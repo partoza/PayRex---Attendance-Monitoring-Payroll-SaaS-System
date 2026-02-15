@@ -42,3 +42,7 @@ appsettings.*.json
 
 # Ignore Program.cs files
 **/Program.cs
+
+# Ignore Markdown files
+*.md
+**/*.md
