@@ -1,0 +1,44 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build folders
+bin/
+obj/
+
+# ASP.NET/Python/node
+wwwroot/lib/
+node_modules/
+
+# Logs
+*.log
+
+# JetBrains Rider
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+packages/
+
+# Secret files
+.env
+secrets.json
+
+# Others
+.vscode/
+
+# Ignore appsettings files (global and in subfolders)
+appsettings.json
+appsettings.*.json
+**/appsettings.json
+**/appsettings.*.json
+
+# Ignore Program.cs files
+**/Program.cs

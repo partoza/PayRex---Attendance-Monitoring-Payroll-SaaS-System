@@ -1,0 +1,40 @@
+@page
+@model PayRex.Web.Pages.UnauthorizedModel
+@{
+    Layout = "~/Pages/Shared/_UnauthorizedLayout.cshtml";
+    ViewData["Title"] = "Unauthorized Access";
+}
+
+<div class="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
+    <div class="max-w-md w-full">
+        <!-- Illustration Placeholder / Image -->
+        <div class="relative mb-8">
+            <div class="absolute inset-0 bg-blue-100 rounded-full blur-3xl opacity-20 transform scale-150"></div>
+            <img src="/images/UnauthorizedIllustration.png" alt="Unauthorized Access" 
+                 class="w-80 h-80 mx-auto relative z-10 drop-shadow-2xl" 
+                 onerror="this.src='https://illustrations.popsy.co/blue/locked-password.svg'; this.onerror=null;"/>
+        </div>
+
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Access Restricted</h1>
+        <p class="text-md text-gray-600 mb-8 leading-relaxed">
+            Oops! It looks like you don't have the necessary permissions to access this page. Please contact your system administrator if you believe this is a mistake.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/Dashboard" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all">
+                Back to Dashboard
+            </a>
+            <button onclick="history.back()" class="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all">
+                Go Back
+            </button>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-gray-100">
+
+            <!-- Small PayRex logo below the buttons -->
+            <div class="mt-6 flex justify-center">
+                <img src="/images/logo.png" alt="PayRex" class="h-16  w-auto opacity-80" />
+            </div>
+        </div>
+    </div>
+</div>

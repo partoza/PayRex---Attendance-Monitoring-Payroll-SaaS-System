@@ -1,0 +1,155 @@
+@page
+@model PayRex.Web.Pages.ContributionsModel
+@{
+    ViewData["Title"] = "Tax & Contributions";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-8 py-10 relative z-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Tax & Contributions</h1>
+            <p class="mt-2 text-gray-600 text-lg">Manage detailed remittances for SSS, PhilHealth, Pag-IBIG, and Tax.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total SSS</p>
+                <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalSSS.ToString("N2")</p>
+            </div>
+             <div class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
+                SSS
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total PhilHealth</p>
+                <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalPhilHealth.ToString("N2")</p>
+            </div>
+             <div class="h-12 w-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 font-bold">
+                PH
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Total Pag-IBIG</p>
+                <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalPagIBIG.ToString("N2")</p>
+            </div>
+             <div class="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 font-bold">
+                P-I
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+             <div class="relative">
+                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                 <input type="text" id="searchInput" 
+                       class="pl-10 block w-full sm:w-64 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                       placeholder="Search employee..." onkeyup="filterTable()">
+            </div>
+            
+             <select id="typeFilter" onchange="filterTable()" 
+                    class="block w-full sm:w-48 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">All Types</option>
+                <option value="SSS">SSS</option>
+                <option value="PhilHealth">PhilHealth</option>
+                <option value="Pag-IBIG">Pag-IBIG</option>
+                <option value="Tax">Tax</option>
+            </select>
+        </div>
+        
+         <button type="button" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+            Export Report
+        </button>
+    </div>
+
+    <!-- Contribution List -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="contributionTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contribution Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Share</th>
+                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Employer Share</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var item in Model.Contributions)
+                    {
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold mr-3 @(item.Type == "SSS" ? "bg-blue-100 text-blue-700" : item.Type == "PhilHealth" ? "bg-green-100 text-green-700" : item.Type == "Pag-IBIG" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700")">
+                                        @item.Type.Substring(0, Math.Min(3, item.Type.Length))
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 search-type">@item.Type</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 search-name">@item.EmployeeName</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                                ₱@item.EmployeeShare.ToString("N2")
+                            </td>
+                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                                ₱@item.EmployerShare.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
+                                ₱@((item.EmployeeShare + item.EmployerShare).ToString("N2"))
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Remitted
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+        var typeFilter = document.getElementById("typeFilter").value.toUpperCase();
+        var table = document.getElementById("contributionTable");
+        var tr = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < tr.length; i++) {
+            var nameTd = tr[i].querySelector(".search-name");
+            var typeTd = tr[i].querySelector(".search-type");
+
+            if (nameTd && typeTd) {
+                var nameText = nameTd.textContent || nameTd.innerText;
+                var typeText = typeTd.textContent || typeTd.innerText;
+
+                var matchesSearch = nameText.toUpperCase().indexOf(filter) > -1;
+                var matchesType = typeFilter === "" || typeText.toUpperCase().indexOf(typeFilter) > -1;
+
+                if (matchesSearch && matchesType) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>

@@ -1,0 +1,175 @@
+@page
+@model PayRex.Web.Pages.CompensationModel
+@{
+    ViewData["Title"] = "Compensation";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-8 py-10 relative z-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Compensation Management</h1>
+            <p class="mt-2 text-gray-600 text-lg">Manage employee deductions, penalties, allowances, and benefits in one place.</p>
+        </div>
+    </div>
+
+    <!-- Tabs Container -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="border-b border-gray-100 px-6">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button onclick="switchTab('deductions')" id="tab-deductions-btn" 
+                        class="border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-all">
+                    Deductions & Penalties
+                </button>
+                <button onclick="switchTab('benefits')" id="tab-benefits-btn" 
+                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all">
+                    Allowances & Benefits
+                </button>
+            </nav>
+        </div>
+
+        <!-- Deductions Content -->
+        <div id="deductions-content" class="p-6 space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between gap-4">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="deductionSearch" placeholder="Search deductions..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           onkeyup="filterDeductions()">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                    Add Deduction
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="min-w-full divide-y divide-gray-200" id="deductionTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var d in Model.Deductions)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 d-name">@d.EmployeeName</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 d-type">@d.Type</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-red-600">-₱@d.Amount.ToString("N2")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@d.Date.ToShortDateString()</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase 
+                                        @(d.Status == "Deducted" ? "bg-green-100 text-green-800" : 
+                                          d.Status == "Applied" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
+                                        @d.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Benefits Content -->
+        <div id="benefits-content" class="hidden p-6 space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between gap-4">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="benefitSearch" placeholder="Search benefits..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           onkeyup="filterBenefits()">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                    Add Benefit
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-gray-100">
+                <table class="min-w-full divide-y divide-gray-200" id="benefitTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach (var b in Model.Benefits)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 b-name">@b.EmployeeName</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 b-type">@b.Type</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">+₱@b.Amount.ToString("N2")</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 italic">@b.Frequency</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase 
+                                        @(b.Status == "Active" ? "bg-green-100 text-green-800" : 
+                                          b.Status == "Approved" ? "bg-blue-100 text-blue-800" : "bg-yellow-100 text-yellow-800")">
+                                        @b.Status
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        const dContent = document.getElementById('deductions-content');
+        const bContent = document.getElementById('benefits-content');
+        const dBtn = document.getElementById('tab-deductions-btn');
+        const bBtn = document.getElementById('tab-benefits-btn');
+
+        if (tab === 'deductions') {
+            dContent.classList.remove('hidden');
+            bContent.classList.add('hidden');
+            dBtn.className = "border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-all";
+            bBtn.className = "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all";
+        } else {
+            dContent.classList.add('hidden');
+            bContent.classList.remove('hidden');
+            dBtn.className = "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all";
+            bBtn.className = "border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-all";
+        }
+    }
+
+    function filterDeductions() {
+        var input = document.getElementById("deductionSearch");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("deductionTable");
+        var tr = table.getElementsByTagName("tr");
+        for (var i = 1; i < tr.length; i++) {
+            var name = tr[i].querySelector(".d-name")?.textContent || "";
+            var type = tr[i].querySelector(".d-type")?.textContent || "";
+            tr[i].style.display = (name.toUpperCase().indexOf(filter) > -1 || type.toUpperCase().indexOf(filter) > -1) ? "" : "none";
+        }
+    }
+
+    function filterBenefits() {
+        var input = document.getElementById("benefitSearch");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("benefitTable");
+        var tr = table.getElementsByTagName("tr");
+        for (var i = 1; i < tr.length; i++) {
+            var name = tr[i].querySelector(".b-name")?.textContent || "";
+            var type = tr[i].querySelector(".b-type")?.textContent || "";
+            tr[i].style.display = (name.toUpperCase().indexOf(filter) > -1 || type.toUpperCase().indexOf(filter) > -1) ? "" : "none";
+        }
+    }
+</script>

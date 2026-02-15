@@ -1,0 +1,803 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Welcome to PayRex";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payrex | Attendance & Payroll Management System for Filipino Enterprises</title>
+
+    <!-- Project CSS (existing) -->
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/images/icon/payrexiconofficial.ico" />
+
+    <!-- Page-specific fonts / icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+
+    <!-- Optional: local bundle if you have a compiled dist/styles.css in wwwroot/dist -->
+    <link rel="stylesheet" href="~/dist/styles.css" asp-append-version="true" />
+    <style>
+        /* Ensure the Inter font family is applied when tailwind isn't overriding */
+        .font-inter {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        /* small fallback for full page hero background if needed */
+        .bg-page-bg {
+            background: radial-gradient(ellipse at 10% 10%, rgba(14,165,233,0.04), transparent), linear-gradient(180deg,#f8fafc,#ffffff);
+        }
+
+        @@keyframes carousel {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-33.33%); /* For 3 sets */
+            }
+        }
+
+        .animate-carousel {
+            animation: carousel 40s linear infinite;
+            will-change: transform;
+        }
+
+            .animate-carousel:hover {
+                animation-play-state: paused;
+            }
+
+        /* Optional: Add loading fallback for images */
+        img {
+            min-width: 100px; /* Prevents images from collapsing */
+        }
+    </style>
+</head>
+<body class="font-inter bg-page-bg bg-geometric">
+    <!-- Navigation Bar (uses project routes via tag helpers) -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between p-4">
+
+            <!-- Logo -->
+            <a asp-page="/Index" class="flex items-center space-x-3">
+                <img src="/images/logo.png" class="h-12 w-auto" alt="Payrex Logo" />
+            </a>
+
+            <!-- Right buttons + mobile toggle -->
+            <div class="flex md:order-2 items-center gap-3">
+                <a asp-page="/Auth/Login"
+                   class="text-white bg-primary hover:brightness-95 focus:ring-4 focus:ring-primary/30 font-semibold rounded-xl text-sm px-5 py-2.5 shadow-md">
+                    Sign Up
+                </a>
+
+                <button data-collapse-toggle="navbar-sticky"
+                        type="button"
+                        class="inline-flex items-center justify-center w-10 h-10 text-gray-600 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        aria-controls="navbar-sticky"
+                        aria-expanded="false">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+                <ul class="flex flex-col md:flex-row md:space-x-10 mt-4 md:mt-0 p-4 md:p-0 bg-white md:bg-transparent border md:border-0 rounded-xl">
+                    <li>
+                        <a href="#home" class="nav-link block py-2 px-3 text-gray-700 hover:text-primary font-medium">
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#features" class="nav-link block py-2 px-3 text-gray-700 hover:text-primary font-medium">
+                            Features
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#about" class="nav-link block py-2 px-3 text-gray-700 hover:text-primary font-medium">
+                            About Us
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#pricing" class="nav-link block py-2 px-3 text-gray-700 hover:text-primary font-medium">
+                            Pricing
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#contact" class="nav-link block py-2 px-3 text-gray-700 hover:text-primary font-medium">
+                            Contact
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home/Hero Section -->
+    <section id="home" class="pt-32 px-4 md:px-8 pb-24">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center">
+                <!-- Philippine Flag Badge -->
+                <div class="inline-flex items-center justify-center mb-6 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
+                    <span class="text-ph-blue font-semibold inline-flex items-center gap-2">
+                        Made for Filipino Enterprises
+                        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block align-middle">
+                            <path d="M15.8405 13.2694C10.6134 10.108 5.387 16.4318 0.160156 13.2694C0.160156 9.75644 0.160156 6.24362 0.160156 2.73057C5.387 5.89247 10.6134 -0.431328 15.8405 2.73057V13.2694Z" fill="#CCCBCA"></path>
+                            <path d="M0.292969 2.93787V8.07835V13.2199C2.86355 12.9826 5.4339 10.4906 8.00448 7.99955C5.4339 7.06323 2.86355 6.12855 0.292969 2.93787Z" fill="white"></path>
+                            <path d="M8.00448 7.99955C5.4339 10.4906 2.86355 12.9825 0.292969 13.2199C5.4339 16.1733 10.5749 10.1054 15.716 13.0676C15.716 11.3541 15.716 9.64047 15.716 7.92696C13.1456 6.44555 10.5748 7.22224 8.00448 7.99955Z" fill="#CF232E"></path>
+                            <path d="M0.292969 2.9374V2.93785C2.8631 6.12809 5.43345 7.06367 8.00363 7.99953C10.5744 7.22222 13.1452 6.44559 15.716 7.92689C15.716 6.21309 15.716 4.49953 15.716 2.78551C10.5748 -0.17669 5.4339 5.89119 0.292969 2.9374Z" fill="#2E4B9F"></path>
+                            <path d="M4.94477 8.65297..." fill="#FACE33"></path>
+                        </svg>
+                    </span>
+                </div>
+
+                <!-- Headline -->
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                    Payroll & Attendance Management <br>
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-ph-blue to-ph-red">
+                        for Philippine Enterprises
+                    </span>
+                </h1>
+
+                <!-- Sub-headline -->
+                <p class="text-gray-600 text-lg md:text-xl mt-8 max-w-3xl mx-auto leading-relaxed">
+                        Streamline attendance tracking,
+                    automate PH government tax calculations, and simplify payroll processing for your enterprise.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
+                    <a asp-page="/Auth/Login" class="bg-primary text-white font-semibold py-4 px-12 rounded-xl hover:brightness-95 transition-colors shadow-lg text-lg text-center">
+                        Start Your Payroll System
+                    </a>
+                </div>
+
+                <p class="text-gray-500 text-sm mt-4">
+                    Designed for Filipino Employers & HR Managers • BIR Tax Compliant • PhilHealth • SSS • Pag-IBIG Ready
+                </p>
+            </div>
+
+            <!-- Dashboard Mockup -->
+            <div class="mt-24 md:mt-32 relative">
+                <div class="bg-white/70 backdrop-blur-md border border-white/20 rounded-3xl p-6 md:p-8 shadow-2xl max-w-5xl mx-auto animate-float overflow-hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center space-x-4">
+                            @* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-primary">
+                                <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
+                            </svg> *@
+                            <div class="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center bg-primary">
+                                <img src="/images/payrexiconwhite.png"
+                                     alt="PayRex Logo"
+                                     class="w-full h-full object-contain p-1" />
+                            </div>
+                            
+                            <h3 class="text-gray-800 font-bold text-xl">PayRex System</h3>
+                        </div>
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-gray-100 to-white border-2 border-dashed border-gray-300 rounded-2xl h-[400px] w-full flex items-center justify-center text-gray-400 overflow-hidden relative" id="videoContainer">
+                        <!-- Loading State (shown while video loads) -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-white z-10 transition-opacity duration-500" id="videoLoading">
+                            <div class="text-center">
+                                <!-- Dashboard icon -->
+                                <!-- Text -->
+                                <p class="text-lg font-medium text-gray-500 mb-4">Loading dashboard preview...</p>
+                            </div>
+                        </div>
+
+                        <!-- Video element (hidden initially) -->
+                        <video class="w-full h-full object-cover opacity-0 transition-opacity duration-500" id="dashboardVideo" autoplay loop muted playsinline>
+                            <source src="/video/payrexsystem.mp4" type="video/mp4">
+                            <!-- Fallback if video format not supported -->
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+
+                <div class="absolute -top-6 -left-6 w-24 h-24 bg-primary/10 rounded-full blur-xl"></div>
+                <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-purple-500/10 rounded-full blur-xl"></div>
+            </div>
+
+            <!-- Trust indicators - Logo Carousel -->
+            <div class="mt-24 text-center">
+                <p class="text-gray-500 mb-8 text-lg">Trusted by Filipino enterprises nationwide</p>
+
+                <!-- Carousel Container with transparent background -->
+                <div class="relative w-full overflow-hidden py-8">
+                    <!-- Gradient Overlays (fade effect on edges) - matching the background -->
+                    <div class="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#f8fafc] to-transparent z-10"></div>
+                    <div class="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#f8fafc] to-transparent z-10"></div>
+
+                    <!-- Carousel Track -->
+                    <div class="flex animate-carousel">
+                        <!-- First set of logos (logo1 to logo9) -->
+                        <div class="flex items-center justify-around gap-16 min-w-full px-4">
+                            <img src="/images/logo/logo1.png" alt="Company Logo" class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo2.png" alt="Company Logo" class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo3.png" alt="Company Logo" class="h-16 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo4.png" alt="Company Logo" class="h-24 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo5.png" alt="Company Logo" class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo6.png" alt="Company Logo" class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo7.png" alt="Company Logo" class="h-24 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo8.png" alt="Company Logo" class="h-16 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                            <img src="/images/logo/logo9.png" alt="Company Logo" class="h-20 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features (kept as provided, icons converted to Bootstrap Icons) -->
+    <section id="features" class="px-4 md:px-8 pt-24 pb-24 bg-white/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Powerful Features for Filipino HR</h2>
+                <p class="text-gray-600 text-xl max-w-3xl mx-auto">Everything you need to manage attendance and payroll compliant with Philippine regulations</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="bg-transparent h-40 rounded-xl mb-6 flex items-center justify-center overflow-hidden text-gray-500">
+                        <img src="/images/features/feature-qrcode.png" alt="QR Code Attendance" class="h-full w-full object-cover rounded-xl" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">QR Code Attendance</h3>
+                    <p class="text-gray-600 mb-6">Employees check in/out using unique QR codes. Real-time tracking with geolocation for accurate time monitoring.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Real-time attendance tracking</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Employee QR codes</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Accurate time monitoring</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="bg-transparent h-40 rounded-xl mb-6 flex items-center justify-center overflow-hidden text-gray-500">
+                        <img src="/images/features/feature-bir.png" alt="BIR Tax Compliance" class="h-full w-full object-cover rounded-xl" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">PH Government Tax Compliance</h3>
+                    <p class="text-gray-600 mb-6">Automatic BIR tax calculations with updated tax tables. Generates BIR 2316, 1601C, and other required forms.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>BIR tax automation</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>PhilHealth, SSS, Pag-IBIG</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Government form generation</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="bg-transparent h-40 rounded-xl mb-6 flex items-center justify-center overflow-hidden text-gray-500">
+                        <img src="/images/features/feature-salary.png" alt="Salary Calculation" class="h-full w-full object-cover rounded-xl" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Auto Salary Calculation & Deductions</h3>
+                    <p class="text-gray-600 mb-6">Automatically calculate salaries, overtime, night differential, holidays, and all required deductions.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Overtime & holiday pay</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Automatic deductions</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Benefits calculations</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-8 justify-center max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="bg-transparent h-40 rounded-xl mb-6 flex items-center justify-center overflow-hidden text-gray-500">
+                        <img src="/images/features/feature-payslip.png" alt="Generated Payslips" class="h-full w-full object-cover rounded-xl" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Generated Payslips</h3>
+                    <p class="text-gray-600 mb-6">Automatically generate detailed payslips for employees. Digital delivery with employee portal access.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Detailed breakdown</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Digital delivery</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Year-to-date summaries</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="bg-transparent h-40 rounded-xl mb-6 flex items-center justify-center overflow-hidden text-gray-500">
+                        <img src="/images/features/feature-hr.png" alt="HR Management" class="h-full w-full object-cover rounded-xl" />
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">HR Management</h3>
+                    <p class="text-gray-600 mb-6">Complete employee database, leave management, performance tracking, and document management.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Employee records</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Leave management</span></li>
+                        <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Document storage</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About, Pricing, Contact and Footer kept largely the same (images/icons adapted) -->
+    <!-- About -->
+    <section id="about" class="px-4 md:px-8 pt-24 pb-24">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">About Payrex Philippines</h2>
+                <p class="text-gray-600 text-xl max-w-3xl mx-auto">Built by Filipinos, for Filipino Enterprises</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-6">Our Philippine Mission</h3>
+                    <p class="text-gray-600 mb-6 text-lg leading-relaxed">
+                        Payrex was created specifically to address the unique challenges of payroll and attendance management in the Philippines. We understand the complexities of BIR tax compliance, PhilHealth, SSS, Pag-IBIG contributions, and Philippine labor laws.
+                    </p>
+                    <p class="text-gray-600 mb-8 text-lg leading-relaxed">
+                        Based in Davao City, our team of Filipino developers and HR experts have built a system that simplifies compliance while saving time for HR managers and employers across the archipelago.
+                    </p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-ph-blue mb-2">500+</div>
+                            <div class="text-gray-600">Filipino Enterprises</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-ph-red mb-2">50K+</div>
+                            <div class="text-gray-600">Employees Served</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-ph-blue mb-2">100%</div>
+                            <div class="text-gray-600">PH Compliance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-ph-blue to-ph-red rounded-3xl p-8 text-white">
+                    <h3 class="text-2xl font-bold mb-6">Why Choose Payrex</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="bi bi-flag"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Made in the Philippines</h4>
+                                <p class="text-white/90">Built specifically for Philippine tax laws, labor codes, and business practices.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="bi bi-shield-lock"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">BIR Compliant</h4>
+                                <p class="text-white/90">Automatic tax calculations with updated BIR tax tables and forms.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-4 flex-shrink-0">
+                                <i class="bi bi-headset"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg mb-2">Local Support</h4>
+                                <p class="text-white/90">Filipino support team available during Philippine business hours.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="px-4 md:px-8 pt-24 pb-24 bg-white/50">
+        <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-16">
+   <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Simple Pricing for Filipino Businesses</h2>
+      <p class="text-gray-600 text-xl max-w-3xl mx-auto">Choose the plan that fits your organization's needs</p>
+        </div>
+
+   <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        @{ var basicPlan = Model.Plans.FirstOrDefault(p => p.Name == "Basic"); }
+           @{ var proPlan = Model.Plans.FirstOrDefault(p => p.Name == "Pro"); }
+
+    @if (basicPlan != null)
+      {
+   <!-- Basic -->
+           <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl">
+                 <div class="text-center mb-8">
+         <h3 class="text-2xl font-bold text-gray-900 mb-2">@basicPlan.Name</h3>
+            <p class="text-gray-600 mb-6">@basicPlan.Description</p>
+       <div class="flex justify-center items-baseline">
+          <span class="text-5xl font-bold text-gray-900">₱@basicPlan.Price.ToString("N0")</span>
+                <span class="text-gray-500 ml-2">/month</span>
+       </div>
+      <p class="text-sm text-gray-500 mt-2">Billed annually at ₱@((basicPlan.Price * 12).ToString("N0"))</p>
+    </div>
+     <ul class="space-y-4 mb-8">
+       <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Up to @basicPlan.MaxEmployees Employees</span></li>
+     <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Up to @(basicPlan.PlanUserLimit ?? 0) Admin/HR users</span></li>
+          <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>QR Code Attendance</span></li>
+     <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>BIR Tax Calculation</span></li>
+        <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>Advanced HR Management</span></li>
+        <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>Priority Support</span></li>
+         </ul>
+       <a class="w-full inline-block text-center py-3 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors" href="#contact">Get Started</a>
+    </div>
+                }
+
+@if (proPlan != null)
+         {
+        <!-- Pro -->
+                <div class="bg-white rounded-2xl p-8 shadow-xl border-2 border-primary transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl relative">
+  <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+        <span class="bg-primary text-white text-sm font-semibold py-1 px-4 rounded-full">Most Popular</span>
+  </div>
+         <div class="text-center mb-8">
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">@proPlan.Name</h3>
+  <p class="text-gray-600 mb-6">@proPlan.Description</p>
+    <div class="flex justify-center items-baseline">
+   <span class="text-5xl font-bold text-gray-900">₱@proPlan.Price.ToString("N0")</span>
+<span class="text-gray-500 ml-2">/month</span>
+        </div>
+    <p class="text-sm text-gray-500 mt-2">Billed annually at ₱@((proPlan.Price * 12).ToString("N0"))</p>
+         </div>
+    <ul class="space-y-4 mb-8">
+      <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Up to @proPlan.MaxEmployees Employees</span></li>
+       <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Up to @(proPlan.PlanUserLimit ?? 0) Admin/HR users</span></li>
+   <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>QR Code Attendance</span></li>
+     <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>BIR Tax Calculation</span></li>
+           <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Advanced Salary Calculation</span></li>
+                            <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Priority Email Support</span></li>
+
+       </ul>
+ <a asp-page="/Dashboard" class="w-full inline-block text-center py-3 rounded-xl bg-primary text-white font-semibold hover:brightness-95 transition-colors">Get Started</a>
+     </div>
+       }
+   </div>
+
+     <div class="text-center mt-12">
+          <div class="inline-flex items-center bg-yellow-50 border border-yellow-200 rounded-xl p-6 max-w-2xl mx-auto">
+          <i class="bi bi-info-circle text-yellow-500 text-2xl mr-4"></i>
+     <div class="text-left">
+  <h4 class="font-bold text-gray-900 mb-1">Enterprise Plan Available</h4>
+            <p class="text-gray-600 text-sm">Need to manage more than 200 employees? Contact us for custom enterprise pricing with unlimited employees, dedicated account manager, and custom integrations.</p>
+         </div>
+          </div>
+  </div>
+     </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="px-4 md:px-8 pt-24 pb-24">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Contact Payrex Philippines</h2>
+                <p class="text-gray-600 text-xl max-w-3xl mx-auto">Get in touch with our Filipino team to learn how Payrex can transform your HR and payroll management</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-8">Send us a message</h3>
+
+                    <form class="space-y-6" method="post" asp-page-handler="Contact">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 mb-2 font-medium">First Name</label>
+                                <input name="FirstName" type="text" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Juan">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2 font-medium">Last Name</label>
+                                <input name="LastName" type="text" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Dela Cruz">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Company</label>
+                            <input name="Company" type="text" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Your Company Name">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Work Email</label>
+                            <input name="Email" type="email" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="juan.delacruz@company.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Phone Number</label>
+                            <input name="Phone" type="tel" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="0912 345 6789">
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Message</label>
+                            <textarea name="Message" rows="5" class="w-full py-3 px-4 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" placeholder="Tell us about your payroll needs..."></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 rounded-xl bg-primary text-white font-semibold hover:brightness-95 transition-colors shadow-md">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-8">Our Philippine Office</h3>
+
+                    <div class="space-y-8">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0 ">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-primary">
+                                    <path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />
+                                </svg>
+
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-900 mb-1">Our Davao Office</h4>
+                                <p class="text-gray-600">Matina, Davao City<br>Davao del Sur, Philippines 8000</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-primary">
+                                    <path fill-rule="evenodd" d="M1.5 4.5a3 3 0 0 1 3-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 0 1-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 0 0 6.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 0 1 1.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.82V19.5a3 3 0 0 1-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5Z" clip-rule="evenodd" />
+                                </svg>
+
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-900 mb-1">Phone</h4>
+                                <p class="text-gray-600">0912 345 6789<br>Mon-Fri, 8am-5pm PHT</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-primary">
+                                    <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                                    <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                                </svg>
+
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-900 mb-1">Email</h4>
+                                <p class="text-gray-600">payrex@gmail.com<br>support@payrex.com</p>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-200">
+                            <h4 class="font-bold text-lg text-gray-900 mb-4">Follow Payrex PH</h4>
+                            <div class="flex space-x-4">
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-ph-blue hover:text-white transition-colors">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-blue-400 hover:text-white transition-colors">
+                                    <i class="bi bi-twitter"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-blue-700 hover:text-white transition-colors">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-pink-600 hover:text-white transition-colors">
+                                    <i class="bi bi-instagram"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-100">
+                            <h4 class="font-bold text-lg text-gray-900 mb-3">Ready to streamline your payroll?</h4>
+                            <p class="text-gray-600 mb-4">Book a free demo with our team to see how Payrex can simplify your HR processes.</p>
+                            <a href="#contact" class="w-full inline-block text-center py-3 rounded-xl bg-primary text-white font-semibold hover:brightness-95 transition-colors">Book a Free Demo</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-4 md:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+                <div class="lg:col-span-2">
+                    <div class="flex items-center mb-6">
+                        <img src="/images/whitelogo.png" alt="Payrex logo" class="h-16 object-contain w-[140px] transition-transform duration-200 origin-center hover:scale-110" />
+                    </div>
+                    <p class="text-gray-400 mb-6 max-w-md">
+                        Payrex is the leading attendance and payroll management platform for Filipino enterprises, designed specifically for Philippine tax laws, labor codes, and business practices.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-ph-blue hover:text-white transition-colors"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-blue-400 hover:text-white transition-colors"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-blue-700 hover:text-white transition-colors"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-pink-600 hover:text-white transition-colors"><i class="bi bi-instagram"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-6">Product</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
+                        <li><a href="#pricing" class="text-gray-400 hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Security</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Compliance</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">For HR Managers</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-6">Company</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#about" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Partners</a></li>
+                        <li><a href="#contact" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-6">Compliance</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">BIR Ready</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">PhilHealth</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">SSS</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Pag-IBIG</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">DOLE Compliant</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gray-400 text-sm mb-4 md:mb-0">&copy; @DateTime.Now.Year - Payrex Philippines. All rights reserved.</div>
+                <div class="text-gray-400 text-sm">BIR Compliant • PhilHealth • SSS • Pag-IBIG Ready • Davao City, Philippines</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating action button -->
+    <div class="fixed bottom-8 right-8 z-40">
+        <button onclick="scrollToTop()" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:brightness-95 transition-colors">
+            <i class="bi bi-arrow-up text-xl"></i>
+        </button>
+    </div>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+
+                    // Update active nav link
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('text-primary','font-semibold');
+                    });
+                    this.classList.add('text-primary','font-semibold');
+                }
+            });
+        });
+
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('text-primary','font-semibold');
+            });
+            document.querySelector('a[href="#home"]')?.classList.add('text-primary','font-semibold');
+        }
+
+        // Update active nav link on scroll
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section[id]');
+            const scrollPosition = window.scrollY + 100;
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('text-primary','font-semibold');
+                        if (link.getAttribute('href') === `#${sectionId}`) {
+                            link.classList.add('text-primary','font-semibold');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Form submission (client-side demo)
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Salamat! Your message has been sent. Our team will contact you within 24 hours.');
+            this.reset();
+        });
+
+        // CTA button actions to contact
+        document.querySelectorAll('button, a').forEach(el => {
+            const txt = (el.textContent || '').trim();
+            if (txt.includes('Start Your Payroll System') || txt.includes('Get Started') || txt.includes('Book a Demo') || txt.includes('Book a Free Demo')) {
+                el.addEventListener('click', function(e) {
+                    const section = document.querySelector('#contact');
+                    if (section) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: section.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            }
+        });
+
+        // Initialize active nav link on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('a[href="#home"]')?.classList.add('text-primary','font-semibold');
+        });
+
+                // Video loading with Flowbite spinner
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('dashboardVideo');
+            const loading = document.getElementById('videoLoading');
+
+            if (video && loading) {
+                // Check if video is already cached and loaded
+                if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+                    video.classList.remove('opacity-0');
+                    loading.style.opacity = '0';
+                    setTimeout(() => {
+                        loading.style.display = 'none';
+                    }, 500);
+                } else {
+                    // Wait for video to load
+                    video.addEventListener('loadeddata', function() {
+                        video.classList.remove('opacity-0');
+                        loading.style.opacity = '0';
+                        setTimeout(() => {
+                            loading.style.display = 'none';
+                        }, 500);
+                    });
+
+                    // Fallback timeout (hide loading after 5 seconds even if video hasn't loaded)
+                    setTimeout(function() {
+                        if (loading.style.opacity !== '0') {
+                            video.classList.remove('opacity-0');
+                            loading.style.opacity = '0';
+                            setTimeout(() => {
+                                loading.style.display = 'none';
+                            }, 500);
+                        }
+                    }, 5000);
+                }
+
+                // Handle video error
+                video.addEventListener('error', function() {
+                    loading.innerHTML = `
+                        <div class="text-center">
+                            <i class="bi bi-exclamation-triangle text-5xl text-yellow-500 mb-4"></i>
+                            <p class="text-lg font-medium text-gray-700">Failed to load video</p>
+                            <p class="text-sm text-gray-500 mt-2">Please refresh the page</p>
+                        </div>
+                    `;
+                });
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+
+</body>
+</html>

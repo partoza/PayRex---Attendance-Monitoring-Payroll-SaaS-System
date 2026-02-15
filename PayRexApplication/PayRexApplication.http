@@ -1,0 +1,6 @@
+@PayRexApplication_HostAddress = http://localhost:5202
+
+GET {{PayRexApplication_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

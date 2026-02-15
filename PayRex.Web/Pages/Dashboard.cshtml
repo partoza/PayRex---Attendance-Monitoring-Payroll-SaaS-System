@@ -1,0 +1,228 @@
+@page
+@model PayRex.Web.Pages.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative group">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        
+        <div class="px-6 py-8 sm:px-10 sm:py-12 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div class="flex-1 min-w-0 text-center lg:text-left">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                        Hello, <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">@Model.UserFirstName</span> 👋
+                    </h1>
+                     @if (Model.UserRole == "Employee")
+                    {
+                        <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                            Welcome to your employee portal. View your payslips, check your attendance, and manage your benefits.
+                        </p>
+                    }
+                    else
+                    {
+                        <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                            Overview of your organization's performance. Manage employees, process payroll, and track attendance.
+                        </p>
+                    }
+
+                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
+                        @if (Model.UserRole == "Employee")
+                        {
+                            <a href="/Payslips" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                                View My Payslip
+                            </a>
+                            <a href="/Attendance" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                Check Attendance
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Employees" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                                Manage Employees
+                            </a>
+                            <a href="/Salary" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                Process Payroll
+                            </a>
+                        }
+                    </div>
+                </div>
+                 <!-- Creative Illustration -->
+                <div class="hidden lg:block flex-shrink-0 relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-100/50 to-yellow-100/50 rounded-full blur-2xl transform scale-90"></div>
+                    <!-- Banknote Rafiki Illustration - Larger -->
+                    <img src="/images/Banknote-rafiki.png" alt="Dashboard Illustration" class="w-80 h-80 relative z-10 drop-shadow-xl transform group-hover:scale-105 transition-transform duration-500" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        @if (Model.UserRole == "Employee")
+        {
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Days Present</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PresentDays</p>
+                <div class="mt-2 text-xs text-green-600 font-semibold bg-green-50 inline-block px-2 py-1 rounded">
+                    On Track
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Late Arrivals</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.LateDays</p>
+                <div class="mt-2 text-xs text-yellow-600 font-semibold bg-yellow-50 inline-block px-2 py-1 rounded">
+                    Warning
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Leave Balance</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.LeaveBalance</p>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
+                    Available
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Next Payout</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">₱@Model.Stats.EstimatedPay.ToString("N2")</p>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
+                    Est. Net Pay
+                </div>
+            </div>
+        }
+        else
+        {
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Total Employees</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.TotalEmployees</p>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
+                    @Model.Stats.NewHires New Hires
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Present Today</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PresentToday</p>
+                <div class="mt-2 text-xs text-green-600 font-semibold bg-green-50 inline-block px-2 py-1 rounded">
+                    @Model.Stats.OnTimePercentage% On Time
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Pending Payroll</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PendingPayroll</p>
+                <div class="mt-2 text-xs text-yellow-600 font-semibold bg-yellow-50 inline-block px-2 py-1 rounded">
+                    Action Required
+                </div>
+            </div>
+             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <p class="text-sm font-medium text-gray-500">Payroll Cost</p>
+                <p class="mt-2 text-3xl font-bold text-gray-900">₱@Model.Stats.PayrollCost.ToString("N2")</p>
+                 <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
+                    Current Period
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content (Chart/List) -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <div class="px-6 py-5 border-b border-gray-50 bg-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                         @if (Model.UserRole == "Employee")
+                        {
+                            <h2 class="text-lg font-bold text-gray-900">Attendance History</h2>
+                            <p class="text-sm text-gray-500 mt-0.5">Your recent time logs</p>
+                        }
+                        else
+                        {
+                            <h2 class="text-lg font-bold text-gray-900">Payroll Status</h2>
+                            <p class="text-sm text-gray-500 mt-0.5">Recent payroll processing overview</p>
+                        }
+                    </div>
+                </div>
+            </div>
+             <div class="p-6 flex-1">
+                 @if (Model.UserRole == "Employee")
+                {
+                    <!-- Employee View: Simple List for now -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Today</p>
+                                <p class="text-xs text-gray-500">Regular Shift</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Present</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Yesterday</p>
+                                <p class="text-xs text-gray-500">Regular Shift</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Present</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                     <!-- Admin View: Payroll List -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                    FEB
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-900">Feb 01 - 15, 2026</p>
+                                    <p class="text-xs text-gray-500">Regular Payroll</p>
+                                </div>
+                            </div>
+                             <span class="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Processing</span>
+                        </div>
+                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
+                                    JAN
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-gray-900">Jan 16 - 31, 2026</p>
+                                    <p class="text-xs text-gray-500">Regular Payroll</p>
+                                </div>
+                            </div>
+                             <span class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Completed</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <div class="px-6 py-5 border-b border-gray-50">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-gray-900">Recent Activity</h2>
+                </div>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto">
+                <div class="space-y-6">
+                    @foreach (var activity in Model.RecentActivities)
+                    {
+                        var color = activity.Type == "Success" ? "green" : activity.Type == "Warning" ? "yellow" : "blue";
+                        
+                        <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
+                            <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-@color-500"></div>
+                            <div class="flex flex-col">
+                                <p class="text-sm font-semibold text-gray-900">@activity.Title</p>
+                                <p class="text-xs text-gray-500 font-medium mt-0.5">@activity.Description</p>
+                                <span class="text-xs text-gray-400 mt-1">@activity.Time</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

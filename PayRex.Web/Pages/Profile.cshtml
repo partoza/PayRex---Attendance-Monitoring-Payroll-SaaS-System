@@ -1,0 +1,607 @@
+@page
+@model PayRex.Web.Pages.ProfileModel
+@{
+    ViewData["Title"] = "Profile Settings";
+}
+
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4 md:top-6 md:right-6 max-w-sm w-full">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="toast-message group relative overflow-hidden bg-white border border-green-100 rounded-2xl shadow-lg shadow-green-100/50 p-4 animate-slide-in" role="alert">
+             <div class="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-[3000ms] w-full animate-progress"></div>
+            <div class="flex items-start gap-4">
+                <div class="p-2 bg-green-50 rounded-xl shrink-0">
+                    <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="flex-1 pt-0.5">
+                    <h3 class="text-sm font-semibold text-gray-900">Success</h3>
+                    <p class="text-sm text-gray-600 mt-1">@Model.SuccessMessage</p>
+                </div>
+                <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="toast-message group relative overflow-hidden bg-white border border-red-100 rounded-2xl shadow-lg shadow-red-100/50 p-4 animate-slide-in" role="alert">
+             <div class="absolute bottom-0 left-0 h-1 bg-red-500 transition-all duration-[3000ms] w-full animate-progress"></div>
+            <div class="flex items-start gap-4">
+                <div class="p-2 bg-red-50 rounded-xl shrink-0">
+                    <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="flex-1 pt-0.5">
+                    <h3 class="text-sm font-semibold text-gray-900">Error</h3>
+                    <p class="text-sm text-gray-600 mt-1">@Model.ErrorMessage</p>
+                </div>
+                <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="max-w-8xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 pb-6 border-b border-gray-100">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Profile Settings</h1>
+            <p class="mt-2 text-gray-600">Manage your personal information and security preferences</p>
+        </div>
+
+        @if (!Model.IsEditMode)
+        {
+            <a href="/Profile?edit=true"
+               class="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit Profile
+            </a>
+        }
+        else
+        {
+            <a href="/Profile"
+               class="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancel Editing
+            </a>
+        }
+    </div>
+
+    <!-- Personal Information Card -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
+        <div class="px-6 py-5 border-b border-gray-50 flex items-center gap-3 bg-gradient-to-r from-blue-50/50 to-transparent">
+             <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                </svg>
+
+             </div>
+             <div>
+                <h2 class="text-lg font-bold text-gray-900">Personal Information</h2>
+                <p class="text-sm text-gray-500">Your profile details and avatar</p>
+             </div>
+        </div>
+
+        <div class="p-6 md:p-8">
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                <!-- Profile Picture Section -->
+                <div class="flex flex-col items-center lg:items-center space-y-6 min-w-[240px]">
+                    <div class="relative group">
+                         <div class="absolute -inset-1 bg-gradient-to-br from-blue-200 to-green-100 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                        {
+                            <img src="@Model.ProfileImageUrl" alt="Profile" class="relative w-32 h-32 lg:w-48 lg:h-48 rounded-full object-cover border-4 border-white shadow-xl ring-1 ring-gray-100" />
+                        }
+                        else
+                        {
+                            <div class="relative w-32 h-32 lg:w-48 lg:h-48 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-5xl lg:text-7xl font-bold border-4 border-white shadow-xl ring-1 ring-gray-100 uppercase tracking-wider">
+                                @(Model.FirstName?.Substring(0, 1) ?? "U")
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model.IsEditMode)
+                    {
+                        <div class="flex flex-row items-center justify-center gap-3 w-full">
+                            <form method="post" asp-page-handler="UploadImage" enctype="multipart/form-data" class="flex-1">
+                                @Html.AntiForgeryToken()
+                                <label class="cursor-pointer block">
+                                    <span class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-xl hover:bg-blue-100 transition-colors duration-200 whitespace-nowrap">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Change
+                                    </span>
+                                    <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="this.form.submit()" />
+                                </label>
+                            </form>
+
+                            @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
+                            {
+                                <form method="post" asp-page-handler="RemoveImage" class="flex-1">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-red-50 text-red-700 text-sm font-semibold rounded-xl hover:bg-red-100 transition-colors duration-200 whitespace-nowrap">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                        <p class="text-xs text-gray-400 font-medium text-center">Max 2MB (JPG, PNG)</p>
+                    }
+                </div>
+
+                <!-- Personal Information Details -->
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-2">
+                    <div class="group relative bg-gray-50 rounded-xl p-4 hover:bg-blue-50/50 transition-colors">
+                        <label class="absolute -top-2.5 left-4 px-2 bg-white text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">First Name</label>
+                        <p class="text-lg font-medium text-gray-900 truncate mt-1">@Model.FirstName</p>
+                    </div>
+                    
+                    <div class="group relative bg-gray-50 rounded-xl p-4 hover:bg-blue-50/50 transition-colors">
+                        <label class="absolute -top-2.5 left-4 px-2 bg-white text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Last Name</label>
+                        <p class="text-lg font-medium text-gray-900 truncate mt-1">@Model.LastName</p>
+                    </div>
+
+                    <div class="md:col-span-2 group relative bg-gray-50 rounded-xl p-4 hover:bg-blue-50/50 transition-colors">
+                        <label class="absolute -top-2.5 left-4 px-2 bg-white text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Email Address</label>
+                        <p class="text-lg font-medium text-gray-900 truncate mt-1">@Model.Email</p>
+                    </div>
+
+                    <div class="group relative bg-gray-50 rounded-xl p-4 hover:bg-blue-50/50 transition-colors">
+                        <label class="absolute -top-2.5 left-4 px-2 bg-white text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Role</label>
+                        <div class="flex items-center gap-2 mt-1">
+                             <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <p class="text-lg font-medium text-gray-900">@Model.Role</p>
+                        </div>
+                    </div>
+
+                     @if (Model.LastPasswordChangeAt.HasValue)
+                     {
+                        <div class="group relative bg-gray-50 rounded-xl p-4 hover:bg-blue-50/50 transition-colors">
+                            <label class="absolute -top-2.5 left-4 px-2 bg-white text-xs font-semibold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">Password Last Changed</label>
+                            <p class="text-lg font-medium text-gray-900 mt-1">@Model.LastPasswordChangeAt.Value.ToString("MMMM dd, yyyy")</p>
+                        </div>
+                     }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Change Password -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+             <div class="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-blue-50/30 to-transparent">
+                 <div class="flex items-center gap-3">
+                     <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                        <svg class="w-6 h-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M8 10V7a4 4 0 1 1 8 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2-3a2 2 0 1 1 4 0v3h-4V7Zm2 6a1 1 0 0 1 1 1v3a1 1 0 1 1-2 0v-3a1 1 0 0 1 1-1Z" clip-rule="evenodd" />
+                        </svg>
+
+                     </div>
+                     <div>
+                        <h2 class="text-lg font-bold text-gray-900">Security</h2>
+                        <p class="text-sm text-gray-500">Password management</p>
+                     </div>
+                 </div>
+                  @if (!Model.IsEditMode)
+                  {
+                      <a href="/Profile?edit=true" class="text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                          Change
+                      </a>
+                  }
+            </div>
+
+            <div class="p-6 md:p-8 flex-1">
+                @if (Model.IsEditMode)
+                {
+                    <form method="post" asp-page-handler="ChangePassword" class="space-y-6" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="bg-yellow-50 border border-yellow-100 rounded-xl p-4 flex gap-3">
+                            <svg class="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-semibold text-yellow-800">Security Notice</h4>
+                                <p class="text-xs text-yellow-700 mt-1">Changing your password will sign you out of all other sessions.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="currentPassword" class="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
+                                <div class="relative">
+                                    <input asp-for="PasswordInput.CurrentPassword" id="currentPassword" type="password" class="w-full rounded-xl border-gray-200 bg-gray-50 py-2.5 pl-4 pr-12 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400" placeholder="••••••••" />
+                                    <button type="button" onclick="togglePassword('currentPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 transition-colors">
+                                        <svg id="currentPassword-eye" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="PasswordInput.CurrentPassword" class="text-xs text-red-600 mt-1 font-medium"></span>
+                            </div>
+
+                            <div>
+                                <label for="newPassword" class="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
+                                <div class="relative">
+                                    <input asp-for="PasswordInput.NewPassword" id="newPassword" type="password" class="w-full rounded-xl border-gray-200 bg-gray-50 py-2.5 pl-4 pr-12 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400" placeholder="••••••••" />
+                                    <button type="button" onclick="togglePassword('newPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 transition-colors">
+                                        <svg id="newPassword-eye" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="PasswordInput.NewPassword" class="text-xs text-red-600 mt-1 font-medium"></span>
+                            </div>
+
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm Password</label>
+                                <div class="relative">
+                                    <input asp-for="PasswordInput.ConfirmPassword" id="confirmPassword" type="password" class="w-full rounded-xl border-gray-200 bg-gray-50 py-2.5 pl-4 pr-12 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200 transition-all placeholder-gray-400" placeholder="••••••••" />
+                                    <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 transition-colors">
+                                        <svg id="confirmPassword-eye" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="PasswordInput.ConfirmPassword" class="text-xs text-red-600 mt-1 font-medium"></span>
+                            </div>
+
+                            <div class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Password Requirements</h4>
+                                <ul class="space-y-1 text-sm text-gray-600">
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        At least 8 characters
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        One uppercase letter & one lowercase letter
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                        One number & one special character
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                             <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 focus:ring-4 focus:ring-blue-100 transition-all shadow-md hover:shadow-lg">
+                                Update Password
+                            </button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="h-full flex flex-col items-center justify-center text-center py-8">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-5 ring-8 ring-blue-50/50">
+                            <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Password Protected</h3>
+                        <p class="text-gray-500 max-w-xs mx-auto mb-6">Your password is managed securely. We recommend updating it regularly.</p>
+                        <a href="/Profile?edit=true" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline decoration-2 underline-offset-2">
+                            Update now &rarr;
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Two-Factor Authentication -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+            <div class="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gradient-to-r from-blue-50/30 to-transparent">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 rounded-xl text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                            <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 0 0-1.032 0 11.209 11.209 0 0 1-7.877 3.08.75.75 0 0 0-.722.515A12.74 12.74 0 0 0 2.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 0 0 .374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 0 0-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08Zm3.094 8.016a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                        </svg>
+
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">2 Factor Auth</h2>
+                        <p class="text-sm text-gray-500">Enhanced account protection</p>
+                    </div>
+                </div>
+                @if (Model.IsTwoFactorEnabled)
+                {
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                        Active
+                    </span>
+                }
+                else
+                {
+                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                        Inactive
+                    </span>
+                }
+            </div>
+
+            <div class="p-6 md:p-8 flex-1">
+                 @if (Model.ShowRecoveryCodes && Model.RecoveryCodes != null && Model.RecoveryCodes.Any())
+                {
+                    <div class="space-y-6">
+                        <div class="bg-green-50 border border-green-200 rounded-xl p-4 flex gap-3">
+                            <svg class="w-6 h-6 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <h4 class="text-sm font-bold text-green-900">Setup Complete!</h4>
+                                <p class="text-sm text-green-700 mt-1">Please save your recovery codes in a safe place.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            @foreach (var code in Model.RecoveryCodes)
+                            {
+                                <div class="recovery-code bg-gray-50 border border-gray-200 rounded-lg py-2 px-3 text-center font-mono text-sm tracking-widest text-gray-800">@code</div>
+                            }
+                        </div>
+                        
+                        <div class="space-y-3">
+                        <button onclick="copyRecoveryCodes()" class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
+                            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="002424">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M816H6a22001-2-2V6a220012-2h8a2200122v2m-612h8a220002-2v-8a22000-2-2h-8a22000-22v8a2200022z" />
+                            </svg>
+                            Copy Recovery Codes
+                        </button>
+                        <a href="/Profile" class="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-sm">Done</a>
+                        </div>
+                    </div>
+                }
+                else if (!Model.IsEditMode)
+                {
+                    <div class="h-full flex flex-col items-center justify-center text-center py-8">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5 ring-8 @(Model.IsTwoFactorEnabled ? "bg-green-50 ring-green-50/50" : "bg-red-50 ring-red-50/50")">
+                            <svg class="w-10 h-10 @(Model.IsTwoFactorEnabled ? "text-green-500" : "text-red-500")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if (Model.IsTwoFactorEnabled)
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                }
+                                else
+                                {
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11h-6" />
+
+                                    <!-- Lock slash -->
+                                }
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">@(Model.IsTwoFactorEnabled ? "Protection Active" : "Disabled")</h3>
+                        <p class="text-gray-500 max-w-xs mx-auto mb-6">
+                            @(Model.IsTwoFactorEnabled ? "Your account is secured with 2FA." : "Add an extra layer of security to your account.")
+                        </p>
+                        @if (!Model.IsTwoFactorEnabled)
+                        {
+                            <a href="/Profile?edit=true" class="inline-flex items-center px-6 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                                Enable 2FA
+                            </a>
+                        }
+                    </div>
+                }
+                else if (!Model.IsTwoFactorEnabled && string.IsNullOrEmpty(Model.TotpQrCodeUri))
+                {
+                     <div class="flex flex-col items-center justify-center text-center">
+                        <div class="mb-6">
+                            <span class="inline-block p-4 rounded-2xl bg-blue-50 text-blue-600 mb-4">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </span>
+                            <h3 class="text-lg font-bold text-gray-900">Setup Authenticator</h3>
+                            <p class="text-gray-500 text-sm mt-1">Use apps like Google Authenticator or Authy</p>
+                        </div>
+                        <form method="post" asp-page-handler="SetupTotp" class="w-full">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg group">
+                                Start Setup
+                                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                </svg>
+                            </button>
+                        </form>
+                     </div>
+                }
+                else if (!Model.IsTwoFactorEnabled) {
+                    <!-- Setup Steps -->
+                     <div class="space-y-6">
+                         <div class="text-center">
+                             @if (!string.IsNullOrEmpty(Model.TotpQrCodeUri)) {
+                                 <div class="inline-block p-1 bg-white rounded-xl border-2 border-dashed border-gray-300 mb-3">
+                                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=@Uri.EscapeDataString(Model.TotpQrCodeUri)" class="w-40 h-40 rounded-lg" />
+                                 </div>
+                             }
+                             <p class="text-sm font-medium text-gray-900">Scan QR Code</p>
+                         </div>
+
+                         <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                             <h4 class="text-sm font-bold text-blue-900 mb-3">Setup Guide</h4>
+                             <ol class="space-y-3">
+                                 <li class="flex gap-3">
+                                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center">1</span>
+                                     <span class="text-sm text-blue-800">Download <span class="font-semibold">Google Authenticator</span> or <span class="font-semibold">Microsoft Authenticator</span>.</span>
+                                 </li>
+                                 <li class="flex gap-3">
+                                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center">2</span>
+                                     <span class="text-sm text-blue-800">Scan the QR code or enter the key manually.</span>
+                                 </li>
+                                 <li class="flex gap-3">
+                                      <span class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center">3</span>
+                                     <span class="text-sm text-blue-800">Enter the 6-digit verification code below.</span>
+                                 </li>
+                             </ol>
+                         </div>
+
+
+                         <div class="relative">
+                             <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                 <div class="w-full border-t border-gray-200"></div>
+                             </div>
+                             <div class="relative flex justify-center">
+                                 <span class="bg-white px-2 text-xs text-gray-500 uppercase tracking-widest">Or enter manually</span>
+                             </div>
+                         </div>
+
+                         <div class="relative group">
+                              <input type="text" readonly value="@Model.TotpManualEntryKey" class="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 text-center font-mono text-sm tracking-widest text-gray-600 focus:ring-0" />
+                              <button onclick="navigator.clipboard.writeText('@Model.TotpManualEntryKey'); showToast('Key copied!', 'success')" class="absolute right-2 top-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-white rounded-lg transition-colors">
+                                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                              </button>
+                         </div>
+
+                         <form method="post" asp-page-handler="EnableTotp" class="space-y-4">
+                             @Html.AntiForgeryToken()
+                             <div>
+                                 <input type="text" asp-for="TotpCode" maxlength="6" inputmode="numeric" placeholder="000 000" class="w-full text-center text-3xl font-mono tracking-[0.5em] border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 py-3" />
+                             </div>
+                             <button type="submit" class="w-full btn-primary px-6 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-md hover:bg-blue-700 hover:shadow-lg transition-all">
+                                 Verify Code
+                             </button>
+                         </form>
+                     </div>
+                }
+                else if (Model.IsTwoFactorEnabled && Model.IsEditMode)
+                {
+                    <div class="flex flex-col items-center justify-center text-center h-full gap-6 p-4">
+                        <!-- Icon -->
+                            <div class="w-20 h-20 rounded-full flex items-center justify-center mb-5 ring-8 bg-red-50 ring-red-50/50">
+
+                            
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-16 h-16 text-red-600">
+                                <path fill-rule="evenodd" d="M11.484 2.17a.75.75 0 0 1 1.032 0 11.209 11.209 0 0 0 7.877 3.08.75.75 0 0 1 .722.515 12.74 12.74 0 0 1 .635 3.985c0 5.942-4.064 10.933-9.563 12.348a.749.749 0 0 1-.374 0C6.314 20.683 2.25 15.692 2.25 9.75c0-1.39.223-2.73.635-3.985a.75.75 0 0 1 .722-.516l.143.001c2.996 0 5.718-1.17 7.734-3.08ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75ZM12 15a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-.008a.75.75 0 0 0-.75-.75H12Z" clip-rule="evenodd" />
+                            </svg>
+
+                        </div>
+
+                        <!-- Text -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Disable two-factor authentication?</h3>
+                            <p class="text-sm text-gray-500 mt-1 max-w-xs">Your account will be less secure. You can re-enable this anytime.</p>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex flex-col w-full max-w-xs gap-2">
+                            <form method="post" asp-page-handler="DisableTotp" class="w-full">
+                                @Html.AntiForgeryToken()
+                                <button type="submit"
+                                        onclick="return confirm('Are you sure you want to disable two-factor authentication?')"
+                                        class="w-full px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg
+                                   hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500
+                                   focus:ring-offset-2 transition-colors">
+                                    Disable 2FA
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Optional: Help text -->
+                        <p class="text-xs text-gray-400">
+                            Need help? <a href="https://www.microsoft.com/en-us/security/business/security-101/what-is-two-factor-authentication-2fa" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Learn more about 2FA</a>
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@keyframes progress {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+    .animate-progress {
+        animation: progress 3s linear forwards;
+    }
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateY(-1rem); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-out forwards;
+    }
+</style>
+
+<script>
+    function togglePassword(id) {
+        var x = document.getElementById(id);
+        var icon = document.getElementById(id + "-eye");
+        if (x.type === "password") {
+            x.type = "text";
+            // Set open eye icon
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
+        } else {
+            x.type = "password";
+            // Set closed eye icon
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />';
+        }
+    }
+
+
+
+    function showToast(message, type) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const toast = document.createElement('div');
+        toast.className = 'toast-message group relative overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-lg p-4 animate-slide-in';
+        if (type === 'success') toast.classList.add('border-green-100');
+        if (type === 'error') toast.classList.add('border-red-100');
+        toast.innerHTML = `<div class="absolute bottom-0 left-0 h-1 ${type==='success'? 'bg-green-500':'bg-red-500'} transition-all duration-[3000ms] w-full animate-progress"></div>
+        <div class="flex items-start gap-4">
+        <div class="p-2 ${type==='success'? 'bg-green-50':'bg-red-50'} rounded-xl shrink-0">
+        <svg class="w-6 h-6 ${type==='success'? 'text-green-600':'text-red-600'}" fill="none" viewBox="002424" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M912l224-4" />
+        </svg>
+        </div>
+        <div class="flex-1 pt-0.5">
+        <h3 class="text-sm font-semibold text-gray-900">${type==='success'?'Success':'Notice'}</h3>
+        <p class="text-sm text-gray-600 mt-1">${message}</p>
+        </div>
+        <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
+        </div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-10px)'; setTimeout(() => toast.remove(),300); },3000);
+ }
+
+    function copyRecoveryCodes() {
+ const nodes = document.querySelectorAll('.recovery-code');
+ if (!nodes || nodes.length ===0) {
+     showToast('No recovery codes to copy.', 'error');
+     return;
+ }
+ const codes = Array.from(nodes).map(n => n.textContent.trim()).join('\n');
+ navigator.clipboard.writeText(codes).then(() => {
+     showToast('Recovery codes copied to clipboard', 'success');
+ }).catch(() => {
+     showToast('Failed to copy codes', 'error');
+ });
+ }
+
+
+
+    // Auto-dismiss toasts
+    document.addEventListener('DOMContentLoaded', () => {
+        const toasts = document.querySelectorAll('.toast-message');
+        toasts.forEach(t => {
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateY(-10px)';
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        });
+    });
+</script>

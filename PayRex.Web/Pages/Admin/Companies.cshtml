@@ -1,0 +1,436 @@
+﻿@page
+@model PayRex.Web.Pages.Admin.CompaniesModel
+@{
+    ViewData["Title"] = "Manage Companies";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Welcome Header (Dashboard Style) -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-green-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-6 py-8 sm:px-10 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Manage Companies</h1>
+                    <p class="mt-2 text-gray-600">View and manage all registered companies on the platform</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-700">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" /></svg>
+                        @Model.Companies.Count Total Companies
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Message -->
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <div class="flex items-center p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 shadow-sm" id="statusAlert">
+            <svg class="w-5 h-5 mr-3 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-sm font-medium flex-1">@Model.StatusMessage</span>
+            <button onclick="document.getElementById('statusAlert').remove()" class="ml-3 text-green-600 hover:text-green-800">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            </button>
+        </div>
+    }
+
+    <!-- Filters Card -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-base font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" /></svg>
+                Filters & Search
+            </h2>
+        </div>
+        <div class="p-4 sm:p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Search -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="text" placeholder="Company name..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" id="searchInput">
+                    </div>
+                </div>
+                <!-- Plan Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Plan</label>
+                    <select id="planFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                        <option value="">All Plans</option>
+                        @foreach (var plan in Model.Companies.Select(c => c.PlanName).Where(p => !string.IsNullOrEmpty(p)).Distinct().OrderBy(p => p))
+                        {
+                            <option value="@plan">@plan</option>
+                        }
+                    </select>
+                </div>
+                <!-- Status Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                    <select id="statusFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 mt-4">
+                <button onclick="clearFilters()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors border border-gray-200">
+                    <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Companies Table Card -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">All Companies</h2>
+                    <p class="text-sm text-gray-500 mt-0.5" id="tableInfo">Showing @Model.Companies.Count companies</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="pageSizeSelect" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="10">10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full" id="companiesTable">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plan</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employees</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100" id="companiesBody">
+                    @if (Model.Companies.Count == 0)
+                    {
+                        <tr id="emptyRow">
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No companies found</p>
+                                    <p class="text-sm text-gray-400 mt-1">Try adjusting your filters</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var company in Model.Companies)
+                        {
+                            var statusActive = company.IsActive || company.Status == "Active";
+                            var planColor = company.PlanName?.ToLower() switch {
+                                "starter" => "bg-green-100 text-green-700",
+                                "professional" or "pro" => "bg-blue-100 text-blue-700",
+                                "enterprise" => "bg-yellow-100 text-yellow-700",
+                                _ => "bg-gray-100 text-gray-700"
+                            };
+
+                            <tr class="hover:bg-gray-50/50 transition-colors data-row"
+                                data-name="@company.CompanyName"
+                                data-plan="@company.PlanName"
+                                data-status="@(statusActive ? "Active" : "Inactive")">
+                                <!-- Company -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 shadow-sm">
+                                            <span class="text-xs font-bold text-white">@company.CompanyName?.Substring(0, Math.Min(2, company.CompanyName?.Length ?? 0)).ToUpper()</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">@company.CompanyName</p>
+                                            <p class="text-xs text-gray-500">ID: @company.CompanyId</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Plan -->
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @planColor">
+                                        @company.PlanName
+                                    </span>
+                                </td>
+                                <!-- Users -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-blue-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                                        <span class="text-sm font-semibold text-gray-900">@company.UserCount</span>
+                                    </div>
+                                </td>
+                                <!-- Employees -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+                                        <span class="text-sm font-semibold text-gray-900">@company.EmployeeCount</span>
+                                    </div>
+                                </td>
+                                <!-- Status -->
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @(statusActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                        <span class="w-1.5 h-1.5 rounded-full @(statusActive ? "bg-green-500" : "bg-red-500") mr-1.5"></span>
+                                        @(statusActive ? "Active" : "Inactive")
+                                    </span>
+                                </td>
+                                <!-- Created -->
+                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                    @company.CreatedAt.ToString("MMM dd, yyyy")
+                                </td>
+                                <!-- Actions -->
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <!-- View -->
+                                        <button type="button"
+                                                data-modal-target="companyModal"
+                                                data-modal-toggle="companyModal"
+                                                onclick="loadCompanyDetails('@company.CompanyId', '@company.CompanyName', '@company.PlanName', '@company.UserCount', '@company.EmployeeCount', '@(statusActive ? "Active" : "Inactive")', '@company.CreatedAt.ToString("MMM dd, yyyy")')"
+                                                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                title="View Details">
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                        <!-- Toggle Status -->
+                                        <form method="post" asp-page-handler="ToggleActive" class="inline">
+                                            <input type="hidden" name="companyId" value="@company.CompanyId" />
+                                            <input type="hidden" name="isActive" value="@(statusActive ? "false" : "true")" />
+                                            <button type="submit"
+                                                    onclick="return confirm('@(statusActive ? "Deactivate this company?" : "Activate this company?")')"
+                                                    class="p-2 @(statusActive ? "text-gray-400 hover:text-red-600 hover:bg-red-50" : "text-gray-400 hover:text-green-600 hover:bg-green-50") rounded-lg transition-all"
+                                                    title="@(statusActive ? "Deactivate" : "Activate")">
+                                                @if (statusActive)
+                                                {
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 008.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" /></svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                                }
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50" id="paginationContainer">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-sm text-gray-600" id="paginationInfo">
+                    Showing <span class="font-semibold" id="showStart">1</span> to <span class="font-semibold" id="showEnd">10</span> of <span class="font-semibold" id="showTotal">0</span> companies
+                </div>
+                <nav class="flex items-center gap-1" id="paginationNav"></nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Company Modal -->
+<div id="companyModal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative w-full max-w-md max-h-full">
+        <div class="relative bg-white rounded-2xl shadow-xl border border-gray-200">
+            <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white rounded-t-2xl">
+                <h3 class="text-lg font-bold text-gray-900">Company Details</h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center transition-all" data-modal-hide="companyModal">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
+                        <span class="text-lg font-bold text-white" id="companyInitials">TC</span>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-gray-900" id="companyName">TechCorp</h4>
+                        <p class="text-sm text-gray-500" id="companyId">—</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-500 mb-1">Plan</p>
+                        <p class="text-sm font-semibold text-gray-900" id="companyPlan">—</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-500 mb-1">Status</p>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" id="companyStatus">
+                            <span class="w-1.5 h-1.5 rounded-full mr-1.5"></span>Active
+                        </span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-500 mb-1">Users</p>
+                        <p class="text-sm font-semibold text-gray-900" id="companyUsers">0</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-500 mb-1">Employees</p>
+                        <p class="text-sm font-semibold text-gray-900" id="companyEmployees">0</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-3">
+                    <p class="text-xs text-gray-500 mb-1">Registered On</p>
+                    <p class="text-sm font-semibold text-gray-900" id="companyCreated">—</p>
+                </div>
+            </div>
+            <div class="flex items-center p-5 border-t border-gray-100 rounded-b-2xl">
+                <button type="button" class="w-full px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all" data-modal-hide="companyModal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let pageSize = 10;
+    let allRows = [];
+    let filteredRows = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        allRows = Array.from(document.querySelectorAll('.data-row'));
+        filteredRows = [...allRows];
+        renderPage();
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('planFilter').addEventListener('change', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('pageSizeSelect').addEventListener('change', function () {
+            pageSize = parseInt(this.value);
+            currentPage = 1;
+            renderPage();
+        });
+    });
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const plan = document.getElementById('planFilter').value;
+        const status = document.getElementById('statusFilter').value;
+
+        filteredRows = allRows.filter(row => {
+            const name = (row.dataset.name || '').toLowerCase();
+            const p = row.dataset.plan || '';
+            const s = row.dataset.status || '';
+
+            if (search && !name.includes(search)) return false;
+            if (plan && p !== plan) return false;
+            if (status && s !== status) return false;
+            return true;
+        });
+
+        currentPage = 1;
+        renderPage();
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('planFilter').value = '';
+        document.getElementById('statusFilter').value = '';
+        filteredRows = [...allRows];
+        currentPage = 1;
+        renderPage();
+    }
+
+    function renderPage() {
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * pageSize;
+        const end = Math.min(start + pageSize, total);
+
+        allRows.forEach(row => row.style.display = 'none');
+        for (let i = start; i < end; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        document.getElementById('showStart').textContent = total === 0 ? 0 : start + 1;
+        document.getElementById('showEnd').textContent = end;
+        document.getElementById('showTotal').textContent = total;
+        document.getElementById('tableInfo').textContent = `Showing ${total} companies`;
+
+        const nav = document.getElementById('paginationNav');
+        nav.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const prevBtn = createPageBtn('‹', currentPage > 1, () => { currentPage--; renderPage(); });
+        nav.appendChild(prevBtn);
+
+        const pages = getPageNumbers(currentPage, totalPages);
+        pages.forEach(p => {
+            if (p === '...') {
+                const dots = document.createElement('span');
+                dots.className = 'px-3 py-1.5 text-gray-400 text-sm';
+                dots.textContent = '...';
+                nav.appendChild(dots);
+            } else {
+                const btn = createPageBtn(p, true, () => { currentPage = p; renderPage(); });
+                if (p === currentPage) btn.className = 'px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg shadow-sm';
+                nav.appendChild(btn);
+            }
+        });
+
+        const nextBtn = createPageBtn('›', currentPage < totalPages, () => { currentPage++; renderPage(); });
+        nav.appendChild(nextBtn);
+    }
+
+    function createPageBtn(label, enabled, onClick) {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.className = 'px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 transition-all';
+        if (!enabled) { btn.disabled = true; btn.className += ' opacity-40 cursor-not-allowed'; }
+        else btn.addEventListener('click', onClick);
+        return btn;
+    }
+
+    function getPageNumbers(current, total) {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        const pages = [];
+        if (current <= 4) { for (let i = 1; i <= 5; i++) pages.push(i); pages.push('...', total); }
+        else if (current >= total - 3) { pages.push(1, '...'); for (let i = total - 4; i <= total; i++) pages.push(i); }
+        else pages.push(1, '...', current - 1, current, current + 1, '...', total);
+        return pages;
+    }
+
+    function loadCompanyDetails(id, name, plan, users, employees, status, created) {
+        document.getElementById('companyInitials').textContent = (name || '').substring(0, 2).toUpperCase();
+        document.getElementById('companyName').textContent = name;
+        document.getElementById('companyId').textContent = 'ID: ' + id;
+        document.getElementById('companyPlan').textContent = plan || 'No Plan';
+        document.getElementById('companyUsers').textContent = users;
+        document.getElementById('companyEmployees').textContent = employees;
+        document.getElementById('companyCreated').textContent = created;
+
+        const statusEl = document.getElementById('companyStatus');
+        const dot = statusEl.querySelector('span');
+        if (status === 'Active') {
+            statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5';
+        } else {
+            statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5';
+        }
+        statusEl.lastChild.textContent = status;
+    }
+</script>
+}

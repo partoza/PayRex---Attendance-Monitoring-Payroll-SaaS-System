@@ -1,0 +1,237 @@
+@page
+@model PayRex.Web.Pages.PayslipsModel
+@{
+    ViewData["Title"] = "Payslips";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+     <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-8 py-10 relative z-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Payslips</h1>
+            <p class="mt-2 text-gray-600 text-lg">View and download your salary details.</p>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+             <div class="relative">
+                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                 <input type="text" id="searchInput" 
+                       class="pl-10 block w-full sm:w-64 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                       placeholder="Search payslip ID..." onkeyup="filterTable()">
+            </div>
+            
+             <select id="periodFilter" onchange="filterTable()" 
+                    class="block w-full sm:w-64 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">All Periods</option>
+                <option value="Feb 01 - Feb 15, 2026">Feb 01 - Feb 15, 2026</option>
+                <option value="Jan 16 - Jan 31, 2026">Jan 16 - Jan 31, 2026</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Payslip List -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="payslipTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payslip ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Basic Pay</th>
+                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Deductions</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Net Pay</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">View</span></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach (var slip in Model.Payslips)
+                    {
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 search-id">
+                                @slip.Id
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 search-period">
+                                @slip.Period
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                                ₱@slip.BasicPay.ToString("N2")
+                            </td>
+                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600">
+                                -₱@slip.Deductions.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-blue-700">
+                                ₱@slip.NetPay.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Paid
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="openPayslipModal('@slip.Id', '@slip.Period', '@slip.BasicPay', '@slip.Deductions', '@slip.NetPay')" class="text-blue-600 hover:text-blue-900">View</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payslip Modal (Printable) -->
+<div id="payslipModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closePayslipModal()"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+      <div class="bg-white p-8" id="printableArea">
+          <!-- Header -->
+          <div class="flex justify-between items-start border-b border-gray-200 pb-6 mb-6">
+              <div>
+                  <h2 class="text-2xl font-bold text-gray-900">PAYSLIP</h2>
+                  <p class="text-sm text-gray-500 mt-1">PayRex Inc.</p>
+                  <p class="text-sm text-gray-500">123 Business St., Makati City</p>
+              </div>
+              <div class="text-right">
+                  <p class="text-sm font-bold text-gray-900" id="modalPeriod">Period: Feb 01 - 15, 2026</p>
+                  <p class="text-sm text-gray-500" id="modalId">ID: PAY-001</p>
+              </div>
+          </div>
+
+          <!-- Employee Info -->
+          <div class="mb-8">
+              <p class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">Employee Details</p>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                      <span class="text-gray-500">Name:</span>
+                      <span class="font-medium text-gray-900 ml-2">John Doe</span>
+                  </div>
+                   <div>
+                      <span class="text-gray-500">Department:</span>
+                      <span class="font-medium text-gray-900 ml-2">Engineering</span>
+                  </div>
+                   <div>
+                      <span class="text-gray-500">Position:</span>
+                      <span class="font-medium text-gray-900 ml-2">Software Engineer</span>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Earnings Table -->
+          <div class="mb-6">
+               <p class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">Earnings</p>
+               <table class="w-full text-sm">
+                   <thead>
+                       <tr class="bg-gray-50 text-left">
+                           <th class="py-2 px-3 font-medium text-gray-500">Description</th>
+                           <th class="py-2 px-3 font-medium text-gray-500 text-right">Amount</th>
+                       </tr>
+                   </thead>
+                   <tbody class="divide-y divide-gray-100">
+                       <tr>
+                           <td class="py-2 px-3 text-gray-900">Basic Pay</td>
+                           <td class="py-2 px-3 text-gray-900 text-right" id="modalBasic">₱0.00</td>
+                       </tr>
+                        <tr>
+                           <td class="py-2 px-3 text-gray-900">Rice Allowance</td>
+                           <td class="py-2 px-3 text-gray-900 text-right">₱2,000.00</td>
+                       </tr>
+                   </tbody>
+               </table>
+          </div>
+
+          <!-- Deductions Table -->
+          <div class="mb-6">
+               <p class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-2">Deductions</p>
+               <table class="w-full text-sm">
+                   <thead>
+                       <tr class="bg-gray-50 text-left">
+                           <th class="py-2 px-3 font-medium text-gray-500">Description</th>
+                           <th class="py-2 px-3 font-medium text-gray-500 text-right">Amount</th>
+                       </tr>
+                   </thead>
+                   <tbody class="divide-y divide-gray-100">
+                       <tr>
+                           <td class="py-2 px-3 text-gray-900">Withholding Tax</td>
+                           <td class="py-2 px-3 text-red-600 text-right">₱1,500.00</td>
+                       </tr>
+                        <tr>
+                           <td class="py-2 px-3 text-gray-900">SSS Contribution</td>
+                           <td class="py-2 px-3 text-red-600 text-right">₱580.00</td>
+                       </tr>
+                       <tr>
+                           <td class="py-2 px-3 text-gray-900">PhilHealth</td>
+                           <td class="py-2 px-3 text-red-600 text-right">₱300.00</td>
+                       </tr>
+                   </tbody>
+               </table>
+          </div>
+
+          <!-- Total -->
+          <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-200">
+              <span class="text-lg font-bold text-gray-900 uppercase">Net Pay</span>
+              <span class="text-2xl font-extrabold text-blue-700" id="modalNet">₱0.00</span>
+          </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
+        <button type="button" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" onclick="window.print()">
+          Print Payslip
+        </button>
+        <button type="button" class="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closePayslipModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function filterTable() {
+        var input = document.getElementById("searchInput");
+        var filter = input.value.toUpperCase();
+        var periodFilter = document.getElementById("periodFilter").value.toUpperCase();
+        var table = document.getElementById("payslipTable");
+        var tr = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < tr.length; i++) {
+            var idTd = tr[i].querySelector(".search-id");
+            var periodTd = tr[i].querySelector(".search-period");
+
+            if (idTd && periodTd) {
+                var idText = idTd.textContent || idTd.innerText;
+                var periodText = periodTd.textContent || periodTd.innerText;
+
+                var matchesSearch = idText.toUpperCase().indexOf(filter) > -1;
+                var matchesPeriod = periodFilter === "" || periodText.toUpperCase().indexOf(periodFilter) > -1;
+
+                if (matchesSearch && matchesPeriod) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function openPayslipModal(id, period, basic, deductions, net) {
+        document.getElementById('modalId').textContent = "ID: " + id;
+        document.getElementById('modalPeriod').textContent = "Period: " + period;
+        document.getElementById('modalBasic').textContent = "₱" + parseFloat(basic).toLocaleString('en-US', {minimumFractionDigits: 2});
+        document.getElementById('modalNet').textContent = "₱" + parseFloat(net).toLocaleString('en-US', {minimumFractionDigits: 2});
+        
+        document.getElementById('payslipModal').classList.remove('hidden');
+    }
+
+    function closePayslipModal() {
+        document.getElementById('payslipModal').classList.add('hidden');
+    }
+</script>

@@ -1,0 +1,482 @@
+﻿@page
+@model PayRex.Web.Pages.Admin.DashboardModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-8">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative group">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        
+        <div class="px-6 py-8 sm:px-10 sm:py-12 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div class="flex-1 min-w-0 text-center lg:text-left">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                        Hello, <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">@Model.UserFirstName</span> 👋
+                    </h1>
+                    <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Your platform is running smoothly. You have <span class="font-bold text-blue-600">@Model.ActiveCompanies active companies</span>
+                        and <span class="font-bold text-green-600">@Model.TotalUsers total users</span> on board.
+                        Here's your daily overview.
+                    </p>
+                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
+                        <a href="/Admin/Companies" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                            View Companies
+                        </a>
+                        <a href="/Admin/Reports" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                            View Reports
+                        </a>
+                    </div>
+                </div>
+                <!-- Creative Illustration -->
+                <div class="hidden lg:block flex-shrink-0 relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-100/50 to-yellow-100/50 rounded-full blur-2xl transform scale-90"></div>
+                    <!-- Banknote Rafiki Illustration - Larger -->
+                    <img src="/images/Banknote-rafiki.png" alt="Dashboard Illustration" class="w-80 h-80 relative z-10 drop-shadow-xl transform group-hover:scale-105 transition-transform duration-500" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards with Shortcuts -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        @{
+            // Colors limited to: blue, green, yellow
+            var kpiCards = new List<(string Title, object Value, string BadgeText, string BadgeColor, string IconColor, string Href, string ButtonText, string IconPath)>
+            {
+                (
+                    Title: "Total Companies",
+                    Value: (object)Model.TotalCompanies,
+                    BadgeText: $"{Model.ActiveCompanies} active",
+                    BadgeColor: "green", // Green
+                    IconColor: "blue", // Blue
+                    Href: "/Admin/Companies",
+                    ButtonText: "View companies",
+                    IconPath: "M4 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a1 1 0 1 1 0 2h-3a1 1 0 0 1-1-1v-2a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v2a1 1 0 0 1-1 1H4a1 1 0 1 1 0-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z"
+                ),
+                (
+                    Title: "Total Users",
+                    Value: (object)Model.TotalUsers,
+                    BadgeText: $"{Model.ActiveUsers} active",
+                    BadgeColor: "blue", // Blue
+                    IconColor: "green", // Green
+                    Href: "/Admin/Users",
+                    ButtonText: "Manage users",
+                    IconPath: "M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9a7 7 0 1 1 14 0H3z"
+                ),
+                (
+                    Title: "Total Employees",
+                    Value: (object)Model.TotalEmployees,
+                    BadgeText: "across companies",
+                    BadgeColor: "yellow", // Yellow
+                    IconColor: "blue", // Blue instead of Purple
+                    Href: "/Admin/Reports",
+                    ButtonText: "View reports",
+                    IconPath: "M6 6V5a3 3 0 0 1 3-3h2a3 3 0 0 1 3 3v1h2a2 2 0 0 1 2 2v3.57A22.952 22.952 0 0 1 10 13a22.952 22.952 0 0 1-8-1.43V8a2 2 0 0 1 2-2h2zm2-1a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1H8V5zm1 5a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H10a1 1 0 0 1-1-1z M2 13.692V16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2.308A24.974 24.974 0 0 1 10 15c-2.796 0-5.487-.46-8-1.308z"
+                ),
+                (
+                    Title: "Monthly Revenue",
+                    Value: (object)$"₱{Model.MonthlyRevenue:N2}",
+                    BadgeText: $"{Model.PendingInvoices} pending",
+                    BadgeColor: "yellow", // Yellow instead of Red
+                    IconColor: "yellow", // Yellow
+                    Href: "/Admin/Billing",
+                    ButtonText: "View billing",
+                    IconPath: "M4 4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4zm2 6a2 2 0 1 1 2-2 2 2 0 0 1-2 2zm8-2a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm-4 8a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"
+                )
+            };
+        }
+
+        @foreach (var card in kpiCards)
+        {
+            <div class="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden">
+                <div class="p-6 flex-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-2.5 rounded-xl bg-@(card.IconColor)-50 group-hover:bg-@(card.IconColor)-100 transition-colors duration-300">
+                            <svg class="w-6 h-6 text-@(card.IconColor)-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="@card.IconPath" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-@(card.BadgeColor)-50 text-@(card.BadgeColor)-700">
+                            @card.BadgeText
+                        </span>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-1">@card.Title</h3>
+                    <p class="text-2xl font-bold text-gray-900 tracking-tight">@card.Value</p>
+                </div>
+                <div class="px-6 pb-6 pt-0 mt-auto">
+                     <a href="@card.Href" class="flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                        @card.ButtonText
+                        <svg class="w-4 h-4 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Charts and Lists Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Chart Section -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <div class="px-6 py-5 border-b border-gray-50 bg-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Growth Analysis</h2>
+                        <p class="text-sm text-gray-500 mt-0.5">Performance trends over time</p>
+                    </div>
+                    <select class="text-sm border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow">
+                        <option>Last 6 months</option>
+                        <option>Last 12 months</option>
+                        <option>Year to date</option>
+                    </select>
+                </div>
+            </div>
+            <div class="p-6 flex-1 relative">
+                <div class="absolute inset-0 bg-gradient-to-b from-white to-gray-50/50 pointer-events-none"></div>
+                <div class="relative z-10" style="height:320px">
+                    <canvas id="trendChart" data-kpis='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new { totalUsers = Model.TotalUsers, monthlyRevenue = Model.MonthlyRevenue }))'></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+            <div class="px-6 py-5 border-b border-gray-50">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-gray-900">Recent Activity</h2>
+                    <a href="/Admin/AuditLogs" class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                        View all
+                    </a>
+                </div>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto">
+                <div class="space-y-6">
+                    <!-- Recent Activity Items (Limited to 4, Colors: Green, Blue, Yellow) -->
+                    <!-- Item 1: Green -->
+                    <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
+                        <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-green-500"></div>
+                        <div class="flex flex-col">
+                            <p class="text-sm font-semibold text-gray-900">New company registered</p>
+                            <p class="text-xs text-gray-500 font-medium mt-0.5">TechCorp Inc. (Business Plan)</p>
+                            <span class="text-xs text-gray-400 mt-1">10 minutes ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 2: Blue -->
+                    <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
+                        <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-blue-500"></div>
+                        <div class="flex flex-col">
+                            <p class="text-sm font-semibold text-gray-900">Monthly report generated</p>
+                            <p class="text-xs text-gray-500 font-medium mt-0.5">Revenue report available</p>
+                            <span class="text-xs text-gray-400 mt-1">1 hour ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 3: Yellow -->
+                    <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
+                         <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-yellow-500"></div>
+                        <div class="flex flex-col">
+                            <p class="text-sm font-semibold text-gray-900">User account deactivated</p>
+                             <p class="text-xs text-gray-500 font-medium mt-0.5">john.doe@example.com</p>
+                            <span class="text-xs text-gray-400 mt-1">2 hours ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 4: Green (Payment) -->
+                     <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
+                         <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-green-500"></div>
+                        <div class="flex flex-col">
+                            <p class="text-sm font-semibold text-gray-900">Payment received</p>
+                            <p class="text-xs text-gray-500 font-medium mt-0.5">₱25,000 from Global Ent.</p>
+                            <span class="text-xs text-gray-400 mt-1">3 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plans Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Plans Breakdown -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full hover:shadow-md transition-shadow">
+            <div class="px-6 py-5 border-b border-gray-50">
+                <div class="flex items-center justify-between">
+                    <div>
+                         <h2 class="text-lg font-bold text-gray-900">Subscription Plans</h2>
+                         <p class="text-sm text-gray-500 mt-0.5">Active pricing tiers</p>
+                    </div>
+                    <a href="/Admin/Plans" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        Manage Plans
+                    </a>
+                </div>
+            </div>
+            <div class="p-6 flex-1">
+                @if (Model.Plans.Any())
+                {
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
+                        @foreach (var p in Model.Plans)
+                        {
+                            <div class="border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm transition-all flex flex-col group relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-gray-50 to-white -mr-10 -mt-10 rounded-full transition-transform group-hover:scale-150 group-hover:from-blue-50"></div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="text-sm font-bold text-gray-900 uppercase tracking-wide">@p.Name</span>
+                                        <span class="text-xs font-semibold px-2.5 py-1 rounded-full @(p.Name.Contains("Enterprise") ? "bg-yellow-100 text-yellow-800" : p.Name.Contains("Business") ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800")">
+                                            @p.BillingCycle
+                                        </span>
+                                    </div>
+                                    <p class="text-2xl font-extrabold text-gray-900 mb-4">₱@p.Price.ToString("N2")</p>
+                                    <div class="flex items-center text-sm text-gray-600 border-t border-gray-100 pt-3">
+                                        <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                        <span class="font-medium">@p.MaxEmployees</span>
+                                        <span class="ml-1 opacity-70">max employees</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-10 flex flex-col items-center justify-center h-full">
+                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <p class="text-gray-500 font-medium">No active plans</p>
+                        <a href="/Admin/Plans" class="mt-4 text-blue-600 hover:text-blue-700 font-medium text-sm">Create your first plan &rarr;</a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Admin Notices (Renamed from Message Section) -->
+        <div class="bg-gradient-to-br from-blue-50 to-white rounded-2xl border border-blue-100 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="px-6 py-6 flex-1">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="p-3 rounded-xl bg-white border border-blue-100 shadow-sm">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">System Notifications</h2>
+                        <p class="text-sm text-gray-600">Important alerts & updates</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="bg-white/80 backdrop-blur-sm border border-yellow-100 rounded-xl p-4 shadow-sm">
+                        <div class="flex gap-4">
+                            <div class="w-2 h-2 mt-2 rounded-full bg-yellow-400 shrink-0"></div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Scheduled Maintenance</p>
+                                <p class="text-xs text-gray-600 mt-1 leading-relaxed">System maintenance on <span class="font-medium text-gray-800">Dec 15, 2:00 AM</span>. Downtime ~2 hours.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 backdrop-blur-sm border border-green-100 rounded-xl p-4 shadow-sm">
+                        <div class="flex gap-4">
+                             <div class="w-2 h-2 mt-2 rounded-full bg-green-400 shrink-0"></div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">Update v2.3.1 Live</p>
+                                <p class="text-xs text-gray-600 mt-1 leading-relaxed">Performance improvements deployed successfully.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-blue-100 text-center">
+                    <p class="text-xs font-medium text-blue-800 bg-blue-50/50 inline-block px-3 py-1 rounded-full">
+                        System Status: <span class="text-green-600">Operational</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var canvas = document.getElementById('trendChart');
+            if (!canvas) return;
+            var kpis = JSON.parse(canvas.dataset.kpis || '{}');
+
+            // Modern Gradient
+            function createModernGradient(ctx, colorStart, colorEnd) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, colorStart);
+                gradient.addColorStop(1, colorEnd);
+                return gradient;
+            }
+
+            var labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            var usersData = [45, 52, 68, 74, 82, 90];
+            var revenueData = [12500, 14200, 16800, 18500, 21000, 23500];
+
+            if (kpis.totalUsers && kpis.monthlyRevenue) {
+                const avgUsers = kpis.totalUsers / 6;
+                const avgRevenue = kpis.monthlyRevenue / 6;
+                usersData = usersData.map(val => Math.round(avgUsers * (val / 82)));
+                revenueData = revenueData.map(val => Math.round(avgRevenue * (val / 21000)));
+            }
+
+            var ctx = canvas.getContext('2d');
+            
+            // Fonts
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#6b7280';
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'New Users',
+                            data: usersData,
+                            borderColor: '#3b82f6', // Blue-500
+                            backgroundColor: createModernGradient(ctx, 'rgba(59, 130, 246, 0.2)', 'rgba(59, 130, 246, 0.0)'),
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0, // Clean look, show on hover
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#3b82f6',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 3
+                        },
+                        {
+                            label: 'Revenue (₱)',
+                            data: revenueData,
+                            borderColor: '#fbbf24', // Amber/Yellow-400
+                            backgroundColor: createModernGradient(ctx, 'rgba(251, 191, 36, 0.2)', 'rgba(251, 191, 36, 0.0)'),
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#fbbf24',
+                            pointHoverBorderColor: '#fff',
+                            pointHoverBorderWidth: 3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 8,
+                                boxHeight: 8,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                padding: 20,
+                                font: {
+                                    size: 12,
+                                    weight: 500
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'white',
+                            titleColor: '#111827',
+                            bodyColor: '#4b5563',
+                            borderColor: '#f3f4f6',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            boxPadding: 4,
+                            usePointStyle: true,
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.datasetIndex === 0) {
+                                        label += context.parsed.y + ' users';
+                                    } else {
+                                        label += '₱' + context.parsed.y.toLocaleString();
+                                    }
+                                    return label;
+                                }
+                            },
+                            // Shadow for tooltip
+                            enabled: true,
+                            external: function(context) {
+                                // Custom shadow implementation could go here, 
+                                // but default styling with border is clean enough.
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: {
+                                color: '#f3f4f6',
+                                drawBorder: false,
+                                borderDash: [4, 4]
+                            },
+                            ticks: {
+                                padding: 10,
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000) + 'k' : value;
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                padding: 10,
+                                callback: function(value) {
+                                    return '₱' + (value >= 1000 ? (value/1000) + 'k' : value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,274 @@
+﻿@using PayRex.Web.Configuration
+@using System.Security.Claims
+@using System.IdentityModel.Tokens.Jwt
+@{
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+    var userId = User.FindFirst("uid")?.Value;
+    var isAuthenticated = Context.Request.Cookies.ContainsKey("PayRex.AuthToken");
+    var menuItems = isAuthenticated ? MenuConfiguration.GetMenuItemsForRole(userRole) : new List<PayRex.Web.Models.MenuItem>();
+    var currentPath = Context.Request.Path.Value ?? "/";
+
+    // Extract user data from JWT token or set defaults
+    string firstName = "User";
+    string lastName = "";
+    string fullName = "User";
+    string? profileImageUrl = null;
+
+    if (isAuthenticated && Context.Request.Cookies.TryGetValue("PayRex.AuthToken", out var token))
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            userEmail = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value ?? userEmail;
+            userRole = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? userRole;
+
+            // Try to get name from token claims
+            var givenName = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+            var familyName = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+
+            if (!string.IsNullOrEmpty(givenName))
+            {
+                firstName = givenName;
+                lastName = familyName ?? "";
+                fullName = !string.IsNullOrEmpty(lastName) ? $"{firstName} {lastName}" : firstName;
+            }
+            else if (!string.IsNullOrEmpty(userEmail))
+            {
+                // Fallback: use email prefix as name
+                fullName = userEmail.Split('@')[0];
+                firstName = fullName;
+            }
+
+            // Try to get profile image URL from claim (if added to JWT)
+            profileImageUrl = jwtToken.Claims.FirstOrDefault(c => c.Type == "profileImage")?.Value;
+        }
+        catch { }
+    }
+
+    var roleDisplay = userRole switch
+    {
+        "SuperAdmin" => "Super Admin",
+        "Admin" => "Administrator",
+        "HR" => "HR Manager",
+        "Hr" => "HR Manager",
+        "Employee" => "Employee",
+        _ => userRole ?? "User"
+    };
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - PayRex</title>
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <!-- CDN fallback will be injected at runtime if local file failed to apply -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="~/images/icon/payrexiconofficial.ico" />
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    @if (isAuthenticated)
+    {
+        <!-- Top Navigation Bar -->
+        <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200">
+            <div class="px-4 py-2 lg:px-6 lg:pl-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-start rtl:justify-end">
+                        <button data-drawer-target="top-bar-sidebar" data-drawer-toggle="top-bar-sidebar" aria-controls="top-bar-sidebar" type="button" class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <span class="sr-only">Open sidebar</span>
+                            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h10" />
+                            </svg>
+
+                        </button>
+                        <a href="@(userRole == "SuperAdmin" ? "/Admin/Dashboard" : "/Dashboard")" class="flex ms-6 md:me-24">
+                            <img src="~/images/logo.png" class="h-10 lg:h-16 drop-shadow-md" alt="PayRex Logo" />
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- User Full Name and Role -->
+                        <div class="hidden md:flex flex-col items-end">
+                            <span class="text-sm font-semibold text-gray-900">@firstName</span>
+                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded">@roleDisplay</span>
+                        </div>
+
+                        <!-- User Avatar with Dropdown -->
+                        <div class="flex items-center ms-3">
+                            <div>
+                                <button type="button" class="flex text-sm rounded-full focus:ring-4 focus:ring-gray-300" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+                                    <span class="sr-only">Open user menu</span>
+                                    @if (!string.IsNullOrEmpty(profileImageUrl))
+                                    {
+                                        <img src="@profileImageUrl" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-lg">
+                                            @firstName.Substring(0, 1).ToUpper()
+                                        </div>
+                                    }
+                                </button>
+                            </div>
+                            <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-lg shadow-lg border border-gray-200" id="dropdown-user">
+                                <div class="px-4 py-3" role="none">
+                                    <div class="flex items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(profileImageUrl))
+                                        {
+                                            <img src="@profileImageUrl" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-xl">
+                                                @firstName.Substring(0, 1).ToUpper()
+                                            </div>
+                                        }
+                                        <div>
+                                            <p class="text-sm text-gray-900 font-semibold" role="none">
+                                                @fullName
+                                            </p>
+                                            <p class="text-xs font-medium text-gray-500" role="none">
+                                                @roleDisplay
+                                            </p>
+                                            <p class="text-xs text-gray-400 truncate max-w-[150px]" role="none">
+                                                @userEmail
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ul class="py-1" role="none">
+                                    <li>
+                                        @if (userRole == "SuperAdmin")
+                                        {
+                                            <a href="/Admin/Dashboard" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                                <svg class="w-4 h-4 mr-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
+                                                </svg>
+                                                Admin Dashboard
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="/Dashboard" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                                <svg class="w-4 h-4 mr-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
+                                                </svg>
+                                                Dashboard
+                                            </a>
+                                        }
+                                    </li>
+                                    <li>
+                                        <a href="/Profile" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            Profile Settings
+                                        </a>
+                                    </li>
+                                    <li class="border-t border-gray-100">
+                                        <form method="post" asp-page="/Auth/Logout" class="block">
+                                            <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" role="menuitem">
+                                                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                </svg>
+                                                Sign out
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside id="top-bar-sidebar" class="fixed top-0 left-0 z-40 w-80 h-screen pt-24 transition-transform -translate-x-full bg-white border-r border-gray-200 lg:translate-x-0" aria-label="Sidebar">
+            <div class="h-full px-4 pb-4 overflow-y-auto bg-white">
+                <ul class="space-y-2 font-medium">
+                    @foreach (var item in menuItems)
+                    {
+                        var isActive = currentPath.StartsWith(item.Url, StringComparison.OrdinalIgnoreCase);
+                        var activeClass = isActive ? "bg-blue-50 text-blue-600" : "text-gray-700 hover:bg-gray-100";
+
+                        @if (!string.IsNullOrEmpty(item.SectionHeader))
+                        {
+                            <li class="pt-4 first:pt-0">
+                                <span class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">@item.SectionHeader</span>
+                            </li>
+                        }
+
+                        <li>
+                            <a href="@item.Url" class="flex items-center p-3 rounded-lg @activeClass group text-base">
+                                <span class="@(isActive ? "text-blue-600" : "text-gray-500")">
+                                    @Html.Raw(item.Icon)
+                                </span>
+                                <span class="ms-3">@item.Title</span>
+                                @if (!string.IsNullOrEmpty(item.Badge))
+                                {
+                                    <span class="inline-flex items-center justify-center px-2 ms-3 text-sm font-medium @item.BadgeColor">@item.Badge</span>
+                                }
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="p-4 lg:ml-80 mt-20">
+            <div class="p-4">
+                @RenderBody()
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Public Layout (No Sidebar) -->
+        <div class="min-h-screen">
+            @RenderBody()
+        </div>
+    }
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        // Runtime check: verify Tailwind utilities are applied; if not, inject CDN stylesheet (development fallback)
+        (function () {
+            try {
+                var test = document.createElement('div');
+                test.className = 'hidden';
+                document.documentElement.appendChild(test);
+                var applied = window.getComputedStyle(test).display === 'none';
+                document.documentElement.removeChild(test);
+
+                console.log('Tailwind utilities applied:', applied);
+                if (!applied) {
+                    console.warn('Tailwind appears not to be applied. Injecting CDN fallback stylesheet.');
+                    var link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://cdn.jsdelivr.net/npm/tailwindcss@3.4.19/dist/tailwind.min.css';
+                    document.head.appendChild(link);
+                }
+            } catch (e) {
+                console.error('Tailwind detection error', e);
+            }
+        })();
+    </script>
+
+</body>
+</html>

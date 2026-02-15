@@ -1,0 +1,306 @@
+﻿@page
+@{
+    ViewData["Title"] = "Add Employee";
+}
+
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <!-- Header with improved spacing -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Add Employee</h1>
+            <p class="mt-1 text-sm text-gray-500">Create a new employee profile, complete all sections below</p>
+        </div>
+        <div>
+            <a href="/Employees" class="inline-flex items-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Employees
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <form id="addEmployeeForm" method="post" action="#" enctype="multipart/form-data">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Form Fields - 2 columns on large screens -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Personal Information Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                                </svg>
+
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
+                                <p class="text-sm text-gray-500">Basic details and contact information</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 sm:px-6 py-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Employee Code <span class="text-red-500">*</span></label>
+                                <input name="EmployeeCode" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="EMP-0001" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Company ID</label>
+                                <input name="CompanyId" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="COMP-01" />
+                            </div>
+                            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
+                                <input name="Email" type="email" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="john.doe@company.com" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">First Name <span class="text-red-500">*</span></label>
+                                <input name="FirstName" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="John" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Last Name <span class="text-red-500">*</span></label>
+                                <input name="LastName" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="Doe" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                                <input name="PhoneNumber" type="tel" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="+1 (555) 000-0000" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment Details Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                                    <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0 1 12 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 0 1 7.5 5.455V5.25Zm7.5 0v.09a49.488 49.488 0 0 0-6 0v-.09a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5Zm-3 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                                    <path d="M3 18.4v-2.796a4.3 4.3 0 0 0 .713.31A26.226 26.226 0 0 0 12 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 0 1-6.477-.427C4.047 21.128 3 19.852 3 18.4Z" />
+                                </svg>
+
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-900">Employment Details</h2>
+                                <p class="text-sm text-gray-500">Position, department, and compensation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 sm:px-6 py-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Position <span class="text-red-500">*</span></label>
+                                <input name="Position" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="Software Engineer" required />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                                <select name="Department" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
+                                    <option value="">Select Department</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Human Resources">Human Resources</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Employment Type</label>
+                                <select name="EmploymentType" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
+                                    <option value="FullTime">Full Time</option>
+                                    <option value="PartTime">Part Time</option>
+                                    <option value="Contractor">Contractor</option>
+                                    <option value="Probation">Probation</option>
+                                    <option value="Intern">Intern</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Employment Status</label>
+                                <select name="Status" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
+                                    <option value="Active">Active</option>
+                                    <option value="Probationary">Probationary</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Terminated">Terminated</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Salary Rate <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₱</span>
+                                    <input name="SalaryRate" type="number" step="0.01" class="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="0.00" required />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Pay Type</label>
+                                <select name="PayType" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
+                                    <option value="Monthly">Monthly</option>
+                                    <option value="Semi-Monthly">Semi-Monthly</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Hourly">Hourly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar: Media Uploads -->
+            <aside class="lg:col-span-1 space-y-6">
+                <!-- Profile Photo Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-4 sm:px-6 py-2 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-semibold text-gray-900">Profile Photo</h3>
+                    </div>
+                    <div class="p-4 py-2 sm:p-6">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="relative mb-4">
+                                <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 bg-gray-50 shadow-sm flex items-center justify-center">
+                                    <img id="profilePreview" src="/images/default-avatar.png" alt="Profile preview" class="w-full h-full object-cover hidden" />
+                                    <div id="profilePlaceholder" class="flex flex-col items-center justify-center text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-12">
+                                            <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" />
+                                        </svg>
+                                        
+                                        <span class="text-xs">No image</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input id="profilePhoto" name="ProfilePhoto" type="file" accept="image/*" class="hidden" onchange="previewImage(event, 'profilePreview', 'profilePlaceholder')" />
+
+                            <label for="profilePhoto" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 cursor-pointer transition-colors w-full justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                Upload Photo
+                            </label>
+
+                            <p class="text-xs text-gray-500 mt-3">JPG, PNG or GIF — max 2MB</p>
+                            <p class="text-xs text-gray-400">Recommended: Square image</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signature Card -->
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-4 sm:px-6 py-2 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-semibold text-gray-900">Signature</h3>
+                    </div>
+                    <div class="p-4 py-2 sm:p-6">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="relative mb-4 w-full">
+                                <div class="w-full h-24 rounded-lg overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center p-2">
+                                    <img id="signaturePreview" src="/images/default-signature.png" alt="Signature preview" class="max-h-full max-w-full object-contain hidden" />
+                                    <div id="signaturePlaceholder" class="flex flex-col items-center justify-center text-gray-400">
+                                        <svg class="w-12 h-12 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                        </svg>
+                                        <span class="text-xs">No signature</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input id="signatureImage" name="SignatureImage" type="file" accept="image/*" class="hidden" onchange="previewImage(event, 'signaturePreview', 'signaturePlaceholder')" />
+
+                            <label for="signatureImage" class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 cursor-pointer transition-colors w-full justify-center border border-gray-200">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                Upload Signature
+                            </label>
+
+                            <p class="text-xs text-gray-500 mt-3">Upload scanned signature image</p>
+                            <p class="text-xs text-gray-400">PNG with transparent background preferred</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions Card -->
+                <div class="space-y-3">
+                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Create Employee
+                    </button>
+                    <a href="/Employees" class="w-full inline-flex items-center justify-center px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(event, previewId, placeholderId) {
+            const input = event.target;
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+
+            // Validate file size (2MB limit)
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('File size exceeds 2MB. Please choose a smaller file.', 'error');
+                input.value = '';
+                return;
+            }
+
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                showNotification('Please select an image file.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                showNotification('Image uploaded successfully!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Simple alert for now - you can enhance this with a toast notification
+            alert(message);
+        }
+
+        // Form validation
+        document.getElementById('addEmployeeForm').addEventListener('submit', function(e) {
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                showNotification('Please fill in all required fields.', 'error');
+            }
+        });
+
+        // Real-time validation
+        document.querySelectorAll('[required]').forEach(field => {
+            field.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('border-red-500');
+                }
+            });
+        });
+    </script>
+}

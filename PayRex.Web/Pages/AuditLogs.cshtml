@@ -1,0 +1,347 @@
+@page
+@model PayRex.Web.Pages.AuditLogsModel
+@{
+    ViewData["Title"] = "Audit Logs";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-6 py-8 sm:px-10 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Audit Logs</h1>
+                    <p class="mt-2 text-gray-600">View-only system activity trail and security events</p>
+                </div>
+                <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                    View Only
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-4">
+            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Failed Logins</p>
+                <p class="text-lg font-bold text-gray-900" id="statFailed">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-4">
+            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" /></svg>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Registrations</p>
+                <p class="text-lg font-bold text-gray-900" id="statRegistrations">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-4">
+            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Password Resets</p>
+                <p class="text-lg font-bold text-gray-900" id="statResets">0</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex items-center gap-4">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Email Requests</p>
+                <p class="text-lg font-bold text-gray-900" id="statEmails">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-base font-semibold text-gray-900 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" /></svg>
+                Filters
+            </h2>
+        </div>
+        <div class="p-4 sm:p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="text" placeholder="User, IP, or details..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" id="searchInput">
+                    </div>
+                </div>
+                <!-- Action Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Action Type</label>
+                    <select id="actionFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                        <option value="">All Actions</option>
+                        <option value="Failed Login">Failed Login</option>
+                        <option value="Registration">Registration</option>
+                        <option value="Password Reset">Password Reset</option>
+                        <option value="Forgot Password">Forgot Password</option>
+                        <option value="2FA Changed">2FA Changed</option>
+                        <option value="Status Change">Status Change</option>
+                        <option value="Login">Login</option>
+                    </select>
+                </div>
+                <!-- Date From -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">From Date</label>
+                    <input type="date" id="dateFrom" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+                <!-- Date To -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">To Date</label>
+                    <input type="date" id="dateTo" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+            </div>
+            <div class="flex items-center gap-3 mt-4">
+                <button onclick="clearFilters()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors border border-gray-200">
+                    <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Activity Log</h2>
+                    <p class="text-sm text-gray-500 mt-0.5" id="tableInfo">All events</p>
+                </div>
+                <select id="pageSizeSelect" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                    <option value="15">15 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">IP Address</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100" id="logsBody">
+                    @{
+                        // Static demo audit log data
+                        var logs = new[] {
+                            new { Time = "2026-02-12 01:05", Action = "Failed Login", User = "unknown@test.com", IP = "192.168.1.45", Details = "Invalid password — 3rd attempt", DateRaw = "2026-02-12" },
+                            new { Time = "2026-02-12 00:58", Action = "Login", User = "admin@techvision.com", IP = "10.0.0.12", Details = "Successful login via 2FA", DateRaw = "2026-02-12" },
+                            new { Time = "2026-02-11 23:45", Action = "Password Reset", User = "maria.santos@cloudsync.com", IP = "172.16.0.5", Details = "Password changed successfully", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 22:30", Action = "Registration", User = "new.user@startupph.com", IP = "203.177.71.100", Details = "New account created — HR role", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 21:15", Action = "Forgot Password", User = "juan.cruz@dataflow.com", IP = "110.54.163.82", Details = "Password reset email sent", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 20:00", Action = "2FA Changed", User = "admin@nexgen.com", IP = "10.0.0.15", Details = "2FA disabled by SuperAdmin", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 19:30", Action = "Status Change", User = "suspended@company.com", IP = "192.168.1.1", Details = "User suspended by admin", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 18:45", Action = "Failed Login", User = "hacker@unknown.com", IP = "45.33.32.156", Details = "Account locked after 5 failed attempts", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 17:20", Action = "Login", User = "hr@paywell.com", IP = "10.0.0.20", Details = "Successful login", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-11 16:00", Action = "Registration", User = "new.employee@workforce.ph", IP = "203.177.71.50", Details = "New account created — Employee role", DateRaw = "2026-02-11" },
+                            new { Time = "2026-02-10 15:30", Action = "Forgot Password", User = "jane.doe@easypay.com", IP = "110.54.163.90", Details = "Password reset email sent", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-10 14:15", Action = "Password Reset", User = "john.smith@techvision.com", IP = "10.0.0.12", Details = "Password changed via reset link", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-10 13:00", Action = "Failed Login", User = "test@gmail.com", IP = "185.220.101.35", Details = "Invalid credentials — unknown account", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-10 12:45", Action = "Status Change", User = "inactive@company.com", IP = "192.168.1.1", Details = "User reactivated by SuperAdmin", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-10 11:30", Action = "2FA Changed", User = "user@cloudsync.com", IP = "172.16.0.8", Details = "2FA enabled by user", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-10 10:15", Action = "Login", User = "admin@dataflow.com", IP = "10.0.0.25", Details = "Successful login", DateRaw = "2026-02-10" },
+                            new { Time = "2026-02-09 09:00", Action = "Registration", User = "hire@newco.ph", IP = "203.177.71.75", Details = "New company + admin account created", DateRaw = "2026-02-09" },
+                            new { Time = "2026-02-09 08:30", Action = "Failed Login", User = "admin@techvision.com", IP = "45.33.32.200", Details = "Wrong password — 1st attempt", DateRaw = "2026-02-09" },
+                            new { Time = "2026-02-09 07:45", Action = "Forgot Password", User = "forgot@startup.com", IP = "110.54.163.120", Details = "Password reset email sent to unverified address", DateRaw = "2026-02-09" },
+                            new { Time = "2026-02-09 06:00", Action = "Password Reset", User = "reset@easypay.com", IP = "10.0.0.30", Details = "Password changed — enforced by policy", DateRaw = "2026-02-09" },
+                        };
+
+                        // Action type badge colors
+                        string getActionColor(string action) => action switch {
+                            "Failed Login" => "bg-red-100 text-red-700",
+                            "Login" => "bg-green-100 text-green-700",
+                            "Registration" => "bg-blue-100 text-blue-700",
+                            "Password Reset" => "bg-yellow-100 text-yellow-700",
+                            "Forgot Password" => "bg-blue-100 text-blue-700",
+                            "2FA Changed" => "bg-yellow-100 text-yellow-700",
+                            "Status Change" => "bg-gray-100 text-gray-700",
+                            _ => "bg-gray-100 text-gray-700"
+                        };
+
+                        string getActionIcon(string action) => action switch {
+                            "Failed Login" => "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z",
+                            "Login" => "M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z",
+                            "Registration" => "M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z",
+                            "Password Reset" => "M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z",
+                            "Forgot Password" => "M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884zM18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z",
+                            "2FA Changed" => "M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5C17.296 10.894 14.18 15.66 10 17.944 5.82 15.66 2.704 10.894 2.166 5z",
+                            "Status Change" => "M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z",
+                            _ => "M10 2a8 8 0 100 16 8 8 0 000-16z"
+                        };
+                    }
+                    @foreach (var log in logs)
+                    {
+                        <tr class="hover:bg-gray-50/50 transition-colors data-row"
+                            data-search="@log.User @log.IP @log.Details"
+                            data-action="@log.Action"
+                            data-date="@log.DateRaw">
+                            <td class="px-6 py-3 text-sm text-gray-500 whitespace-nowrap font-mono">@log.Time</td>
+                            <td class="px-6 py-3">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold @getActionColor(log.Action)">
+                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="@getActionIcon(log.Action)" clip-rule="evenodd" /></svg>
+                                    @log.Action
+                                </span>
+                            </td>
+                            <td class="px-6 py-3 text-sm text-gray-900 font-medium truncate max-w-[180px]">@log.User</td>
+                            <td class="px-6 py-3 text-sm text-gray-500 font-mono">@log.IP</td>
+                            <td class="px-6 py-3 text-sm text-gray-600 truncate max-w-[250px]">@log.Details</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-sm text-gray-600">
+                    Showing <span class="font-semibold" id="showStart">1</span> to <span class="font-semibold" id="showEnd">15</span> of <span class="font-semibold" id="showTotal">0</span> events
+                </div>
+                <nav class="flex items-center gap-1" id="paginationNav"></nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentPage = 1;
+    let pageSize = 15;
+    let allRows = [];
+    let filteredRows = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        allRows = Array.from(document.querySelectorAll('.data-row'));
+        filteredRows = [...allRows];
+        updateStats();
+        renderPage();
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('actionFilter').addEventListener('change', applyFilters);
+        document.getElementById('dateFrom').addEventListener('change', applyFilters);
+        document.getElementById('dateTo').addEventListener('change', applyFilters);
+        document.getElementById('pageSizeSelect').addEventListener('change', function () {
+            pageSize = parseInt(this.value);
+            currentPage = 1;
+            renderPage();
+        });
+    });
+
+    function updateStats() {
+        const counts = { 'Failed Login': 0, 'Registration': 0, 'Password Reset': 0, 'Forgot Password': 0 };
+        allRows.forEach(row => {
+            const action = row.dataset.action;
+            if (counts.hasOwnProperty(action)) counts[action]++;
+        });
+        document.getElementById('statFailed').textContent = counts['Failed Login'];
+        document.getElementById('statRegistrations').textContent = counts['Registration'];
+        document.getElementById('statResets').textContent = counts['Password Reset'];
+        document.getElementById('statEmails').textContent = counts['Forgot Password'];
+    }
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const action = document.getElementById('actionFilter').value;
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+
+        filteredRows = allRows.filter(row => {
+            const s = (row.dataset.search || '').toLowerCase();
+            const a = row.dataset.action || '';
+            const d = row.dataset.date || '';
+
+            if (search && !s.includes(search)) return false;
+            if (action && a !== action) return false;
+            if (from && d < from) return false;
+            if (to && d > to) return false;
+            return true;
+        });
+        currentPage = 1;
+        renderPage();
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('actionFilter').value = '';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        filteredRows = [...allRows];
+        currentPage = 1;
+        renderPage();
+    }
+
+    function renderPage() {
+        const total = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = Math.min(start + pageSize, total);
+
+        allRows.forEach(row => row.style.display = 'none');
+        for (let i = start; i < end; i++) filteredRows[i].style.display = '';
+
+        document.getElementById('showStart').textContent = total === 0 ? 0 : start + 1;
+        document.getElementById('showEnd').textContent = end;
+        document.getElementById('showTotal').textContent = total;
+        document.getElementById('tableInfo').textContent = `Showing ${total} events`;
+
+        const nav = document.getElementById('paginationNav');
+        nav.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        nav.appendChild(createPageBtn('‹', currentPage > 1, () => { currentPage--; renderPage(); }));
+        getPageNumbers(currentPage, totalPages).forEach(p => {
+            if (p === '...') {
+                const d = document.createElement('span');
+                d.className = 'px-3 py-1.5 text-gray-400 text-sm'; d.textContent = '...';
+                nav.appendChild(d);
+            } else {
+                const btn = createPageBtn(p, true, () => { currentPage = p; renderPage(); });
+                if (p === currentPage) btn.className = 'px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white rounded-lg shadow-sm';
+                nav.appendChild(btn);
+            }
+        });
+        nav.appendChild(createPageBtn('›', currentPage < totalPages, () => { currentPage++; renderPage(); }));
+    }
+
+    function createPageBtn(label, enabled, onClick) {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.className = 'px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 transition-all';
+        if (!enabled) { btn.disabled = true; btn.className += ' opacity-40 cursor-not-allowed'; }
+        else btn.addEventListener('click', onClick);
+        return btn;
+    }
+
+    function getPageNumbers(current, total) {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        if (current <= 4) { const p = []; for (let i = 1; i <= 5; i++) p.push(i); p.push('...', total); return p; }
+        if (current >= total - 3) { const p = [1, '...']; for (let i = total - 4; i <= total; i++) p.push(i); return p; }
+        return [1, '...', current - 1, current, current + 1, '...', total];
+    }
+</script>
+}

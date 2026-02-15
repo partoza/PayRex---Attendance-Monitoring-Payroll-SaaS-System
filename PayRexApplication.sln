@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36616.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRex.API", "PayRexApplication\PayRex.API.csproj", "{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRex.Web", "PayRex.Web\PayRex.Web.csproj", "{4BFF0E09-C4CA-40B6-971E-69A300789299}"
+	ProjectSection(ProjectDependencies) = postProject
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC} = {43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|x64.Build.0 = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Debug|x86.Build.0 = Debug|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|x64.ActiveCfg = Release|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|x64.Build.0 = Release|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|x86.ActiveCfg = Release|Any CPU
+		{43275689-A11C-4BF1-8D69-6BEEFB2E7DEC}.Release|x86.Build.0 = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|x64.Build.0 = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Debug|x86.Build.0 = Debug|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|x64.ActiveCfg = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|x64.Build.0 = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|x86.ActiveCfg = Release|Any CPU
+		{4BFF0E09-C4CA-40B6-971E-69A300789299}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EA1DB0D5-6E23-4451-BF84-E4C36DE3E0EF}
+	EndGlobalSection
+EndGlobal
