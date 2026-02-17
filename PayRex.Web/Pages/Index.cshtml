@@ -1,8 +1,72 @@
 ﻿@page
 @model IndexModel
+@using System.Security.Claims
+@using System.IdentityModel.Tokens.Jwt
+@using PayRex.Web.Configuration
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = null;
     ViewData["Title"] = "Welcome to PayRex";
+
+    // Authentication Logic & User Data Extraction
+    var isAuthenticated = Request.Cookies.ContainsKey("PayRex.AuthToken");
+    
+    // Default user data
+    string firstName = "User";
+    string lastName = "";
+    string fullName = "User";
+    string? userRole = null;
+    string userEmail = "";
+    string? profileImageUrl = null;
+    string? companyLogoUrl = null;
+
+    if (isAuthenticated && Request.Cookies.TryGetValue("PayRex.AuthToken", out var token))
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            
+            userEmail = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value ?? "";
+            userRole = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            // Try to get name from token claims
+            var givenName = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+            var familyName = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+
+            if (!string.IsNullOrEmpty(givenName))
+            {
+                firstName = givenName;
+                lastName = familyName ?? "";
+                fullName = !string.IsNullOrEmpty(lastName) ? $"{firstName} {lastName}" : firstName;
+            }
+            else if (!string.IsNullOrEmpty(userEmail))
+            {
+                fullName = userEmail.Split('@')[0];
+                firstName = fullName;
+            }
+
+            // Get profile image & company logo
+            profileImageUrl = jwtToken.Claims.FirstOrDefault(c => c.Type == "profileImage")?.Value;
+            companyLogoUrl = jwtToken.Claims.FirstOrDefault(c => c.Type == "companyLogo")?.Value;
+        }
+        catch { /* Token parsing failed - treat as unauthenticated or handle gracefully */ }
+    }
+    
+    // Role Display Logic (for dropdown)
+    var roleDisplay = userRole switch
+    {
+        "SuperAdmin" => "Super Admin",
+        "Admin" => "Administrator",
+        "HR" => "HR Manager",
+        "Hr" => "HR Manager", 
+        "Employee" => "Employee",
+        _ => userRole ?? "User"
+    };
+
+    // Dashboard Link Logic
+    var dashboardLink = (userRole == "SuperAdmin") ? "/Admin/Dashboard" : "/Dashboard";
+    var startBtnLink = isAuthenticated ? dashboardLink : "/Auth/Login";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -50,11 +114,6 @@
             .animate-carousel:hover {
                 animation-play-state: paused;
             }
-
-        /* Optional: Add loading fallback for images */
-        img {
-            min-width: 100px; /* Prevents images from collapsing */
-        }
     </style>
 </head>
 <body class="font-inter bg-page-bg bg-geometric">
@@ -64,15 +123,95 @@
 
             <!-- Logo -->
             <a asp-page="/Index" class="flex items-center space-x-3">
-                <img src="/images/logo.png" class="h-12 w-auto" alt="Payrex Logo" />
+                <img src="@(isAuthenticated && !string.IsNullOrEmpty(companyLogoUrl) ? companyLogoUrl : Url.Content("~/images/logo.png"))" class="h-12 w-auto" alt="Payrex Logo" />
             </a>
 
             <!-- Right buttons + mobile toggle -->
             <div class="flex md:order-2 items-center gap-3">
-                <a asp-page="/Auth/Login"
-                   class="text-white bg-primary hover:brightness-95 focus:ring-4 focus:ring-primary/30 font-semibold rounded-xl text-sm px-5 py-2.5 shadow-md">
-                    Sign Up
-                </a>
+                @if (isAuthenticated)
+                {
+                    <!-- User Profile Dropdown -->
+                    <div class="relative">
+                        <button type="button" class="flex text-sm rounded-full focus:ring-4 focus:ring-gray-300 transition-all hover:ring-2 hover:ring-primary/50" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+                            <span class="sr-only">Open user menu</span>
+                            @if (!string.IsNullOrEmpty(profileImageUrl))
+                            {
+                                <img src="@profileImageUrl" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+                            }
+                            else
+                            {
+                                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-sm">
+                                    @firstName.Substring(0, 1).ToUpper()
+                                </div>
+                            }
+                        </button>
+                        
+                        <!-- Dropdown menu -->
+                        <div class="z-50 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-xl shadow-xl border border-gray-100 w-64 animate-fade-in-down" id="dropdown-user">
+                            <div class="px-4 py-3" role="none">
+                                <div class="flex items-center gap-3">
+                                    @if (!string.IsNullOrEmpty(profileImageUrl))
+                                    {
+                                        <img src="@profileImageUrl" alt="Profile" class="w-12 h-12 rounded-full object-cover border border-gray-200" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xl">
+                                            @firstName.Substring(0, 1).ToUpper()
+                                        </div>
+                                    }
+                                    <div class="overflow-hidden">
+                                        <p class="text-sm text-gray-900 font-bold truncate" role="none">
+                                            @fullName
+                                        </p>
+                                        <p class="text-xs font-medium text-gray-500 truncate" role="none">
+                                            @roleDisplay
+                                        </p>
+                                        <p class="text-xs text-gray-400 truncate" role="none">
+                                            @userEmail
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <ul class="py-1" role="none">
+                                <li>
+                                    <a href="@dashboardLink" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" role="menuitem">
+                                        <svg class="w-4 h-4 mr-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
+                                        </svg>
+                                        @(userRole == "SuperAdmin" ? "Admin Dashboard" : "Dashboard")
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="/Profile" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" role="menuitem">
+                                        <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Profile Settings
+                                    </a>
+                                </li>
+                                <li class="border-t border-gray-100">
+                                    <form method="post" asp-page="/Auth/Logout" class="block logout-form">
+                                        <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" role="menuitem">
+                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            Sign out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <a asp-page="/Auth/Login"
+                       class="text-white bg-primary hover:brightness-95 focus:ring-4 focus:ring-primary/30 font-semibold rounded-xl text-sm px-5 py-2.5 shadow-md transition-all">
+                        Sign Up
+                    </a>
+                }
 
                 <button data-collapse-toggle="navbar-sticky"
                         type="button"
@@ -154,8 +293,8 @@
 
                 <!-- CTA Buttons -->
                 <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
-                    <a asp-page="/Auth/Login" class="bg-primary text-white font-semibold py-4 px-12 rounded-xl hover:brightness-95 transition-colors shadow-lg text-lg text-center">
-                        Start Your Payroll System
+                    <a href="@(isAuthenticated ? dashboardLink : "/Auth/Login")" class="bg-primary text-white font-semibold py-4 px-12 rounded-xl hover:brightness-95 transition-colors shadow-lg text-lg text-center">
+                        "Start Your Payroll System
                     </a>
                 </div>
 
@@ -213,7 +352,7 @@
 
             <!-- Trust indicators - Logo Carousel -->
             <div class="mt-24 text-center">
-                <p class="text-gray-500 mb-8 text-lg">Trusted by Filipino enterprises nationwide</p>
+                <p class="text-gray-500 mb-2 text-lg">Trusted by Filipino enterprises nationwide</p>
 
                 <!-- Carousel Container with transparent background -->
                 <div class="relative w-full overflow-hidden py-8">
@@ -245,7 +384,7 @@
     <section id="features" class="px-4 md:px-8 pt-24 pb-24 bg-white/50">
         <div class="max-w-6xl mx-auto">
             <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Powerful Features for Filipino HR</h2>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Powerful Features of PayRex</h2>
                 <p class="text-gray-600 text-xl max-w-3xl mx-auto">Everything you need to manage attendance and payroll compliant with Philippine regulations</p>
             </div>
 

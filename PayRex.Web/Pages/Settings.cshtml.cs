@@ -117,7 +117,7 @@ namespace PayRex.Web.Pages
                 await using var ms = new MemoryStream();
                 await CompanyLogoFile.CopyToAsync(ms);
                 ms.Position = 0;
-                var resp = await _authApi.UploadProfileImageAsync(token, ms, CompanyLogoFile.FileName, CompanyLogoFile.ContentType);
+                var resp = await _authApi.UploadCompanyLogoAsync(token, ms, CompanyLogoFile.FileName, CompanyLogoFile.ContentType);
                 if (resp != null && resp.Success && !string.IsNullOrEmpty(resp.ImageUrl))
                 {
                     // Preserve existing profile values when updating logo
@@ -134,7 +134,7 @@ namespace PayRex.Web.Pages
                         ContactEmail = cp.ContactEmail,
                         ContactPhone = cp.ContactPhone,
                         Tin = cp.Tin,
-                        UrlImage = resp.ImageUrl,
+                        LogoUrl = resp.ImageUrl,
                         PayrollCycle = cp.PayrollCycle,
                         WorkHoursPerDay = cp.WorkHoursPerDay,
                         OvertimeRate = cp.OvertimeRate,
@@ -180,7 +180,7 @@ namespace PayRex.Web.Pages
                 ContactEmail = cp.ContactEmail,
                 ContactPhone = cp.ContactPhone,
                 Tin = cp.Tin,
-                UrlImage = null,
+                LogoUrl = null,
                 PayrollCycle = cp.PayrollCycle,
                 WorkHoursPerDay = cp.WorkHoursPerDay,
                 OvertimeRate = cp.OvertimeRate,
@@ -203,6 +203,14 @@ namespace PayRex.Web.Pages
             var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
             if (string.IsNullOrEmpty(token)) return RedirectToPage("/Auth/Login");
 
+            // Fetch current profile to preserve LogoUrl (in case it was uploaded separately)
+            var currentProfile = await _authApi.GetCompanyProfileAsync(token);
+            if (currentProfile == null)
+            {
+                ErrorMessage = "Failed to load current company profile";
+                return RedirectToPage(new { edit = true });
+            }
+
             var dto = new UpdateCompanyRequestDto
             {
                 CompanyName = Request.Form["CompanyName"],
@@ -210,7 +218,8 @@ namespace PayRex.Web.Pages
                 ContactEmail = Request.Form["ContactEmail"],
                 ContactPhone = Request.Form["ContactPhone"],
                 Tin = Request.Form["Tin"],
-                UrlImage = Profile.UrlImage
+                // Preserve the current LogoUrl (which may have been uploaded via OnPostUploadCompanyLogoAsync)
+                LogoUrl = currentProfile.LogoUrl
             };
 
             // Also pick up payroll fields if present in the same form

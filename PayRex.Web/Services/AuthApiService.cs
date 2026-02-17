@@ -371,6 +371,34 @@ namespace PayRex.Web.Services
  }
  }
 
+ public async Task<ProfileImageResponseDto?> UploadCompanyLogoAsync(string token, Stream imageStream, string fileName, string contentType)
+ {
+  try
+  {
+  using var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/company/logo");
+  var clean = NormalizeToken(token);
+  if (!string.IsNullOrEmpty(clean))
+  request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+
+  var content = new MultipartFormDataContent();
+  var streamContent = new StreamContent(imageStream);
+  streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+  content.Add(streamContent, "file", fileName);
+
+  request.Content = content;
+
+  var response = await _httpClient.SendAsync(request);
+  var responseContent = await response.Content.ReadAsStringAsync();
+
+  return JsonSerializer.Deserialize<ProfileImageResponseDto>(responseContent, JsonOptions);
+  }
+  catch (Exception ex)
+  {
+  _logger.LogError(ex, "Error calling UploadCompanyLogo API");
+  return new ProfileImageResponseDto { Success = false, Message = "An error occurred while uploading logo" };
+  }
+ }
+
  public async Task<(bool Success, string? Message)> RemoveProfileImageAsync(string token)
  {
  try

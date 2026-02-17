@@ -11,7 +11,6 @@ namespace PayRex.Web.DTOs
         public string? ContactPhone { get; set; }
         public string? Tin { get; set; }
         public string? LogoUrl { get; set; }
-        public string? UrlImage { get; set; }
 
         // Payroll
         public int? PayrollCycle { get; set; }
@@ -33,7 +32,6 @@ namespace PayRex.Web.DTOs
         public string? ContactPhone { get; set; }
         public string? Tin { get; set; }
         public string? LogoUrl { get; set; }
-        public string? UrlImage { get; set; }
 
         // Payroll
         public int? PayrollCycle { get; set; }

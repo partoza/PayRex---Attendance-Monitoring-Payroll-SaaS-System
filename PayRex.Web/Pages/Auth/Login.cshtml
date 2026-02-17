@@ -20,14 +20,15 @@
  <p class="text-gray-500 text-lg mb-8">Log in to access your payroll and attendance dashboard.</p>
 
  <div class="bg-white rounded-2xl shadow-lg p-8 text-left">
- <div id="globalError" class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm @(string.IsNullOrEmpty(Model.ErrorMessage) ? "hidden" : "")">
+ <div id="globalError" class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm @((string.IsNullOrEmpty(Model.ErrorMessage) || Model.IsLockedOut) ? "hidden" : "")">
  @Model.ErrorMessage
  </div>
 
  @if (Model.IsLockedOut)
  {
- <div class="mb-4 rounded-lg bg-yellow-100 text-yellow-700 px-4 py-3 text-sm">
- <strong>Account Locked:</strong> Too many failed login attempts. Please try again in @Model.LockoutRemainingSeconds seconds.
+ <div id="lockoutMessage" class="mb-4 rounded-lg bg-yellow-100 text-yellow-700 px-4 py-3 text-sm">
+ <p><strong>Account Locked. </strong>Too many logged in attempts.</p>
+ <div class="text-sm text-yellow-800 mt-1">Try again in <span id="lockoutTimer" data-seconds="@Model.LockoutRemainingSeconds">@Model.LockoutRemainingSeconds</span> seconds.</div>
  </div>
  }
 
@@ -70,7 +71,7 @@
  </div>
  </div>
 
- <button id="submitButton" type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:brightness-95 transition shadow flex items-center justify-center" @(Model.IsLockedOut ? "disabled" : "")>
+ <button id="submitButton" type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:brightness-95 transition shadow flex items-center justify-center @(Model.IsLockedOut ? "opacity-60 pointer-events-none cursor-not-allowed" : "")" @(Model.IsLockedOut ? "disabled=\"disabled\"" : "") aria-disabled="@(Model.IsLockedOut ? "true" : "false")">
  <div role="status" id="spinner" class="hidden">
  <svg aria-hidden="true" class="w-4 h-4 me-2 text-primary animate-spin fill-white" viewBox="00100101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10050.5908C10078.205177.6142100.59150100.591C22.3858100.591078.2051050.5908C022.976622.38580.59082500.59082C77.61420.5908210022.976610050.5908ZM9.0814450.5908C9.0814473.189527.401391.50945091.5094C72.598791.509490.918673.189590.918650.5908C90.918627.992172.59879.67226509.67226C27.40139.672269.0814427.99219.0814450.5908Z" fill="currentColor" /><path d="M93.967639.0409C96.39338.403897.862435.911697.007933.5539C95.293228.822792.87124.369289.816720.348C85.845215.119280.882610.723875.21247.41289C69.54224.1019463.27541.9402556.76981.05124C51.76660.36754146.69760.44684341.73451.27873C39.26131.6932837.8134.1977838.45016.62326C39.08739.0487441.569410.471744.050510.1071C47.85119.5485551.71919.5268955.540210.0491C60.864210.776665.992812.545770.633115.2552C75.273517.964879.334721.561982.584925.841C84.917528.912186.799732.291388.181135.8758C89.08338.215891.542139.678193.967639.0409Z" fill="currentFill" /></svg>
  </div>
@@ -105,7 +106,8 @@ Don't have an account?
                     </svg>
                     <h3 class="text-xl font-semibold text-gray-900">Two-Factor Authentication</h3>
                 </div>
-                <button type="button" class="text-gray-400 hover:text-gray-600 rounded-lg text-sm p-2 transition-colors duration-200" data-modal-hide="totpModal">
+                <button type="button" class="text-gray-400 hover:text-gray-600 rounded-lg text-sm p-2 transition-colors duration-200" data-modal-hide="totpModal" onclick="window.location.href='https://localhost:7002/Auth/Login'">
+                    
                     <span class="sr-only">Close</span>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -204,28 +206,28 @@ Don't have an account?
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+
+                        <button type="submit" 
+                                class="px-6 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium
+                           hover:bg-gray-200 focus:ring-4 focus:ring-gray-100
+                           transition-all duration-200 border border-gray-200
+                           flex items-center justify-center gap-2 order-1 sm:order-2" onclick="window.location.href='https://localhost:7002/Auth/Login'" data-modal-hide="totpModal">
+                           
+
+                            Cancel
+                        </button>
+
                         <button type="submit"
                                 class="px-6 py-2.5 rounded-xl bg-blue-600 text-white font-medium
                            hover:bg-blue-700 focus:ring-4 focus:ring-blue-200
                            transition-all duration-200 shadow-lg shadow-blue-600/20
                            flex items-center justify-center gap-2 order-2 sm:order-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Verify & Continue
+                            
+                            Verify
                         </button>
 
-                        <button type="submit" asp-page-handler="CancelTotp"
-                                class="px-6 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium
-                           hover:bg-gray-200 focus:ring-4 focus:ring-gray-100
-                           transition-all duration-200 border border-gray-200
-                           flex items-center justify-center gap-2 order-1 sm:order-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Cancel
-                        </button>
+                        
                     </div>
 
                     <!-- Additional help -->
@@ -312,6 +314,57 @@ Don't have an account?
                 focusFirstDigit();
             }
         }
+
+        // ========== LOCKOUT COUNTDOWN HANDLER ==========
+        function startLockoutTimer(initialSeconds) {
+            const timerEl = document.getElementById('lockoutTimer');
+            const submitBtn = document.getElementById('submitButton');
+            const lockMsg = document.getElementById('lockoutMessage');
+
+            let seconds = Number(initialSeconds || (timerEl ? timerEl.dataset.seconds : 0));
+            if (!timerEl || seconds <= 0) return;
+
+            // Update display immediately
+            timerEl.textContent = seconds;
+
+            const iv = setInterval(() => {
+                seconds = Math.max(0, seconds - 1);
+                if (seconds <= 0) {
+                    clearInterval(iv);
+                    // Hide lockout message and re-enable submit
+                    if (lockMsg) lockMsg.classList.add('hidden');
+                    if (submitBtn) {
+                        // Remove native disabled attribute
+                        submitBtn.removeAttribute('disabled');
+                        // Remove aria-disabled for accessibility
+                        submitBtn.setAttribute('aria-disabled', 'false');
+                        // Remove visual disabled styles added server-side
+                        submitBtn.classList.remove('opacity-60', 'pointer-events-none', 'cursor-not-allowed');
+                    }
+                    // Clear timer display
+                    if (timerEl) {
+                        timerEl.textContent = '0';
+                        timerEl.removeAttribute('data-seconds');
+                    }
+                } else {
+                    timerEl.textContent = seconds;
+                }
+            }, 1000);
+        }
+
+        // Kick off lockout timer if server indicated lockout
+        document.addEventListener('DOMContentLoaded', function() {
+            const timerEl = document.getElementById('lockoutTimer');
+            if (timerEl) {
+                const secs = parseInt(timerEl.dataset.seconds || '0', 10);
+                if (secs > 0) {
+                    // ensure submit is disabled while locked
+                    const submitBtn = document.getElementById('submitButton');
+                    if (submitBtn) submitBtn.setAttribute('disabled', '');
+                    startLockoutTimer(secs);
+                }
+            }
+        });
 
         /**
          * Focus the first TOTP digit input

@@ -14,6 +14,7 @@
     string lastName = "";
     string fullName = "User";
     string? profileImageUrl = null;
+    string? companyLogoUrl = null;
 
     if (isAuthenticated && Context.Request.Cookies.TryGetValue("PayRex.AuthToken", out var token))
     {
@@ -43,6 +44,9 @@
 
             // Try to get profile image URL from claim (if added to JWT)
             profileImageUrl = jwtToken.Claims.FirstOrDefault(c => c.Type == "profileImage")?.Value;
+            
+            // Try to get company logo URL from claim
+            companyLogoUrl = jwtToken.Claims.FirstOrDefault(c => c.Type == "companyLogo")?.Value;
         }
         catch { }
     }
@@ -93,7 +97,7 @@
 
                         </button>
                         <a href="@(userRole == "SuperAdmin" ? "/Admin/Dashboard" : "/Dashboard")" class="flex ms-6 md:me-24">
-                            <img src="~/images/logo.png" class="h-10 lg:h-16 drop-shadow-md" alt="PayRex Logo" />
+                            <img id="layout-header-logo" src="@(string.IsNullOrEmpty(companyLogoUrl) ? Url.Content("~/images/logo.png") : companyLogoUrl)" class="h-10 lg:h-16 drop-shadow-md" alt="PayRex Logo" />
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
@@ -110,7 +114,7 @@
                                     <span class="sr-only">Open user menu</span>
                                     @if (!string.IsNullOrEmpty(profileImageUrl))
                                     {
-                                        <img src="@profileImageUrl" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                                        <img src="@profileImageUrl" alt="Profile" class="layout-profile-img w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
                                     }
                                     else
                                     {
@@ -125,7 +129,7 @@
                                     <div class="flex items-center gap-3">
                                         @if (!string.IsNullOrEmpty(profileImageUrl))
                                         {
-                                            <img src="@profileImageUrl" alt="Profile" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200" />
+                                            <img src="@profileImageUrl" alt="Profile" class="layout-profile-img w-12 h-12 rounded-full object-cover border-2 border-gray-200" />
                                         }
                                         else
                                         {
@@ -177,7 +181,7 @@
                                         </a>
                                     </li>
                                     <li class="border-t border-gray-100">
-                                        <form method="post" asp-page="/Auth/Logout" class="block">
+                                        <form method="post" asp-page="/Auth/Logout" class="block logout-form">
                                             <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" role="menuitem">
                                                 <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -247,6 +251,37 @@
     @await RenderSectionAsync("Scripts", required: false)
 
     <script>
+        // Check for locally stored profile image and logo overrides (allows updating without logout)
+        (function() {
+            try {
+                const storedLogo = localStorage.getItem('payrex_company_logo');
+                if (storedLogo) {
+                    const logoImg = document.getElementById('layout-header-logo');
+                    if (logoImg) logoImg.src = storedLogo;
+                }
+                
+                const storedProfile = localStorage.getItem('payrex_profile_image');
+                if (storedProfile) {
+                    const profileImgs = document.querySelectorAll('.layout-profile-img');
+                    profileImgs.forEach(img => img.src = storedProfile);
+                }
+            } catch (e) { console.error('Error restoring layout images', e); }
+        })();
+
+        // Ensure local cached images are cleared before submitting logout forms
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                document.querySelectorAll('.logout-form').forEach(function (f) {
+                    f.addEventListener('submit', function () {
+                        try {
+                            localStorage.removeItem('payrex_company_logo');
+                            localStorage.removeItem('payrex_profile_image');
+                        } catch (e) { }
+                    });
+                });
+            } catch (e) { /* ignore */ }
+        });
+
         // Runtime check: verify Tailwind utilities are applied; if not, inject CDN stylesheet (development fallback)
         (function () {
             try {

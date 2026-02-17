@@ -22,9 +22,11 @@ namespace PayRex.Web.Pages.Auth
 
   public IActionResult OnPost()
  {
-            Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
-         _logger.LogInformation("User logged out");
-    return RedirectToPage("/Index");
-        }
+                Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
+            _logger.LogInformation("User logged out");
+                // Perform a server-side redirect to Index so the browser requests
+                // the homepage without the auth cookie (unauthenticated state).
+                return RedirectToPage("/Index");
+          }
     }
 }

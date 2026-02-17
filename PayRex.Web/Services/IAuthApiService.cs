@@ -23,6 +23,7 @@ namespace PayRex.Web.Services
 
         // Profile image methods
         Task<ProfileImageResponseDto?> UploadProfileImageAsync(string token, Stream imageStream, string fileName, string contentType);
+        Task<ProfileImageResponseDto?> UploadCompanyLogoAsync(string token, Stream imageStream, string fileName, string contentType);
         Task<(bool Success, string? Message)> RemoveProfileImageAsync(string token);
 
         // 2FA methods - use client DTO types

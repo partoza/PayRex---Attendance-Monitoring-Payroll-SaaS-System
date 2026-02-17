@@ -104,7 +104,7 @@
                          <div class="absolute -inset-1 bg-gradient-to-br from-blue-200 to-green-100 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                         @if (!string.IsNullOrEmpty(Model.ProfileImageUrl))
                         {
-                            <img src="@Model.ProfileImageUrl" alt="Profile" class="relative w-32 h-32 lg:w-48 lg:h-48 rounded-full object-cover border-4 border-white shadow-xl ring-1 ring-gray-100" />
+                            <img id="userProfileImage" src="@Model.ProfileImageUrl" alt="Profile" class="relative w-32 h-32 lg:w-48 lg:h-48 rounded-full object-cover border-4 border-white shadow-xl ring-1 ring-gray-100" />
                         }
                         else
                         {
@@ -603,5 +603,16 @@
                 setTimeout(() => t.remove(), 300);
             }, 3000);
         });
+
+        // Sync profile image to layout and localStorage
+        const profileImg = document.getElementById('userProfileImage');
+        if (profileImg && profileImg.src) {
+            // Save to storage
+            localStorage.setItem('payrex_profile_image', profileImg.src);
+            
+            // Update layout immediately
+            const layoutImgs = document.querySelectorAll('.layout-profile-img');
+            layoutImgs.forEach(img => img.src = profileImg.src);
+        }
     });
 </script>
