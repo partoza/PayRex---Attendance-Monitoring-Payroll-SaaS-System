@@ -20,6 +20,11 @@ namespace PayRex.Web.Pages.Admin
      [BindProperty, DataType(DataType.Date)] public DateTime EffectiveDate { get; set; }
   [BindProperty] public string? Note { get; set; }
 
+ // New: require current user's password to confirm changes
+ [BindProperty, DataType(DataType.Password)]
+ [Required(ErrorMessage = "Password is required to confirm changes")]
+ public string? ConfirmPassword { get; set; }
+
  [TempData] public string? StatusMessage { get; set; }
         public bool LoadSuccess { get; set; }
 
@@ -61,6 +66,12 @@ PhilHealthPercentage = dto.PhilHealthPercentage;
 
         public async Task<IActionResult> OnPostAsync()
         {
+   if (!ModelState.IsValid)
+   {
+ StatusMessage = "Please provide required information.";
+ return Page();
+ }
+
    if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return RedirectToPage("/Auth/Login");
 
   var client = _httpClientFactory.CreateClient("PayRexApi");
@@ -72,12 +83,13 @@ PhilHealthPercentage = dto.PhilHealthPercentage;
  pagIbigPercentage = PagIbigPercentage,
     philHealthPercentage = PhilHealthPercentage,
       effectiveDate = EffectiveDate,
-     note = Note
+     note = Note,
+ password = ConfirmPassword
     };
 
   var body = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
      var response = await client.PutAsync("api/superadmin/settings", body);
-            StatusMessage = response.IsSuccessStatusCode ? "System settings updated successfully" : "Failed to update system settings";
+            StatusMessage = response.IsSuccessStatusCode ? "System settings updated successfully" : "Failed to update system settings. Ensure your password is correct.";
 
  return RedirectToPage();
   }

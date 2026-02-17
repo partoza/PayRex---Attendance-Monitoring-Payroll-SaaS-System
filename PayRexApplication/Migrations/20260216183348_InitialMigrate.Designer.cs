@@ -12,8 +12,8 @@ using PayRexApplication.Data;
 namespace PayRex.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260210172625_initialMigrate")]
-    partial class initialMigrate
+    [Migration("20260216183348_InitialMigrate")]
+    partial class InitialMigrate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -285,11 +285,26 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(4)")
                         .HasColumnName("companyId");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("address");
+
                     b.Property<string>("CompanyName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)")
                         .HasColumnName("companyName");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("contactEmail");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("contactPhone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -301,6 +316,11 @@ namespace PayRex.API.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("isActive");
 
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("logoUrl");
+
                     b.Property<int>("PlanId")
                         .HasColumnType("int")
                         .HasColumnName("planId");
@@ -309,9 +329,19 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("status");
 
+                    b.Property<string>("Tin")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("tin");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
+
+                    b.Property<string>("UrlImage")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("urlImage");
 
                     b.HasKey("CompanyId");
 
@@ -349,6 +379,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(4)")
                         .HasColumnName("companyId");
 
+                    b.Property<decimal>("AbsentRate")
+                        .HasColumnType("decimal(4,2)")
+                        .HasColumnName("absentRate");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
@@ -361,10 +395,6 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("lateGraceMinutes");
 
-                    b.Property<decimal>("NightDifferentialRate")
-                        .HasColumnType("decimal(4,2)")
-                        .HasColumnName("nightDifferentialRate");
-
                     b.Property<decimal>("OvertimeRate")
                         .HasColumnType("decimal(4,2)")
                         .HasColumnName("overtimeRate");
@@ -373,11 +403,16 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("payrollCycle");
 
+                    b.Property<string>("RolesJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)")
+                        .HasColumnName("rolesJson");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
 
-                    b.Property<decimal>("WorkHoursPerDay")
+                    b.Property<decimal?>("WorkHoursPerDay")
                         .HasColumnType("decimal(4,2)")
                         .HasColumnName("workHoursPerDay");
 
@@ -455,6 +490,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("position");
 
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("int")
+                        .HasColumnName("roleId");
+
                     b.Property<decimal>("SalaryRate")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("salaryRate");
@@ -470,6 +509,8 @@ namespace PayRex.API.Migrations
                     b.HasKey("EmployeeId");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("CompanyId", "EmployeeCode")
                         .IsUnique();
@@ -619,6 +660,60 @@ namespace PayRex.API.Migrations
                         .IsUnique();
 
                     b.ToTable("employeeQrCodes");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.EmployeeRole", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("roleId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<decimal?>("BasicRate")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("basicRate");
+
+                    b.Property<string>("CompanyId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)")
+                        .HasColumnName("companyId");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("createdAt");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<string>("RateType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("rateType");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("roleName");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updatedAt");
+
+                    b.HasKey("RoleId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("employeeRoles");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.GovernmentContribution", b =>
@@ -1224,7 +1319,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = true,
                             LastName = "Partoza",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$8YbcvCZCc9Dg8fFQAX6.IencgY7Qr8I4JK7pPQ5X3SlTY3KgRAHe6",
+                            PasswordHash = "$2a$11$h1birYnQ28XJ1XC/abSvRe5tGX4b2BPu8uA8aZeGUsYz.C8BpKF2i",
                             Role = 0,
                             Status = 0,
                             TotpSecretKey = "JBSWY3DPEHPK3PXP"
@@ -1239,7 +1334,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Admin",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$TqOB31ARbW3mi2V4qgsZbOiNq3iGwfArimcWUfYFz/tknRWIgYQJe",
+                            PasswordHash = "$2a$11$s2AVOXu9FqDz.Wp5KGdX6.ivJzK6sUunOowTc4Zdr88keDsslsB1a",
                             Role = 1,
                             Status = 0
                         },
@@ -1253,7 +1348,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "HR",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$KXrNfrM5504u3Y2ennjFS.oD3y6Vs5ozC8hMJQIrTAvrz4rYgVcvS",
+                            PasswordHash = "$2a$11$BVl6NC2HIuS80SwGp/rPqOC83K4d.OqcjreeDF9KjErliSJlXnLsO",
                             Role = 2,
                             Status = 0
                         });
@@ -1418,7 +1513,14 @@ namespace PayRex.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PayRexApplication.Models.EmployeeRole", "Role")
+                        .WithMany("Employees")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Company");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.EmployeeBenefit", b =>
@@ -1452,6 +1554,17 @@ namespace PayRex.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.EmployeeRole", b =>
+                {
+                    b.HasOne("PayRexApplication.Models.Company", "Company")
+                        .WithMany("EmployeeRoles")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.GovernmentContribution", b =>
@@ -1599,6 +1712,8 @@ namespace PayRex.API.Migrations
 
                     b.Navigation("CompanySetting");
 
+                    b.Navigation("EmployeeRoles");
+
                     b.Navigation("Employees");
 
                     b.Navigation("PayrollPeriods");
@@ -1623,6 +1738,11 @@ namespace PayRex.API.Migrations
                     b.Navigation("GovernmentContributions");
 
                     b.Navigation("PayrollSummaries");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.EmployeeRole", b =>
+                {
+                    b.Navigation("Employees");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.PayrollPeriod", b =>

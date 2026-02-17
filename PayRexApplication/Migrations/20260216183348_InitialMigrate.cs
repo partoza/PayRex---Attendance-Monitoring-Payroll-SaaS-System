@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace PayRex.API.Migrations
 {
     /// <inheritdoc />
-    public partial class initialMigrate : Migration
+    public partial class InitialMigrate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -63,7 +63,13 @@ namespace PayRex.API.Migrations
                     status = table.Column<int>(type: "int", nullable: false),
                     createdAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    isActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                    isActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    address = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    contactEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    contactPhone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    tin = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    logoUrl = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
+                    urlImage = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -107,11 +113,12 @@ namespace PayRex.API.Migrations
                 {
                     companyId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     payrollCycle = table.Column<int>(type: "int", nullable: false),
-                    workHoursPerDay = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    workHoursPerDay = table.Column<decimal>(type: "decimal(4,2)", nullable: true),
                     overtimeRate = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
                     lateGraceMinutes = table.Column<int>(type: "int", nullable: false),
-                    nightDifferentialRate = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
                     holidayRate = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    absentRate = table.Column<decimal>(type: "decimal(4,2)", nullable: false),
+                    rolesJson = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     createdAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -127,36 +134,29 @@ namespace PayRex.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "employees",
+                name: "employeeRoles",
                 columns: table => new
                 {
-                    employeeId = table.Column<int>(type: "int", nullable: false)
+                    roleId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     companyId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    employeeCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    firstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    lastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    position = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    department = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    salaryRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    employmentType = table.Column<int>(type: "int", nullable: false),
-                    status = table.Column<int>(type: "int", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    phoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    dateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    hireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    roleName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    basicRate = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    rateType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    isActive = table.Column<bool>(type: "bit", nullable: false),
                     createdAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_employees", x => x.employeeId);
+                    table.PrimaryKey("PK_employeeRoles", x => x.roleId);
                     table.ForeignKey(
-                        name: "FK_employees_companies_companyId",
+                        name: "FK_employeeRoles_companies_companyId",
                         column: x => x.companyId,
                         principalTable: "companies",
                         principalColumn: "companyId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -273,6 +273,139 @@ namespace PayRex.API.Migrations
                         principalTable: "billingInvoices",
                         principalColumn: "invoiceId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "employees",
+                columns: table => new
+                {
+                    employeeId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    companyId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    employeeCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    firstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    lastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    position = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    department = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    salaryRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    employmentType = table.Column<int>(type: "int", nullable: false),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    phoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    dateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    hireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    updatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    roleId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_employees", x => x.employeeId);
+                    table.ForeignKey(
+                        name: "FK_employees_companies_companyId",
+                        column: x => x.companyId,
+                        principalTable: "companies",
+                        principalColumn: "companyId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_employees_employeeRoles_roleId",
+                        column: x => x.roleId,
+                        principalTable: "employeeRoles",
+                        principalColumn: "roleId",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "auditLogs",
+                columns: table => new
+                {
+                    auditId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    companyId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: true),
+                    userId = table.Column<int>(type: "int", nullable: true),
+                    role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    action = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    entityAffected = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    target = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    targetId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    oldValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    newValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ipAddress = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    userAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_auditLogs", x => x.auditId);
+                    table.ForeignKey(
+                        name: "FK_auditLogs_companies_companyId",
+                        column: x => x.companyId,
+                        principalTable: "companies",
+                        principalColumn: "companyId");
+                    table.ForeignKey(
+                        name: "FK_auditLogs_users_userId",
+                        column: x => x.userId,
+                        principalTable: "users",
+                        principalColumn: "userId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "payrollApprovals",
+                columns: table => new
+                {
+                    approvalId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    payrollPeriodId = table.Column<int>(type: "int", nullable: false),
+                    approvedBy = table.Column<int>(type: "int", nullable: false),
+                    approvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    status = table.Column<int>(type: "int", nullable: false),
+                    remarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_payrollApprovals", x => x.approvalId);
+                    table.ForeignKey(
+                        name: "FK_payrollApprovals_payrollPeriods_payrollPeriodId",
+                        column: x => x.payrollPeriodId,
+                        principalTable: "payrollPeriods",
+                        principalColumn: "payrollPeriodId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_payrollApprovals_users_approvedBy",
+                        column: x => x.approvedBy,
+                        principalTable: "users",
+                        principalColumn: "userId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "userLoginAttempts",
+                columns: table => new
+                {
+                    attemptId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    userId = table.Column<int>(type: "int", nullable: true),
+                    email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    ipAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    success = table.Column<bool>(type: "bit", nullable: false),
+                    reason = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    userAgent = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
+                    timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    attemptCount = table.Column<int>(type: "int", nullable: false),
+                    isLocked = table.Column<bool>(type: "bit", nullable: false),
+                    lockUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    lastAttemptAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_userLoginAttempts", x => x.attemptId);
+                    table.ForeignKey(
+                        name: "FK_userLoginAttempts_users_userId",
+                        column: x => x.userId,
+                        principalTable: "users",
+                        principalColumn: "userId",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -475,99 +608,6 @@ namespace PayRex.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "auditLogs",
-                columns: table => new
-                {
-                    auditId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    companyId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: true),
-                    userId = table.Column<int>(type: "int", nullable: true),
-                    role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    action = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    entityAffected = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    target = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    targetId = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    oldValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    newValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ipAddress = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    userAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_auditLogs", x => x.auditId);
-                    table.ForeignKey(
-                        name: "FK_auditLogs_companies_companyId",
-                        column: x => x.companyId,
-                        principalTable: "companies",
-                        principalColumn: "companyId");
-                    table.ForeignKey(
-                        name: "FK_auditLogs_users_userId",
-                        column: x => x.userId,
-                        principalTable: "users",
-                        principalColumn: "userId");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "payrollApprovals",
-                columns: table => new
-                {
-                    approvalId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    payrollPeriodId = table.Column<int>(type: "int", nullable: false),
-                    approvedBy = table.Column<int>(type: "int", nullable: false),
-                    approvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    status = table.Column<int>(type: "int", nullable: false),
-                    remarks = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_payrollApprovals", x => x.approvalId);
-                    table.ForeignKey(
-                        name: "FK_payrollApprovals_payrollPeriods_payrollPeriodId",
-                        column: x => x.payrollPeriodId,
-                        principalTable: "payrollPeriods",
-                        principalColumn: "payrollPeriodId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_payrollApprovals_users_approvedBy",
-                        column: x => x.approvedBy,
-                        principalTable: "users",
-                        principalColumn: "userId");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "userLoginAttempts",
-                columns: table => new
-                {
-                    attemptId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    userId = table.Column<int>(type: "int", nullable: true),
-                    email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    ipAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
-                    success = table.Column<bool>(type: "bit", nullable: false),
-                    reason = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    userAgent = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
-                    timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    attemptCount = table.Column<int>(type: "int", nullable: false),
-                    isLocked = table.Column<bool>(type: "bit", nullable: false),
-                    lockUntil = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    lastAttemptAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    createdAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_userLoginAttempts", x => x.attemptId);
-                    table.ForeignKey(
-                        name: "FK_userLoginAttempts_users_userId",
-                        column: x => x.userId,
-                        principalTable: "users",
-                        principalColumn: "userId",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "payslips",
                 columns: table => new
                 {
@@ -607,25 +647,25 @@ namespace PayRex.API.Migrations
 
             migrationBuilder.InsertData(
                 table: "companies",
-                columns: new[] { "companyId", "companyName", "createdAt", "isActive", "planId", "status", "updatedAt" },
+                columns: new[] { "companyId", "address", "companyName", "contactEmail", "contactPhone", "createdAt", "isActive", "logoUrl", "planId", "status", "tin", "updatedAt", "urlImage" },
                 values: new object[,]
                 {
-                    { "0000", "PayRex System", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, 3, 0, null },
-                    { "1001", "Demo Company", new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, 1, 0, null }
+                    { "0000", null, "PayRex System", null, null, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, null, 3, 0, null, null, null },
+                    { "1001", null, "Demo Company", null, null, new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, null, 1, 0, null, null, null }
                 });
 
             migrationBuilder.InsertData(
                 table: "users",
                 columns: new[] { "userId", "companyId", "createdAt", "email", "firstName", "isTwoFactorEnabled", "lastName", "lastPasswordChangeAt", "passwordHash", "passwordResetTokenExpiry", "passwordResetTokenHash", "profileImageUrl", "recoveryCodesHash", "role", "status", "totpSecretKey", "updatedAt" },
-                values: new object[] { 1, "0000", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "partozajohnrex@gmail.com", "John Rex", true, "Partoza", null, "$2a$11$8YbcvCZCc9Dg8fFQAX6.IencgY7Qr8I4JK7pPQ5X3SlTY3KgRAHe6", null, null, null, null, 0, 0, "JBSWY3DPEHPK3PXP", null });
+                values: new object[] { 1, "0000", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "partozajohnrex@gmail.com", "John Rex", true, "Partoza", null, "$2a$11$h1birYnQ28XJ1XC/abSvRe5tGX4b2BPu8uA8aZeGUsYz.C8BpKF2i", null, null, null, null, 0, 0, "JBSWY3DPEHPK3PXP", null });
 
             migrationBuilder.InsertData(
                 table: "users",
                 columns: new[] { "userId", "companyId", "createdAt", "email", "firstName", "lastName", "lastPasswordChangeAt", "passwordHash", "passwordResetTokenExpiry", "passwordResetTokenHash", "profileImageUrl", "recoveryCodesHash", "role", "status", "totpSecretKey", "updatedAt" },
                 values: new object[,]
                 {
-                    { 2, "1001", new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), "alice.admin@example.com", "Alice", "Admin", null, "$2a$11$TqOB31ARbW3mi2V4qgsZbOiNq3iGwfArimcWUfYFz/tknRWIgYQJe", null, null, null, null, 1, 0, null, null },
-                    { 3, "1001", new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), "hannah.hr@example.com", "Hannah", "HR", null, "$2a$11$KXrNfrM5504u3Y2ennjFS.oD3y6Vs5ozC8hMJQIrTAvrz4rYgVcvS", null, null, null, null, 2, 0, null, null }
+                    { 2, "1001", new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), "alice.admin@example.com", "Alice", "Admin", null, "$2a$11$s2AVOXu9FqDz.Wp5KGdX6.ivJzK6sUunOowTc4Zdr88keDsslsB1a", null, null, null, null, 1, 0, null, null },
+                    { 3, "1001", new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc), "hannah.hr@example.com", "Hannah", "HR", null, "$2a$11$BVl6NC2HIuS80SwGp/rPqOC83K4d.OqcjreeDF9KjErliSJlXnLsO", null, null, null, null, 2, 0, null, null }
                 });
 
             migrationBuilder.CreateIndex(
@@ -719,6 +759,11 @@ namespace PayRex.API.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_employeeRoles_companyId",
+                table: "employeeRoles",
+                column: "companyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_employees_companyId",
                 table: "employees",
                 column: "companyId");
@@ -728,6 +773,11 @@ namespace PayRex.API.Migrations
                 table: "employees",
                 columns: new[] { "companyId", "employeeCode" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_employees_roleId",
+                table: "employees",
+                column: "roleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_governmentContributions_employeeId",
@@ -899,6 +949,9 @@ namespace PayRex.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "payrollPeriods");
+
+            migrationBuilder.DropTable(
+                name: "employeeRoles");
 
             migrationBuilder.DropTable(
                 name: "companies");

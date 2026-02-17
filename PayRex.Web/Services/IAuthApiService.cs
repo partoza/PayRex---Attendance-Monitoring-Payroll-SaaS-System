@@ -1,6 +1,7 @@
 using PayRex.Web.DTOs;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace PayRex.Web.Services
 {
@@ -16,6 +17,10 @@ namespace PayRex.Web.Services
         Task<(bool Success, string? Message)> UpdateProfileAsync(string token, UpdateProfileRequestDto request);
         Task<(bool Success, string? Message, bool RequireRelogin)> ChangePasswordAsync(string token, ChangePasswordRequestDto request);
 
+        // Company profile
+        Task<CompanyProfileDto?> GetCompanyProfileAsync(string token);
+        Task<(bool Success, string? Message)> UpdateCompanyProfileAsync(string token, UpdateCompanyRequestDto dto);
+
         // Profile image methods
         Task<ProfileImageResponseDto?> UploadProfileImageAsync(string token, Stream imageStream, string fileName, string contentType);
         Task<(bool Success, string? Message)> RemoveProfileImageAsync(string token);
@@ -25,5 +30,10 @@ namespace PayRex.Web.Services
         Task<ClientTotpEnableResponseDto?> EnableTotpAsync(string token, EnableTotpRequestDto request);
         Task<(bool Success, string? Message)> DisableTotpAsync(string token);
         Task<TwoFactorStatusDto?> GetTwoFactorStatusAsync(string token);
+
+        // Employee roles (company-level)
+        Task<List<EmployeeRoleDto>?> GetEmployeeRolesAsync(string token);
+        Task<(bool Success, string? Message)> SyncEmployeeRolesAsync(string token, List<EmployeeRoleDto> roles);
+        Task<(bool Success, string? Message)> DeleteEmployeeRoleAsync(string token, int id);
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using PayRexApplication.Enums;
+using System.Collections.Generic;
 
 namespace PayRexApplication.Models
 {
@@ -26,7 +27,7 @@ namespace PayRexApplication.Models
         [Column("status")]
         public CompanyStatus Status { get; set; }
 
-[Required]
+        [Required]
         [Column("createdAt")]
       public DateTime CreatedAt { get; set; }
 
@@ -40,7 +41,32 @@ namespace PayRexApplication.Models
         [Column("isActive")]
         public bool IsActive { get; set; } = true;
 
- // Navigation properties
+ // New contact/profile fields
+      [Column("address")]
+      [MaxLength(1000)]
+        public string? Address { get; set; }
+
+      [Column("contactEmail")]
+      [MaxLength(256)]
+        public string? ContactEmail { get; set; }
+
+      [Column("contactPhone")]
+      [MaxLength(50)]
+        public string? ContactPhone { get; set; }
+
+      [Column("tin")]
+      [MaxLength(50)]
+        public string? Tin { get; set; }
+
+      [Column("logoUrl")]
+      [MaxLength(512)]
+        public string? LogoUrl { get; set; }
+
+      [Column("urlImage")]
+      [MaxLength(512)]
+        public string? UrlImage { get; set; }
+
+        // Navigation properties
       [ForeignKey("PlanId")]
         public virtual SubscriptionPlan SubscriptionPlan { get; set; } = null!;
 
@@ -52,5 +78,8 @@ namespace PayRexApplication.Models
         public virtual ICollection<AttendanceRecord> AttendanceRecords { get; set; } = new List<AttendanceRecord>();
 public virtual ICollection<PayrollPeriod> PayrollPeriods { get; set; } = new List<PayrollPeriod>();
         public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+
+        // Roles for this company
+        public virtual ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
   }
 }

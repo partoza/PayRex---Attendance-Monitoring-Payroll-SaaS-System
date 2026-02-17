@@ -73,6 +73,13 @@ public string LastName { get; set; } = string.Empty;
         [Column("updatedAt")]
     public DateTime? UpdatedAt { get; set; }
 
+    // Role FK
+     [Column("roleId")]
+        public int? RoleId { get; set; }
+
+        [ForeignKey("RoleId")]
+        public virtual EmployeeRole? Role { get; set; }
+
     // Navigation properties
       [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; } = null!;

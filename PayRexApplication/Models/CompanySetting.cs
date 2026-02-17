@@ -17,9 +17,9 @@ namespace PayRexApplication.Models
         [Column("payrollCycle")]
         public PayrollCycle PayrollCycle { get; set; }
 
-        [Required]
+        // Work hours can be derived from payroll frequency; allow null to use defaults
         [Column("workHoursPerDay", TypeName = "decimal(4,2)")]
-        public decimal WorkHoursPerDay { get; set; } = 8.0m;
+        public decimal? WorkHoursPerDay { get; set; } = 8.0m;
 
         [Required]
         [Column("overtimeRate", TypeName = "decimal(4,2)")]
@@ -29,11 +29,16 @@ namespace PayRexApplication.Models
         [Column("lateGraceMinutes")]
         public int LateGraceMinutes { get; set; } = 15;
 
-        [Column("nightDifferentialRate", TypeName = "decimal(4,2)")]
-        public decimal NightDifferentialRate { get; set; } = 1.10m;
-
         [Column("holidayRate", TypeName = "decimal(4,2)")]
         public decimal HolidayRate { get; set; } = 2.00m;
+
+        // Absent rate (multiplier or deduction percent) added to align with UI
+        [Column("absentRate", TypeName = "decimal(4,2)")]
+        public decimal AbsentRate { get; set; } = 0.00m;
+
+        [Column("rolesJson")]
+        [MaxLength(4000)]
+        public string? RolesJson { get; set; }
 
         [Required]
         [Column("createdAt")]

@@ -45,6 +45,11 @@ namespace PayRexApplication.Data
         /// </summary>
         public DbSet<Payment> Payments { get; set; }
 
+        /// <summary>
+        /// Gets or sets the EmployeeRoles
+        /// </summary>
+        public DbSet<EmployeeRole> EmployeeRoles { get; set; }
+
         // All Users (SuperAdmin, Admin, HR)
 
         /// <summary>
@@ -179,18 +184,25 @@ namespace PayRexApplication.Data
 
             // ===== Company Configuration =====
             modelBuilder.Entity<Company>(entity =>
-    {
-            entity.HasKey(e => e.CompanyId);
-entity.Property(e => e.CompanyId).HasMaxLength(4);
-                entity.HasIndex(e => e.CompanyName);
+ {
+     entity.HasKey(e => e.CompanyId);
+     entity.Property(e => e.CompanyId).HasMaxLength(4);
+     entity.HasIndex(e => e.CompanyName);
      entity.Property(e => e.Status).HasConversion<int>();
-          entity.Property(e => e.IsActive).HasDefaultValue(true);
+     entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-      entity.HasOne(e => e.SubscriptionPlan)
-               .WithMany(p => p.Companies)
-              .HasForeignKey(e => e.PlanId)
-       .OnDelete(DeleteBehavior.Restrict);
-  });
+     entity.Property(e => e.Address).HasMaxLength(1000);
+     entity.Property(e => e.ContactEmail).HasMaxLength(256);
+     entity.Property(e => e.ContactPhone).HasMaxLength(50);
+     entity.Property(e => e.Tin).HasMaxLength(50);
+    entity.Property(e => e.LogoUrl).HasMaxLength(512);
+    entity.Property(e => e.UrlImage).HasMaxLength(512);
+
+     entity.HasOne(e => e.SubscriptionPlan)
+     .WithMany(p => p.Companies)
+     .HasForeignKey(e => e.PlanId)
+     .OnDelete(DeleteBehavior.Restrict);
+ });
 
             // ===== Subscription Configuration =====
             modelBuilder.Entity<Subscription>(entity =>
@@ -230,16 +242,16 @@ entity.Property(e => e.CompanyId).HasMaxLength(4);
             // ===== Payment Configuration =====
             modelBuilder.Entity<Payment>(entity =>
     {
-     entity.HasKey(e => e.PaymentId);
-      entity.Property(e => e.PaymentId).UseIdentityColumn();
-    entity.HasIndex(e => e.InvoiceId);
-     entity.HasIndex(e => e.ReferenceNo);
-                entity.Property(e => e.Status).HasConversion<int>();
+        entity.HasKey(e => e.PaymentId);
+        entity.Property(e => e.PaymentId).UseIdentityColumn();
+        entity.HasIndex(e => e.InvoiceId);
+        entity.HasIndex(e => e.ReferenceNo);
+        entity.Property(e => e.Status).HasConversion<int>();
 
-     entity.HasOne(e => e.BillingInvoice)
-      .WithMany(i => i.Payments)
-           .HasForeignKey(e => e.InvoiceId)
-           .OnDelete(DeleteBehavior.Cascade);
+        entity.HasOne(e => e.BillingInvoice)
+         .WithMany(i => i.Payments)
+              .HasForeignKey(e => e.InvoiceId)
+              .OnDelete(DeleteBehavior.Cascade);
     });
 
             // ===== User Configuration =====
@@ -292,7 +304,29 @@ entity.Property(e => e.CompanyId).HasMaxLength(4);
       .WithMany(c => c.Employees)
      .HasForeignKey(e => e.CompanyId)
 .OnDelete(DeleteBehavior.Cascade);
+
+             // Role relationship (optional)
+             entity.HasOne(e => e.Role)
+             .WithMany(r => r.Employees)
+             .HasForeignKey(e => e.RoleId)
+             .OnDelete(DeleteBehavior.SetNull);
          });
+
+            // ===== EmployeeRole Configuration =====
+            modelBuilder.Entity<EmployeeRole>(entity =>
+ {
+     entity.HasKey(e => e.RoleId);
+     entity.Property(e => e.RoleId).UseIdentityColumn();
+     entity.HasIndex(e => e.CompanyId);
+     entity.Property(e => e.RoleName).HasMaxLength(100);
+     entity.Property(e => e.RateType).HasMaxLength(50);
+     entity.Property(e => e.Description).HasMaxLength(500);
+
+     entity.HasOne(e => e.Company)
+     .WithMany(c => c.EmployeeRoles)
+     .HasForeignKey(e => e.CompanyId)
+     .OnDelete(DeleteBehavior.Restrict);
+ });
 
             // ===== EmployeeQrCode Configuration =====
             modelBuilder.Entity<EmployeeQrCode>(entity =>

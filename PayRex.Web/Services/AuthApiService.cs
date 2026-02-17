@@ -2,6 +2,7 @@ using PayRex.Web.DTOs;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace PayRex.Web.Services
 {
@@ -577,5 +578,117 @@ namespace PayRex.Web.Services
  return null;
  }
  }
+
+ public async Task<CompanyProfileDto?> GetCompanyProfileAsync(string token)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Get, "api/auth/company");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+
+ var sw = Stopwatch.StartNew();
+ var response = await _httpClient.SendAsync(request);
+ var responseContent = await response.Content.ReadAsStringAsync();
+ sw.Stop();
+
+ // Log elapsed time and status to help diagnose slow API calls
+ _logger.LogInformation("GetCompanyProfileAsync: Status={Status}, ElapsedMs={ElapsedMs}, Url={Url}", response.StatusCode, sw.ElapsedMilliseconds, _httpClient?.BaseAddress?.ToString() + "api/auth/company");
+
+ if (response.IsSuccessStatusCode)
+ {
+ return JsonSerializer.Deserialize<CompanyProfileDto>(responseContent, JsonOptions);
  }
+ _logger.LogWarning("GetCompanyProfile failed with status code: {Status}", response.StatusCode);
+ return null;
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling GetCompanyProfile API");
+ return null;
+ }
+ }
+
+ public async Task<(bool Success, string? Message)> UpdateCompanyProfileAsync(string token, UpdateCompanyRequestDto dto)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Put, "api/auth/company");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+ request.Content = new StringContent(JsonSerializer.Serialize(dto, JsonOptions), Encoding.UTF8, "application/json");
+
+ var response = await _httpClient.SendAsync(request);
+ var content = await response.Content.ReadAsStringAsync();
+ if (response.IsSuccessStatusCode) return (true, "Company updated");
+ try { var doc = JsonSerializer.Deserialize<JsonElement>(content, JsonOptions); if (doc.TryGetProperty("message", out var m)) return (false, m.GetString()); } catch { }
+ return (false, "Failed to update company");
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling UpdateCompanyProfile API");
+ return (false, ex.Message);
+ }
+ }
+
+ public async Task<List<EmployeeRoleDto>?> GetEmployeeRolesAsync(string token)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Get, "api/EmployeeRoles");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+ var response = await _httpClient.SendAsync(request);
+ if (!response.IsSuccessStatusCode) return null;
+ var content = await response.Content.ReadAsStringAsync();
+ return JsonSerializer.Deserialize<List<EmployeeRoleDto>>(content, JsonOptions);
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling GetEmployeeRoles API");
+ return null;
+ }
+ }
+
+ public async Task<(bool Success, string? Message)> SyncEmployeeRolesAsync(string token, List<EmployeeRoleDto> roles)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Post, "api/EmployeeRoles/sync");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+ request.Content = new StringContent(JsonSerializer.Serialize(roles, JsonOptions), Encoding.UTF8, "application/json");
+ var response = await _httpClient.SendAsync(request);
+ var content = await response.Content.ReadAsStringAsync();
+ if (response.IsSuccessStatusCode) return (true, null);
+ try { var doc = JsonSerializer.Deserialize<JsonElement>(content, JsonOptions); if (doc.TryGetProperty("message", out var m)) return (false, m.GetString()); } catch { }
+ return (false, "Failed to sync roles");
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling SyncEmployeeRoles API");
+ return (false, ex.Message);
+ }
+ }
+
+ public async Task<(bool Success, string? Message)> DeleteEmployeeRoleAsync(string token, int id)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Delete, $"api/EmployeeRoles/{id}");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean)) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+ var response = await _httpClient.SendAsync(request);
+ var content = await response.Content.ReadAsStringAsync();
+ if (response.IsSuccessStatusCode) return (true, null);
+ try { var doc = JsonSerializer.Deserialize<JsonElement>(content, JsonOptions); if (doc.TryGetProperty("message", out var m)) return (false, m.GetString()); } catch { }
+ return (false, "Failed to delete role");
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling DeleteEmployeeRole API");
+ return (false, ex.Message);
+ }
+ }
+ } // <- This closing brace was missing
 }

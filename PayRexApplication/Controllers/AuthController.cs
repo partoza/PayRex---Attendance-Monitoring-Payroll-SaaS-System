@@ -871,5 +871,106 @@ user.UpdatedAt = DateTime.UtcNow;
 
             return Unauthorized(new { message = "Invalid credentials" });
    }
+
+        /// <summary>
+        /// Get current user's company profile
+        /// </summary>
+        [HttpGet("company")]
+        [Authorize]
+        public async Task<IActionResult> GetCompanyProfile()
+        {
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+            var user = await _db.Users.FindAsync(parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            var company = await _db.Companies.FindAsync(user.CompanyId);
+            if (company == null) return NotFound(new { message = "Company not found" });
+
+            // load company settings if available
+            var settings = await _db.CompanySettings.FindAsync(company.CompanyId);
+
+            return Ok(new CompanyProfileDto
+            {
+                CompanyId = company.CompanyId,
+                CompanyName = company.CompanyName,
+                Address = company.Address,
+                ContactEmail = company.ContactEmail,
+                ContactPhone = company.ContactPhone,
+                Tin = company.Tin,
+                    LogoUrl = company.LogoUrl,
+                    UrlImage = company.UrlImage,
+                PayrollCycle = settings != null ? (int?)settings.PayrollCycle : null,
+                WorkHoursPerDay = settings?.WorkHoursPerDay,
+                OvertimeRate = settings != null ? (decimal?)settings.OvertimeRate : null,
+                LateGraceMinutes = settings?.LateGraceMinutes,
+                HolidayRate = settings?.HolidayRate,
+                AbsentRate = settings?.AbsentRate,
+                // expose roles JSON so frontend can show/edit roles list
+                RolesJson = settings?.RolesJson
+            });
+        }
+
+        /// <summary>
+ /// Update current user's company profile
+ /// </summary>
+ [HttpPut("company")]
+ [Authorize(Roles = "SuperAdmin,Admin")]
+ public async Task<IActionResult> UpdateCompanyProfile([FromBody] UpdateCompanyProfileDto dto)
+ {
+ if (!ModelState.IsValid) return BadRequest(ModelState);
+
+ var userId = User.FindFirst("uid")?.Value;
+ if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+ var user = await _db.Users.FindAsync(parsedUserId);
+ if (user == null) return NotFound(new { message = "User not found" });
+
+ var company = await _db.Companies.FindAsync(user.CompanyId);
+ if (company == null) return NotFound(new { message = "Company not found" });
+
+ var oldValues = new { company.CompanyName, company.Address, company.ContactEmail, company.ContactPhone, company.Tin, company.LogoUrl };
+
+ company.CompanyName = dto.CompanyName;
+ company.Address = dto.Address;
+ company.ContactEmail = dto.ContactEmail;
+ company.ContactPhone = dto.ContactPhone;
+ company.Tin = dto.Tin;
+ company.LogoUrl = dto.LogoUrl;
+ company.UrlImage = dto.UrlImage;
+ company.UpdatedAt = DateTime.UtcNow;
+
+ // Update or create company settings
+ var settings = await _db.CompanySettings.FindAsync(company.CompanyId);
+ if (settings == null)
+ {
+ settings = new CompanySetting
+ {
+ CompanyId = company.CompanyId,
+ CreatedAt = DateTime.UtcNow
+ };
+ _db.CompanySettings.Add(settings);
+ }
+
+ if (dto.PayrollCycle.HasValue) settings.PayrollCycle = (Enums.PayrollCycle)dto.PayrollCycle.Value;
+ if (dto.WorkHoursPerDay.HasValue) settings.WorkHoursPerDay = dto.WorkHoursPerDay.Value;
+ if (dto.OvertimeRate.HasValue) settings.OvertimeRate = dto.OvertimeRate.Value;
+ if (dto.LateGraceMinutes.HasValue) settings.LateGraceMinutes = dto.LateGraceMinutes.Value;
+ if (dto.HolidayRate.HasValue) settings.HolidayRate = dto.HolidayRate.Value;
+ if (dto.AbsentRate.HasValue) settings.AbsentRate = dto.AbsentRate.Value;
+
+ // Roles JSON persisted on settings
+ if (!string.IsNullOrWhiteSpace(dto.RolesJson)) settings.RolesJson = dto.RolesJson;
+
+ settings.UpdatedAt = DateTime.UtcNow;
+
+ await _db.SaveChangesAsync();
+
+ await _activityLogger.LogAsync(parsedUserId, company.CompanyId, "UpdateCompanyProfile", "Company", company.CompanyId,
+ System.Text.Json.JsonSerializer.Serialize(oldValues), System.Text.Json.JsonSerializer.Serialize(dto), GetClientIpAddress(), HttpContext.Request.Headers["User-Agent"].FirstOrDefault(), user.Role.ToString(), "Company");
+
+ return Ok(new { message = "Company profile updated" });
+ }
     }
 }

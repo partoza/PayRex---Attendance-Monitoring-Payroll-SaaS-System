@@ -44,6 +44,8 @@ public DateTime EffectiveDate { get; set; }
         public decimal PhilHealthPercentage { get; set; }
  public DateTime EffectiveDate { get; set; }
         public string? Note { get; set; }
+        // Password confirmation required to perform the update
+ public string? Password { get; set; }
     }
 
     public class PlanDto
@@ -263,30 +265,61 @@ public int? PlanUserLimit { get; set; }
 
         public async Task<bool> UpdateSystemSettingsAsync(UpdateSystemSettingDto dto, int actorUserId, string? ipAddress, string? userAgent)
         {
-   var existing = await _db.SystemSettings.OrderByDescending(s => s.EffectiveDate).FirstOrDefaultAsync();
-            var oldValues = existing != null
-    ? $"SSS={existing.SssPercentage},PagIbig={existing.PagIbigPercentage},PhilHealth={existing.PhilHealthPercentage}"
-        : "none";
+ // Verify actor user's password before applying changes
+ var actor = await _db.Users.FindAsync(actorUserId);
+ if (actor == null)
+ {
+ _logger.LogWarning("Attempt to update system settings by non-existent user {ActorId}", actorUserId);
+ return false;
+ }
 
-    // Create new setting record (append, don't overwrite, for history)
-    var setting = new SystemSetting
-            {
-   SssPercentage = dto.SssPercentage,
-     PagIbigPercentage = dto.PagIbigPercentage,
-        PhilHealthPercentage = dto.PhilHealthPercentage,
-                EffectiveDate = dto.EffectiveDate,
-    Note = dto.Note,
-     CreatedAt = DateTime.UtcNow
-      };
+ if (string.IsNullOrEmpty(dto.Password))
+ {
+ _logger.LogWarning("Password not provided for system settings update by user {ActorId}", actorUserId);
+ return false;
+ }
 
-            _db.SystemSettings.Add(setting);
-            await _db.SaveChangesAsync();
+ // Verify password using BCrypt (seeds use BCrypt)
+ try
+ {
+ if (!BCrypt.Net.BCrypt.Verify(dto.Password, actor.PasswordHash))
+ {
+ _logger.LogWarning("Invalid password provided for system settings update by user {ActorId}", actorUserId);
+ return false;
+ }
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error verifying password for user {ActorId}", actorUserId);
+ return false;
+ }
 
-            var newValues = $"SSS={dto.SssPercentage},PagIbig={dto.PagIbigPercentage},PhilHealth={dto.PhilHealthPercentage}";
-            await _audit.LogAsync(actorUserId, null, "UpdateSystemSettings", "SystemSetting", setting.SettingId.ToString(),
-            oldValues, newValues, ipAddress, userAgent);
+ var existing = await _db.SystemSettings.OrderByDescending(s => s.EffectiveDate).FirstOrDefaultAsync();
+ var oldValues = existing != null
+ ? $"SSS={existing.SssPercentage},PagIbig={existing.PagIbigPercentage},PhilHealth={existing.PhilHealthPercentage}"
+ : "none";
 
-            return true;
+ // Create new setting record (append, don't overwrite, for history)
+ var setting = new SystemSetting
+ {
+ SssPercentage = dto.SssPercentage,
+ PagIbigPercentage = dto.PagIbigPercentage,
+ PhilHealthPercentage = dto.PhilHealthPercentage,
+ EffectiveDate = dto.EffectiveDate,
+ Note = dto.Note,
+ CreatedAt = DateTime.UtcNow
+ };
+
+ _db.SystemSettings.Add(setting);
+ await _db.SaveChangesAsync();
+
+ var newValues = $"SSS={dto.SssPercentage},PagIbig={dto.PagIbigPercentage},PhilHealth={dto.PhilHealthPercentage}";
+ await _audit.LogAsync(actorUserId, null, "UpdateSystemSettings", "SystemSetting", setting.SettingId.ToString(),
+ oldValues, newValues, ipAddress, userAgent);
+
+ _logger.LogInformation("System settings updated by user {ActorId}: {NewValues}", actorUserId, newValues);
+
+ return true;
         }
 
         public async Task<List<PlanDto>> GetPlansAsync()

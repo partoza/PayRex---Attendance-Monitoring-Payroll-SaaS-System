@@ -277,20 +277,57 @@
             </h2>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">SSS Rate (from API)</p>
-                    <p class="text-lg font-bold text-gray-900">@Model.SssPercentage%</p>
+            <form method="post" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <label class="text-xs text-gray-500 mb-1 block">SSS Rate (from API)</label>
+                        <input asp-for="SssPercentage" class="mt-1 w-full rounded-lg border-gray-200" />
+                        <span asp-validation-for="SssPercentage" class="text-red-600 text-sm"></span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <label class="text-xs text-gray-500 mb-1 block">Pag-IBIG Rate (from API)</label>
+                        <input asp-for="PagIbigPercentage" class="mt-1 w-full rounded-lg border-gray-200" />
+                        <span asp-validation-for="PagIbigPercentage" class="text-red-600 text-sm"></span>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <label class="text-xs text-gray-500 mb-1 block">PhilHealth Rate (from API)</label>
+                        <input asp-for="PhilHealthPercentage" class="mt-1 w-full rounded-lg border-gray-200" />
+                        <span asp-validation-for="PhilHealthPercentage" class="text-red-600 text-sm"></span>
+                    </div>
                 </div>
-                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">Pag-IBIG Rate (from API)</p>
-                    <p class="text-lg font-bold text-gray-900">@Model.PagIbigPercentage%</p>
+
+                @if (Model.LoadSuccess)
+                {
+                    <div class="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-500 mb-1 block">Effective Date</label>
+                                <input asp-for="EffectiveDate" class="mt-1 w-full rounded-lg border-gray-200" type="date" />
+                                <span asp-validation-for="EffectiveDate" class="text-red-600 text-sm"></span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Note))
+                            {
+                                <div>
+                                    <label class="text-xs text-gray-500 mb-1 block">Note</label>
+                                    <textarea asp-for="Note" class="mt-1 w-full rounded-lg border-gray-200"></textarea>
+                                    <span asp-validation-for="Note" class="text-red-600 text-sm"></span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="bg-white rounded-xl p-4 border border-gray-100">
+                    <label class="text-xs text-gray-500 mb-1 block">Confirm with your password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="mt-1 w-full rounded-lg border-gray-200" />
+                    <span asp-validation-for="ConfirmPassword" class="text-red-600 text-sm"></span>
                 </div>
-                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                    <p class="text-xs text-gray-500 mb-1">PhilHealth Rate (from API)</p>
-                    <p class="text-lg font-bold text-gray-900">@Model.PhilHealthPercentage%</p>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">Save Settings</button>
                 </div>
-            </div>
+            </form>
+
             @if (Model.LoadSuccess)
             {
                 <div class="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
