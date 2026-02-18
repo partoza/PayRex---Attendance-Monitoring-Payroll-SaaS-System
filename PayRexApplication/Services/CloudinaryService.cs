@@ -20,6 +20,15 @@ namespace PayRexApplication.Services
     Task<string?> UploadProfileImageAsync(Stream imageStream, string fileName, string userId);
 
         /// <summary>
+        /// Upload a company logo to Cloudinary
+        /// </summary>
+        /// <param name="imageStream">Image data stream</param>
+        /// <param name="fileName">Original file name</param>
+        /// <param name="companyId">Company ID for folder organization</param>
+        /// <returns>Secure URL of uploaded logo or null if failed</returns>
+    Task<string?> UploadCompanyLogoAsync(Stream imageStream, string fileName, string companyId);
+
+        /// <summary>
         /// Delete an image from Cloudinary by public ID
      /// </summary>
         /// <param name="publicId">Cloudinary public ID</param>
@@ -133,6 +142,63 @@ Transformation = new Transformation()
    _logger.LogError(ex, "Error uploading image to Cloudinary for user {UserId}", userId);
          return null;
          }
+        }
+
+        public async Task<string?> UploadCompanyLogoAsync(Stream imageStream, string fileName, string companyId)
+        {
+            if (!_isConfigured)
+            {
+                _logger.LogWarning("Cloudinary is not configured. Cannot upload image.");
+                return null;
+            }
+
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
+            {
+                _logger.LogWarning("Invalid file extension: {Extension}", extension);
+                return null;
+            }
+
+            if (imageStream.Length > MaxFileSizeBytes)
+            {
+                _logger.LogWarning("File size {Size} exceeds maximum allowed", imageStream.Length);
+                return null;
+            }
+
+            try
+            {
+                var publicId = $"payrex/companies/company_{companyId}_{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(fileName, imageStream),
+                    PublicId = publicId,
+                    Overwrite = true,
+                    Transformation = new Transformation()
+                        .Quality("auto")
+                        .FetchFormat("auto"),
+                    Tags = "company,logo"
+                };
+
+                // Limit max dimensions if needed, but keeping original aspect ratio is preferred as per user request
+                // We can add .Width(500).Crop("limit") if we want to valid max width
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    _logger.LogInformation("Company logo uploaded successfully for company {CompanyId}: {Url}", companyId, uploadResult.SecureUrl);
+                    return uploadResult.SecureUrl?.ToString();
+                }
+
+                _logger.LogError("Cloudinary upload failed: {Error}", uploadResult.Error?.Message);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading logo to Cloudinary for company {CompanyId}", companyId);
+                return null;
+            }
         }
 
      public async Task<bool> DeleteImageAsync(string publicId)

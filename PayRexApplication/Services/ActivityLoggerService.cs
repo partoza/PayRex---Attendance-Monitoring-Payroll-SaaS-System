@@ -23,7 +23,7 @@ namespace PayRexApplication.Services
         /// <param name="role">The role<see cref="string?"/></param>
         /// <param name="entityAffected">The entityAffected<see cref="string?"/></param>
         /// <returns>The <see cref="Task"/></returns>
-        Task LogAsync(int? userId, string? companyId, string action, string? entityType = null,
+        Task LogAsync(int? userId, int? companyId, string action, string? entityType = null,
        string? entityId = null, string? oldValue = null, string? newValue = null,
    string? ipAddress = null, string? userAgent = null,
         string? role = null, string? entityAffected = null);
@@ -70,7 +70,7 @@ namespace PayRexApplication.Services
         /// <param name="role">The role<see cref="string?"/></param>
         /// <param name="entityAffected">The entityAffected<see cref="string?"/></param>
         /// <returns>The <see cref="Task"/></returns>
-        public async Task LogAsync(int? userId, string? companyId, string action, string? entityType = null,
+        public async Task LogAsync(int? userId, int? companyId, string action, string? entityType = null,
             string? entityId = null, string? oldValue = null, string? newValue = null,
       string? ipAddress = null, string? userAgent = null,
          string? role = null, string? entityAffected = null)

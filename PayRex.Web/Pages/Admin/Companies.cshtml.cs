@@ -43,7 +43,7 @@ namespace PayRex.Web.Pages.Admin
   return Page();
         }
 
-        public async Task<IActionResult> OnPostToggleActiveAsync(string companyId, bool isActive)
+        public async Task<IActionResult> OnPostToggleActiveAsync(int companyId, bool isActive)
         {
     if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return RedirectToPage("/Auth/Login");
 
@@ -63,7 +63,7 @@ client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bear
 
    public class CompanyItem
         {
-       public string CompanyId { get; set; } = "";
+       public int CompanyId { get; set; }
      public string CompanyName { get; set; } = "";
    public string Status { get; set; } = "";
     public bool IsActive { get; set; }

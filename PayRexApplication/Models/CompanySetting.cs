@@ -9,9 +9,8 @@ namespace PayRexApplication.Models
     public class CompanySetting
     {
         [Key]
-        [MaxLength(4)]
         [Column("companyId")]
-        public string CompanyId { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
 
         [Required]
         [Column("payrollCycle")]

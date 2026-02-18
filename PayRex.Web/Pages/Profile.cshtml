@@ -4,52 +4,15 @@
     ViewData["Title"] = "Profile Settings";
 }
 
-<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4 md:top-6 md:right-6 max-w-sm w-full">
-    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
-    {
-        <div class="toast-message group relative overflow-hidden bg-white border border-green-100 rounded-2xl shadow-lg shadow-green-100/50 p-4 animate-slide-in" role="alert">
-             <div class="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-[3000ms] w-full animate-progress"></div>
-            <div class="flex items-start gap-4">
-                <div class="p-2 bg-green-50 rounded-xl shrink-0">
-                    <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="flex-1 pt-0.5">
-                    <h3 class="text-sm font-semibold text-gray-900">Success</h3>
-                    <p class="text-sm text-gray-600 mt-1">@Model.SuccessMessage</p>
-                </div>
-                <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    }
-    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-    {
-        <div class="toast-message group relative overflow-hidden bg-white border border-red-100 rounded-2xl shadow-lg shadow-red-100/50 p-4 animate-slide-in" role="alert">
-             <div class="absolute bottom-0 left-0 h-1 bg-red-500 transition-all duration-[3000ms] w-full animate-progress"></div>
-            <div class="flex items-start gap-4">
-                <div class="p-2 bg-red-50 rounded-xl shrink-0">
-                    <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="flex-1 pt-0.5">
-                    <h3 class="text-sm font-semibold text-gray-900">Error</h3>
-                    <p class="text-sm text-gray-600 mt-1">@Model.ErrorMessage</p>
-                </div>
-                <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    }
-</div>
+@* Server-side messages: call global showToast on load *@
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SuccessMessage)), 'success'); });</script>
+}
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorMessage)), 'error'); });</script>
+}
 
 <div class="max-w-8xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
     <!-- Header -->
@@ -126,7 +89,7 @@
                                         </svg>
                                         Change
                                     </span>
-                                    <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="this.form.submit()" />
+                                    <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" class="hidden" onchange="uploadProfileImage(this)" />
                                 </label>
                             </form>
 
@@ -519,22 +482,7 @@
     </div>
 </div>
 
-<style>
-    @@keyframes progress {
-        from { width: 100%; }
-        to { width: 0%; }
-    }
-    .animate-progress {
-        animation: progress 3s linear forwards;
-    }
-    @@keyframes slideIn {
-        from { opacity: 0; transform: translateY(-1rem); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-slide-in {
-        animation: slideIn 0.3s ease-out forwards;
-    }
-</style>
+@* Toast animations/styles moved to shared layout *@
 
 <script>
     function togglePassword(id) {
@@ -553,29 +501,16 @@
 
 
 
-    function showToast(message, type) {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = 'toast-message group relative overflow-hidden bg-white border border-gray-200 rounded-2xl shadow-lg p-4 animate-slide-in';
-        if (type === 'success') toast.classList.add('border-green-100');
-        if (type === 'error') toast.classList.add('border-red-100');
-        toast.innerHTML = `<div class="absolute bottom-0 left-0 h-1 ${type==='success'? 'bg-green-500':'bg-red-500'} transition-all duration-[3000ms] w-full animate-progress"></div>
-        <div class="flex items-start gap-4">
-        <div class="p-2 ${type==='success'? 'bg-green-50':'bg-red-50'} rounded-xl shrink-0">
-        <svg class="w-6 h-6 ${type==='success'? 'text-green-600':'text-red-600'}" fill="none" viewBox="002424" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M912l224-4" />
-        </svg>
-        </div>
-        <div class="flex-1 pt-0.5">
-        <h3 class="text-sm font-semibold text-gray-900">${type==='success'?'Success':'Notice'}</h3>
-        <p class="text-sm text-gray-600 mt-1">${message}</p>
-        </div>
-        <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
-        </div>`;
-        container.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-10px)'; setTimeout(() => toast.remove(),300); },3000);
- }
+    // Toast functions moved to shared layout; pages call showToast / showUploadToast / hideUploadToast
+
+    function uploadProfileImage(input) {
+        if (!input || !input.form) return;
+        const file = input.files && input.files[0];
+        if (!file) return;
+        showLoadingToast('Uploading image...');
+        // submit the form (will navigate/reload)
+        input.form.submit();
+    }
 
     function copyRecoveryCodes() {
  const nodes = document.querySelectorAll('.recovery-code');
@@ -593,24 +528,11 @@
 
 
 
-    // Auto-dismiss toasts
+    // Sync profile image to layout and localStorage
     document.addEventListener('DOMContentLoaded', () => {
-        const toasts = document.querySelectorAll('.toast-message');
-        toasts.forEach(t => {
-            setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.transform = 'translateY(-10px)';
-                setTimeout(() => t.remove(), 300);
-            }, 3000);
-        });
-
-        // Sync profile image to layout and localStorage
         const profileImg = document.getElementById('userProfileImage');
         if (profileImg && profileImg.src) {
-            // Save to storage
             localStorage.setItem('payrex_profile_image', profileImg.src);
-            
-            // Update layout immediately
             const layoutImgs = document.querySelectorAll('.layout-profile-img');
             layoutImgs.forEach(img => img.src = profileImg.src);
         }

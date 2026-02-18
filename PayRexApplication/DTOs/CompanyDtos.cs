@@ -4,14 +4,13 @@ namespace PayRexApplication.DTOs
 {
  public class CompanyProfileDto
  {
- public string CompanyId { get; set; } = string.Empty;
+ public int CompanyId { get; set; }
  public string CompanyName { get; set; } = string.Empty;
  public string? Address { get; set; }
  public string? ContactEmail { get; set; }
  public string? ContactPhone { get; set; }
  public string? Tin { get; set; }
  public string? LogoUrl { get; set; }
-	public string? UrlImage { get; set; }
 
  // Payroll settings
  public int? PayrollCycle { get; set; }
@@ -45,8 +44,6 @@ namespace PayRexApplication.DTOs
 
  [MaxLength(512)]
  public string? LogoUrl { get; set; }
-	[MaxLength(512)]
-	public string? UrlImage { get; set; }
 
  // Payroll settings
  public int? PayrollCycle { get; set; }

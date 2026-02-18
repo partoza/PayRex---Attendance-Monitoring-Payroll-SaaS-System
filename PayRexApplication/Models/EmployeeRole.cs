@@ -13,9 +13,8 @@ namespace PayRexApplication.Models
  public int RoleId { get; set; }
 
  [Required]
- [MaxLength(4)]
  [Column("companyId")]
- public string CompanyId { get; set; } = string.Empty;
+ public int CompanyId { get; set; }
 
  [Required]
  [MaxLength(100)]

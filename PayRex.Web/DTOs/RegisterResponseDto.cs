@@ -4,6 +4,6 @@ namespace PayRex.Web.DTOs
     {
         public int Id { get; set; }
         public string Email { get; set; } = string.Empty;
-        public string CompanyId { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
     }
 }

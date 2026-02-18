@@ -26,7 +26,7 @@ namespace PayRex.Web.Pages.Admin
  [Required]
  public string Role { get; set; } = "Hr";
  [Required]
- public string CompanyId { get; set; } = string.Empty;
+ public int CompanyId { get; set; }
  }
 
  public void OnGet()

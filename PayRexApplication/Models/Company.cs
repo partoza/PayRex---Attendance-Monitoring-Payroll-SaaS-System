@@ -10,9 +10,13 @@ namespace PayRexApplication.Models
     public class Company
   {
         [Key]
+        [Column("companyId")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int CompanyId { get; set; }
+
+        [Column("companyCode")]
         [MaxLength(4)]
-    [Column("companyId")]
-        public string CompanyId { get; set; } = string.Empty;
+        public string CompanyCode { get; set; } = string.Empty;
 
    [Required]
         [MaxLength(200)]
@@ -61,10 +65,6 @@ namespace PayRexApplication.Models
       [Column("logoUrl")]
       [MaxLength(512)]
         public string? LogoUrl { get; set; }
-
-      [Column("urlImage")]
-      [MaxLength(512)]
-        public string? UrlImage { get; set; }
 
         // Navigation properties
       [ForeignKey("PlanId")]

@@ -11,9 +11,8 @@ namespace PayRexApplication.Models
 [Column("auditId")]
         public int AuditId { get; set; }
 
-        [MaxLength(4)]
-      [Column("companyId")]
-        public string? CompanyId { get; set; }
+        [Column("companyId")]
+        public int? CompanyId { get; set; }
 
         [Column("userId")]
         public int? UserId { get; set; }

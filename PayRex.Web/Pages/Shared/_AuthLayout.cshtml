@@ -1,6 +1,7 @@
 @{
  Layout = null;
 }
+@inject Microsoft.Extensions.Configuration.IConfiguration AppConfig
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,6 +43,7 @@
  @RenderBody()
 
  <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+ <script src="https://www.google.com/recaptcha/api.js" async defer></script>
  @RenderSection("Scripts", required: false)
 </body>
 </html>

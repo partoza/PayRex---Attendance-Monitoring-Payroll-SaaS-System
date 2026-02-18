@@ -1,306 +1,724 @@
-﻿@page
+@page
+@model PayRex.Web.Pages.AddEmployeeModel
 @{
     ViewData["Title"] = "Add Employee";
+    Layout = "_Layout";
 }
 
-<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-    <!-- Header with improved spacing -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Add Employee</h1>
-            <p class="mt-1 text-sm text-gray-500">Create a new employee profile, complete all sections below</p>
-        </div>
-        <div>
-            <a href="/Employees" class="inline-flex items-center px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Employees
-            </a>
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    @* Global toast container is provided by the shared layout *@
+
+    <!-- Header Section - Matching Settings style -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-8 py-10 relative z-10 text-gray-900">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight flex items-center gap-3">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        Add New Employee
+                    </h1>
+                    <p class="mt-2 text-gray-600 text-lg">Create a new employee profile. Fill in all required information.</p>
+                </div>
+                <button type="button" onclick="window.history.back()" 
+                    class="inline-flex items-center px-6 py-3 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Main Form -->
-    <form id="addEmployeeForm" method="post" action="#" enctype="multipart/form-data">
+    <form id="addEmployeeForm" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" id="companyId" name="CompanyId" />
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Main Form Fields - 2 columns on large screens -->
+            <!-- Main Content Column (2/3 width) -->
             <div class="lg:col-span-2 space-y-6">
+                
                 <!-- Personal Information Card -->
-                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-                                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
-
                             </div>
-                            <div>
-                                <h2 class="text-lg font-semibold text-gray-900">Personal Information</h2>
-                                <p class="text-sm text-gray-500">Basic details and contact information</p>
-                            </div>
+                            <h2 class="text-lg font-bold text-gray-900">Personal Information</h2>
                         </div>
                     </div>
-                    <div class="px-4 sm:px-6 py-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Employee Code <span class="text-red-500">*</span></label>
-                                <input name="EmployeeCode" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="EMP-0001" required />
-                            </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Employee Code (Readonly) -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Company ID</label>
-                                <input name="CompanyId" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="COMP-01" />
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee Code</label>
+                                <input type="text" id="employeeCode" name="EmployeeCode" readonly
+                                    class="mt-1 block w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-2.5 cursor-not-allowed"
+                                    placeholder="Loading...">
                             </div>
-                            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Email <span class="text-red-500">*</span></label>
-                                <input name="Email" type="email" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="john.doe@company.com" required />
-                            </div>
+
+                            <!-- Company ID (Readonly) -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">First Name <span class="text-red-500">*</span></label>
-                                <input name="FirstName" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="John" required />
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Company Name</label>
+                                <input type="text" id="companyName" name="CompanyName" readonly
+                                    class="mt-1 block w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl px-3 py-2.5 cursor-not-allowed">
                             </div>
+
+                            <!-- First Name (Required) -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Last Name <span class="text-red-500">*</span></label>
-                                <input name="LastName" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="Doe" required />
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    First Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="firstName" name="FirstName" required maxlength="100"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="Enter first name">
                             </div>
+
+                            <!-- Last Name (Required) -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                                <input name="PhoneNumber" type="tel" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="+1 (555) 000-0000" />
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    Last Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="lastName" name="LastName" required maxlength="100"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="Enter last name">
+                            </div>
+
+                            <!-- Email (Required) -->
+                            <div class="md:col-span-2">
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email" id="email" name="Email" required maxlength="256"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="name@company.com">
+                            </div>
+
+                            <!-- Contact Number -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact Number</label>
+                                <input type="tel" id="contactNumber" name="ContactNumber" maxlength="20"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="+63 9XX XXX XXXX">
+                            </div>
+
+                            <!-- Civil Status -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Civil Status</label>
+                                <select id="civilStatus" name="CivilStatus"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5">
+                                    <option value="">Select status</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                </select>
+                            </div>
+
+                            <!-- Birthdate -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Birthdate</label>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" id="birthdate" name="Birthdate" datepicker datepicker-autohide
+                                        class="block w-full pl-10 border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                        placeholder="Select date">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Employment Details Card -->
-                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
-                                    <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0 1 12 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 0 1 7.5 5.455V5.25Zm7.5 0v.09a49.488 49.488 0 0 0-6 0v-.09a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5Zm-3 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
-                                    <path d="M3 18.4v-2.796a4.3 4.3 0 0 0 .713.31A26.226 26.226 0 0 0 12 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 0 1-6.477-.427C4.047 21.128 3 19.852 3 18.4Z" />
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-
                             </div>
-                            <div>
-                                <h2 class="text-lg font-semibold text-gray-900">Employment Details</h2>
-                                <p class="text-sm text-gray-500">Position, department, and compensation</p>
-                            </div>
+                            <h2 class="text-lg font-bold text-gray-900">Employment Details</h2>
                         </div>
                     </div>
-                    <div class="px-4 sm:px-6 py-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Position <span class="text-red-500">*</span></label>
-                                <input name="Position" type="text" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="Software Engineer" required />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Department</label>
-                                <select name="Department" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
-                                    <option value="">Select Department</option>
-                                    <option value="Engineering">Engineering</option>
-                                    <option value="Human Resources">Human Resources</option>
-                                    <option value="Finance">Finance</option>
-                                    <option value="Sales">Sales</option>
-                                    <option value="Marketing">Marketing</option>
-                                    <option value="Operations">Operations</option>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Role / Position (Required) -->
+                            <div class="md:col-span-2">
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    Role / Position <span class="text-red-500">*</span>
+                                </label>
+                                <select id="roleId" name="RoleId" required
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5">
+                                    <option value="">Select role</option>
                                 </select>
                             </div>
+
+                            <!-- Salary Display -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Employment Type</label>
-                                <select name="EmploymentType" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
-                                    <option value="FullTime">Full Time</option>
-                                    <option value="PartTime">Part Time</option>
-                                    <option value="Contractor">Contractor</option>
-                                    <option value="Probation">Probation</option>
-                                    <option value="Intern">Intern</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Employment Status</label>
-                                <select name="Status" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
-                                    <option value="Active">Active</option>
-                                    <option value="Probationary">Probationary</option>
-                                    <option value="Inactive">Inactive</option>
-                                    <option value="Terminated">Terminated</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Salary Rate <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">₱</span>
-                                    <input name="SalaryRate" type="number" step="0.01" class="w-full rounded-lg border border-gray-200 pl-8 pr-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-shadow" placeholder="0.00" required />
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Salary</label>
+                                <div class="mt-1 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                    <span id="salaryDisplay" class="text-lg font-bold text-blue-700">₱ 0.00</span>
                                 </div>
                             </div>
+
+                            <!-- Start Date (Required) -->
                             <div>
-                                <label class="block text-xs font-medium text-gray-600 mb-1">Pay Type</label>
-                                <select name="PayType" class="w-full rounded-lg border border-gray-200 px-3 py-2.5 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white transition-shadow">
-                                    <option value="Monthly">Monthly</option>
-                                    <option value="Semi-Monthly">Semi-Monthly</option>
-                                    <option value="Weekly">Weekly</option>
-                                    <option value="Hourly">Hourly</option>
-                                </select>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    Start Date <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" id="startDate" name="StartDate" required datepicker datepicker-autohide
+                                        class="block w-full pl-10 border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                        placeholder="Select start date">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Government Identifiers Card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                                </svg>
+                            </div>
+                            <h2 class="text-lg font-bold text-gray-900">Government Identifiers</h2>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- TIN -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">TIN</label>
+                                <input type="text" id="tin" name="TIN" maxlength="15"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="XXX-XXX-XXX-XXX">
+                                <span id="tinError" class="text-xs text-red-600 mt-1"></span>
+                            </div>
+
+                            <!-- SSS -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">SSS Number</label>
+                                <input type="text" id="sss" name="SSS" maxlength="12"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="XX-XXXXXXX-X">
+                                <span id="sssError" class="text-xs text-red-600 mt-1"></span>
+                            </div>
+
+                            <!-- PhilHealth -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">PhilHealth ID</label>
+                                <input type="text" id="philHealth" name="PhilHealth" maxlength="14"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="XX-XXXXXXXXX-X">
+                                <span id="philHealthError" class="text-xs text-red-600 mt-1"></span>
+                            </div>
+
+                            <!-- Pag-IBIG -->
+                            <div>
+                                <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pag-IBIG MID</label>
+                                <input type="text" id="pagIbig" name="PagIbig" maxlength="14"
+                                    class="mt-1 block w-full border border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm px-3 py-2.5"
+                                    placeholder="XXXX-XXXX-XXXX">
+                                <span id="pagIbigError" class="text-xs text-red-600 mt-1"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Removed main Cancel/Create buttons — moved to Signature card -->
             </div>
 
-            <!-- Sidebar: Media Uploads -->
-            <aside class="lg:col-span-1 space-y-6">
+            <!-- Sidebar Column (1/3 width) -->
+            <div class="space-y-6">
                 <!-- Profile Photo Card -->
-                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="px-4 sm:px-6 py-2 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-semibold text-gray-900">Profile Photo</h3>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-900">Profile Photo</h3>
+                        </div>
                     </div>
-                    <div class="p-4 py-2 sm:p-6">
-                        <div class="flex flex-col items-center text-center">
-                            <div class="relative mb-4">
-                                <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-100 bg-gray-50 shadow-sm flex items-center justify-center">
-                                    <img id="profilePreview" src="/images/default-avatar.png" alt="Profile preview" class="w-full h-full object-cover hidden" />
-                                    <div id="profilePlaceholder" class="flex flex-col items-center justify-center text-gray-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-12">
-                                            <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" />
-                                        </svg>
-                                        
-                                        <span class="text-xs">No image</span>
+                    <div class="p-6">
+                        <div class="flex flex-col items-center">
+                            <!-- Preview Container -->
+                            <div class="relative mb-4 group">
+                                <div class="p-2 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm inline-block">
+                                    <div class="w-40 h-40 rounded-full overflow-hidden">
+                                        <img id="profilePreview" class="w-full h-full object-cover hidden" alt="Profile Preview">
+                                        <div id="profilePlaceholder" class="w-full h-full flex items-center justify-center bg-gray-100">
+                                            <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <input id="profilePhoto" name="ProfilePhoto" type="file" accept="image/*" class="hidden" onchange="previewImage(event, 'profilePreview', 'profilePlaceholder')" />
-
-                            <label for="profilePhoto" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 cursor-pointer transition-colors w-full justify-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
-                                Upload Photo
-                            </label>
-
-                            <p class="text-xs text-gray-500 mt-3">JPG, PNG or GIF — max 2MB</p>
-                            <p class="text-xs text-gray-400">Recommended: Square image</p>
+                            <!-- Upload Area -->
+                            <div class="w-full mt-2">
+                                <label for="profilePhoto" class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-xl border-2 border-blue-200 border-dashed transition-all cursor-pointer">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Choose Photo
+                                </label>
+                                <input id="profilePhoto" name="profilePhoto" type="file" class="hidden" accept="image/*" onchange="previewImage(this, 'profilePreview', 'profilePlaceholder')" />
+                                <p class="text-xs text-gray-400 text-center mt-2">JPG, PNG or WebP (max 2MB)</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Signature Card -->
-                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="px-4 sm:px-6 py-2 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-semibold text-gray-900">Signature</h3>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-900">Signature</h3>
+                        </div>
                     </div>
-                    <div class="p-4 py-2 sm:p-6">
-                        <div class="flex flex-col items-center text-center">
-                            <div class="relative mb-4 w-full">
-                                <div class="w-full h-24 rounded-lg overflow-hidden border-2 border-gray-200 bg-white flex items-center justify-center p-2">
-                                    <img id="signaturePreview" src="/images/default-signature.png" alt="Signature preview" class="max-h-full max-w-full object-contain hidden" />
-                                    <div id="signaturePlaceholder" class="flex flex-col items-center justify-center text-gray-400">
-                                        <svg class="w-12 h-12 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                        </svg>
-                                        <span class="text-xs">No signature</span>
+                    <div class="p-6">
+                        <div class="flex flex-col items-center">
+                            <!-- Preview Container -->
+                            <div class="relative mb-4 group">
+                                <div class="p-2 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm inline-block">
+                                    <div class="w-full flex items-center justify-center">
+                                        <img id="signaturePreview" class="max-w-full h-auto object-contain hidden" alt="Signature Preview">
+                                        <div id="signaturePlaceholder" class="text-center text-gray-400">
+                                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                            <p class="text-xs mt-1">No signature</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <input id="signatureImage" name="SignatureImage" type="file" accept="image/*" class="hidden" onchange="previewImage(event, 'signaturePreview', 'signaturePlaceholder')" />
+                            <!-- Upload Area -->
+                            <div class="w-full">
+                                <label for="signature" class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-xl border-2 border-blue-200 border-dashed transition-all cursor-pointer">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    Upload Signature
+                                </label>
+                                <input id="signature" name="signature" type="file" class="hidden" accept="image/*" onchange="previewImage(this, 'signaturePreview', 'signaturePlaceholder')" />
+                                <p class="text-xs text-gray-400 text-center mt-2">PNG with transparency recommended</p>
+                            </div>
+                        </div>
+                        <!-- Create + Reset buttons placed under Signature card (stacked, full-width, icons removed) -->
+                        <div class="mt-6 space-y-3">
+                            <button type="submit" id="submitBtn"
+                                class="w-full px-6 py-3 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm">
+                                Create Employee
+                            </button>
 
-                            <label for="signatureImage" class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 cursor-pointer transition-colors w-full justify-center border border-gray-200">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                Upload Signature
-                            </label>
-
-                            <p class="text-xs text-gray-500 mt-3">Upload scanned signature image</p>
-                            <p class="text-xs text-gray-400">PNG with transparent background preferred</p>
+                            <button type="button" id="resetBtn" onclick="resetForm()"
+                                class="w-full px-6 py-3 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
+                                Reset
+                            </button>
                         </div>
                     </div>
                 </div>
-
-                <!-- Form Actions Card -->
-                <div class="space-y-3">
-                    <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Create Employee
-                    </button>
-                    <a href="/Employees" class="w-full inline-flex items-center justify-center px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
-                        Cancel
-                    </a>
-                </div>
-            </aside>
+            </div>
         </div>
     </form>
 </div>
 
 @section Scripts {
+    <!-- Flowbite JS for datepicker -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    
     <script>
-        function previewImage(event, previewId, placeholderId) {
-            const input = event.target;
+        const API_URL = (window.ApiBaseUrl || '@ViewData["ApiBaseUrl"]' || '').replace(/"/g, '');
+        let token = '';
+        let roles = [];
+
+        // Global toast helpers are provided by shared layout (showToast / showUploadToast / hideUploadToast)
+        document.addEventListener('DOMContentLoaded', () => {
+            token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+
+            // Ensure inputs are referenced safely
+            let birthdateInput = document.getElementById('birthdate');
+            let startDateInput = document.getElementById('startDate');
+
+            // Initialize Flowbite datepickers
+            if (typeof Datepicker !== 'undefined') {
+                if (birthdateInput) {
+                    new Datepicker(birthdateInput, {
+                        autohide: true,
+                        format: 'yyyy-mm-dd',
+                        todayBtn: true,
+                        clearBtn: true,
+                        todayHighlight: true
+                    });
+                }
+                
+                if (startDateInput) {
+                    new Datepicker(startDateInput, {
+                        autohide: true,
+                        format: 'yyyy-mm-dd',
+                        todayBtn: true,
+                        clearBtn: true,
+                        todayHighlight: true
+                    });
+                }
+            }
+
+            // Set default start date to today
+            const today = new Date().toISOString().split('T')[0];
+            if (startDateInput) {
+                startDateInput.value = today;
+            }
+
+            // Load data
+            fetchNextEmployeeCode();
+            fetchRoles();
+            loadCompanyId();
+            populateCompanyFromToken();
+            
+            const cid = document.getElementById('companyId').value;
+            if (cid) fetchCompanyProfile(cid);
+
+            // Setup gov ID masking
+            setupGovIdMasking();
+        });
+
+        function loadCompanyId() {
+            try {
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.companyId) document.getElementById('companyId').value = payload.companyId;
+                    if (payload.companyName) document.getElementById('companyName').value = payload.companyName;
+                }
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
+        }
+
+        function populateCompanyFromToken() {
+            try {
+                if (!token) return;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.companyName) document.getElementById('companyName').value = payload.companyName;
+                if (payload.companyId) document.getElementById('companyId').value = payload.companyId;
+                if (payload.companyLogo) {
+                    const logo = document.getElementById('layout-header-logo');
+                    if (logo) logo.src = payload.companyLogo;
+                }
+            } catch (e) {
+                console.warn('populateCompanyFromToken failed', e);
+            }
+        }
+
+        async function fetchCompanyProfile(companyId) {
+            try {
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(`${API_URL}/api/Companies/${companyId}`, { headers, credentials: 'include' });
+                if (!res.ok) {
+                    console.info('Company profile fetch not available or failed', res.status);
+                    return;
+                }
+                const company = await res.json();
+                if (company.companyName) document.getElementById('companyName').value = company.companyName;
+                if (company.companyId) document.getElementById('companyId').value = company.companyId;
+                if (company.logoUrl) {
+                    const logo = document.getElementById('layout-header-logo');
+                    if (logo) logo.src = company.logoUrl;
+                }
+            } catch (e) {
+                console.warn('Failed to fetch company profile (may be 404):', e);
+            }
+        }
+
+        async function fetchNextEmployeeCode() {
+            try {
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(`${API_URL}/api/Employees/next-code`, {
+                    headers,
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('employeeCode').value = data.employeeCode;
+                    if (data.companyName) document.getElementById('companyName').value = data.companyName;
+                    if (data.companyId) document.getElementById('companyId').value = data.companyId;
+                }
+            } catch (e) {
+                console.error('Error fetching employee code:', e);
+            }
+        }
+
+        async function fetchRoles() {
+            try {
+                console.log('Resolved API base URL:', API_URL);
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(`${API_URL}/api/EmployeeRoles`, {
+                    headers,
+                    credentials: 'include'
+                });
+                console.log('/api/EmployeeRoles response status:', res.status);
+                if (res.ok) {
+                    roles = await res.json();
+                    console.log('Roles fetched:', roles);
+                    const select = document.getElementById('roleId');
+                    console.log('Role select element:', select);
+                    select.innerHTML = '<option value="">Select role</option>';
+                    roles.filter(r => r.isActive).forEach(r => {
+                        console.log('Adding role option', r.roleId, r.roleName);
+                        const opt = document.createElement('option');
+                        opt.value = r.roleId;
+                        opt.textContent = r.roleName;
+                        opt.dataset.rate = r.basicRate || 0;
+                        opt.dataset.rateType = r.rateType || '';
+                        select.appendChild(opt);
+                    });
+
+                    select.addEventListener('change', function () {
+                        const selected = this.options[this.selectedIndex];
+                        const rate = parseFloat(selected.dataset.rate) || 0;
+                        const rateType = selected.dataset.rateType || '';
+                        const label = rateType ? ` / ${rateType}` : '';
+                        document.getElementById('salaryDisplay').textContent =
+                            `₱ ${rate.toLocaleString('en-PH', { minimumFractionDigits: 2 })}${label}`;
+                    });
+                }
+                else {
+                    try { const txt = await res.text(); console.warn('EmployeeRoles response body:', txt); } catch(e){ console.warn('Failed to read EmployeeRoles response body', e); }
+                }
+            } catch (e) {
+                console.error('Error fetching roles:', e);
+            }
+        }
+
+        function setupGovIdMasking() {
+            maskInput('tin', [3, 3, 3, 3], '-');
+            maskInput('sss', [2, 7, 1], '-');
+            maskInput('philHealth', [2, 9, 1], '-');
+            maskInput('pagIbig', [4, 4, 4], '-');
+        }
+
+        function maskInput(id, groups, separator) {
+            const input = document.getElementById(id);
+            input.addEventListener('input', function (e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                const totalDigits = groups.reduce((a, b) => a + b, 0);
+                value = value.substring(0, totalDigits);
+
+                let formatted = '';
+                let pos = 0;
+                for (let i = 0; i < groups.length; i++) {
+                    if (pos >= value.length) break;
+                    if (i > 0) formatted += separator;
+                    formatted += value.substring(pos, pos + groups[i]);
+                    pos += groups[i];
+                }
+                this.value = formatted;
+            });
+        }
+
+        function previewImage(input, previewId, placeholderId) {
             const preview = document.getElementById(previewId);
             const placeholder = document.getElementById(placeholderId);
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('File size exceeds 2MB. Please choose a smaller file.', 'error');
+                    input.value = '';
+                    return;
+                }
 
-            if (!input.files || !input.files[0]) return;
+                if (!file.type.match('image.*')) {
+                    showToast('Please select an image file.', 'error');
+                    input.value = '';
+                    return;
+                }
 
-            const file = input.files[0];
+                showUploadToast();
 
-            // Validate file size (2MB limit)
-            if (file.size > 2 * 1024 * 1024) {
-                showNotification('File size exceeds 2MB. Please choose a smaller file.', 'error');
-                input.value = '';
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    hideUploadToast();
+                    showToast('Image uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function resetForm() {
+            const form = document.getElementById('addEmployeeForm');
+            if (!form) return;
+            form.reset();
+
+            // Clear visual previews
+            const profilePreview = document.getElementById('profilePreview');
+            const profilePlaceholder = document.getElementById('profilePlaceholder');
+            if (profilePreview) { profilePreview.src = ''; profilePreview.classList.add('hidden'); }
+            if (profilePlaceholder) profilePlaceholder.classList.remove('hidden');
+
+            const signaturePreview = document.getElementById('signaturePreview');
+            const signaturePlaceholder = document.getElementById('signaturePlaceholder');
+            if (signaturePreview) { signaturePreview.src = ''; signaturePreview.classList.add('hidden'); }
+            if (signaturePlaceholder) signaturePlaceholder.classList.remove('hidden');
+
+            // Reset salary display and error texts
+            const salaryDisplay = document.getElementById('salaryDisplay');
+            if (salaryDisplay) salaryDisplay.textContent = '₱ 0.00';
+
+            ['tinError','sssError','philHealthError','pagIbigError'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+
+            // Reset any custom styling on gov id inputs
+            ['tin','sss','philHealth','pagIbig'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('border-red-500');
+            });
+
+            // Reset start date to today
+            const startDateInput = document.getElementById('startDate');
+            if (startDateInput) startDateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        function validateGovIds() {
+            let valid = true;
+
+            const tinVal = document.getElementById('tin').value;
+            if (tinVal && !/^\d{3}-\d{3}-\d{3}-\d{3}$/.test(tinVal)) {
+                document.getElementById('tinError').textContent = 'Format: XXX-XXX-XXX-XXX (12 digits)';
+                document.getElementById('tin').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('tinError').textContent = '';
+                document.getElementById('tin').classList.remove('border-red-500');
+            }
+
+            const sssVal = document.getElementById('sss').value;
+            if (sssVal && !/^\d{2}-\d{7}-\d{1}$/.test(sssVal)) {
+                document.getElementById('sssError').textContent = 'Format: XX-XXXXXXX-X (10 digits)';
+                document.getElementById('sss').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('sssError').textContent = '';
+                document.getElementById('sss').classList.remove('border-red-500');
+            }
+
+            const phVal = document.getElementById('philHealth').value;
+            if (phVal && !/^\d{2}-\d{9}-\d{1}$/.test(phVal)) {
+                document.getElementById('philHealthError').textContent = 'Format: XX-XXXXXXXXX-X (12 digits)';
+                document.getElementById('philHealth').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('philHealthError').textContent = '';
+                document.getElementById('philHealth').classList.remove('border-red-500');
+            }
+
+            const piVal = document.getElementById('pagIbig').value;
+            if (piVal && !/^\d{4}-\d{4}-\d{4}$/.test(piVal)) {
+                document.getElementById('pagIbigError').textContent = 'Format: XXXX-XXXX-XXXX (12 digits)';
+                document.getElementById('pagIbig').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('pagIbigError').textContent = '';
+                document.getElementById('pagIbig').classList.remove('border-red-500');
+            }
+
+            return valid;
+        }
+
+        document.getElementById('addEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!validateGovIds()) {
+                showToast('Please fix government ID format errors.', 'error');
                 return;
             }
 
-            // Validate file type
-            if (!file.type.match('image.*')) {
-                showNotification('Please select an image file.', 'error');
-                input.value = '';
-                return;
-            }
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creating...';
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                showNotification('Image uploaded successfully!', 'success');
-            };
-            reader.readAsDataURL(file);
-        }
+            const formData = new FormData(this);
 
-        function showNotification(message, type = 'info') {
-            // Simple alert for now - you can enhance this with a toast notification
-            alert(message);
-        }
+            try {
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // Form validation
-        document.getElementById('addEmployeeForm').addEventListener('submit', function(e) {
-            const requiredFields = this.querySelectorAll('[required]');
-            let isValid = true;
+                const res = await fetch(`${API_URL}/api/Employees`, {
+                    method: 'POST',
+                    headers,
+                    credentials: 'include',
+                    body: formData
+                });
 
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('border-red-500');
-                    isValid = false;
+                console.log('Create employee response status:', res.status);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || 'Employee created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Employees';
+                    }, 2000);
+                } else if (res.status === 409) {
+                    const err = await res.json();
+                    showToast(err.message || 'Email already exists.', 'error');
                 } else {
-                    field.classList.remove('border-red-500');
+                    try {
+                        const err = await res.json();
+                        showToast(err.message || 'Failed to create employee.', 'error');
+                    } catch (e) {
+                        const txt = await res.text();
+                        console.error('Create employee error body:', txt);
+                        showToast('Failed to create employee.', 'error');
+                    }
                 }
-            });
-
-            if (!isValid) {
-                e.preventDefault();
-                showNotification('Please fill in all required fields.', 'error');
+            } catch (err) {
+                showToast('Network error. Please try again.', 'error');
+                console.error('Network error creating employee:', err);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>Create Employee';
             }
-        });
-
-        // Real-time validation
-        document.querySelectorAll('[required]').forEach(field => {
-            field.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    this.classList.remove('border-red-500');
-                }
-            });
         });
     </script>
+
+        @* Toast animations moved to shared layout *@
 }

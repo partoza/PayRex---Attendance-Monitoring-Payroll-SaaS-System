@@ -184,25 +184,26 @@ namespace PayRexApplication.Data
 
             // ===== Company Configuration =====
             modelBuilder.Entity<Company>(entity =>
- {
-     entity.HasKey(e => e.CompanyId);
-     entity.Property(e => e.CompanyId).HasMaxLength(4);
-     entity.HasIndex(e => e.CompanyName);
-     entity.Property(e => e.Status).HasConversion<int>();
-     entity.Property(e => e.IsActive).HasDefaultValue(true);
+            {
+              entity.HasKey(e => e.CompanyId);
+              entity.Property(e => e.CompanyId).UseIdentityColumn();
+              entity.Property(e => e.CompanyCode).HasMaxLength(4);
+              entity.HasIndex(e => e.CompanyCode).IsUnique();
+              entity.HasIndex(e => e.CompanyName);
+              entity.Property(e => e.Status).HasConversion<int>();
+              entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-     entity.Property(e => e.Address).HasMaxLength(1000);
-     entity.Property(e => e.ContactEmail).HasMaxLength(256);
-     entity.Property(e => e.ContactPhone).HasMaxLength(50);
-     entity.Property(e => e.Tin).HasMaxLength(50);
-    entity.Property(e => e.LogoUrl).HasMaxLength(512);
-    entity.Property(e => e.UrlImage).HasMaxLength(512);
+              entity.Property(e => e.Address).HasMaxLength(1000);
+              entity.Property(e => e.ContactEmail).HasMaxLength(256);
+              entity.Property(e => e.ContactPhone).HasMaxLength(50);
+              entity.Property(e => e.Tin).HasMaxLength(50);
+              entity.Property(e => e.LogoUrl).HasMaxLength(512);
 
-     entity.HasOne(e => e.SubscriptionPlan)
-     .WithMany(p => p.Companies)
-     .HasForeignKey(e => e.PlanId)
-     .OnDelete(DeleteBehavior.Restrict);
- });
+              entity.HasOne(e => e.SubscriptionPlan)
+                .WithMany(p => p.Companies)
+                .HasForeignKey(e => e.PlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+            });
 
             // ===== Subscription Configuration =====
             modelBuilder.Entity<Subscription>(entity =>
@@ -292,25 +293,39 @@ namespace PayRexApplication.Data
 
             // ===== Employee Configuration =====
             modelBuilder.Entity<Employee>(entity =>
-         {
-             entity.HasKey(e => e.EmployeeId);
-             entity.Property(e => e.EmployeeId).UseIdentityColumn();
-             entity.HasIndex(e => e.CompanyId);
-             entity.HasIndex(e => new { e.CompanyId, e.EmployeeCode }).IsUnique();
-             entity.Property(e => e.EmploymentType).HasConversion<int>();
-             entity.Property(e => e.Status).HasConversion<int>();
+            {
+                entity.HasKey(e => e.EmployeeNumber);
+                entity.Property(e => e.EmployeeNumber).UseIdentityColumn();
+                entity.HasIndex(e => e.CompanyId);
+                entity.HasIndex(e => new { e.CompanyId, e.EmployeeCode }).IsUnique();
+                entity.Property(e => e.Status).HasConversion<int>();
 
-             entity.HasOne(e => e.Company)
-      .WithMany(c => c.Employees)
-     .HasForeignKey(e => e.CompanyId)
-.OnDelete(DeleteBehavior.Cascade);
+                // Government ID fields
+                entity.Property(e => e.TIN).HasMaxLength(15);
+                entity.Property(e => e.SSS).HasMaxLength(12);
+                entity.Property(e => e.PhilHealth).HasMaxLength(14);
+                entity.Property(e => e.PagIbig).HasMaxLength(14);
 
-             // Role relationship (optional)
-             entity.HasOne(e => e.Role)
-             .WithMany(r => r.Employees)
-             .HasForeignKey(e => e.RoleId)
-             .OnDelete(DeleteBehavior.SetNull);
-         });
+                // Profile/signature now stored on User; no Employee columns for these
+
+                entity.HasOne(e => e.Company)
+                    .WithMany(c => c.Employees)
+                    .HasForeignKey(e => e.CompanyId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Role relationship (optional)
+                entity.HasOne(e => e.Role)
+                    .WithMany(r => r.Employees)
+                    .HasForeignKey(e => e.RoleId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // User relationship (optional)
+                // Use NoAction to avoid SQL Server "multiple cascade paths" errors
+                entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.NoAction);
+            });
 
             // ===== EmployeeRole Configuration =====
             modelBuilder.Entity<EmployeeRole>(entity =>
@@ -586,7 +601,8 @@ PlanUserLimit = 3,
      // Seed System Company for SuperAdmin (CompanyId = "0000")
    var systemCompany = new Company
    {
-  CompanyId = "0000",
+  CompanyId = 1,
+  CompanyCode = "0000",
     CompanyName = "PayRex System",
   PlanId = 3, // Enterprise plan
    Status = CompanyStatus.Active,
@@ -600,7 +616,7 @@ PlanUserLimit = 3,
             var superAdmin = new User
      {
            UserId = 1,
-        CompanyId = "0000",
+        CompanyId = 1,
   FirstName = "John Rex",
       LastName = "Partoza",
      Email = "partozajohnrex@gmail.com",
@@ -620,7 +636,8 @@ PlanUserLimit = 3,
  // ========================================
  var demoCompany = new Company
  {
- CompanyId = "1001",
+ CompanyId = 2,
+ CompanyCode = "1001",
  CompanyName = "Demo Company",
  PlanId =1,
  Status = CompanyStatus.Active,

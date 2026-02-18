@@ -83,6 +83,35 @@ namespace PayRex.Web.Pages.Auth
                 return Page();
             }
 
+            // If reCAPTCHA secret configured, validate captcha response
+            try
+            {
+                var secret = _config["Recaptcha:SecretKey"];
+                if (!string.IsNullOrWhiteSpace(secret))
+                {
+                    var token = Request.Form["g-recaptcha-response"].ToString();
+                    if (string.IsNullOrWhiteSpace(token))
+                    {
+                        ErrorMessage = "Please complete the CAPTCHA.";
+                        TempData["ErrorMessage"] = ErrorMessage;
+                        return Page();
+                    }
+
+                    var ok = await VerifyRecaptchaAsync(token, secret);
+                    if (!ok)
+                    {
+                        ErrorMessage = "CAPTCHA validation failed. Please try again.";
+                        TempData["ErrorMessage"] = ErrorMessage;
+                        _logger.LogWarning("reCAPTCHA validation failed for {Email}", Input.Email);
+                        return Page();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error verifying reCAPTCHA");
+            }
+
             // Call API to login
             var loginRequest = new LoginRequestDto
             {
@@ -132,6 +161,36 @@ namespace PayRex.Web.Pages.Auth
 
             // Login successful - store JWT token
             return SetAuthTokenAndRedirect(response);
+        }
+
+        private async Task<bool> VerifyRecaptchaAsync(string token, string secret)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                var values = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "secret", secret },
+                    { "response", token }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                var resp = await client.PostAsync("https://www.google.com/recaptcha/api/siteverify", content);
+                if (!resp.IsSuccessStatusCode) return false;
+
+                using var stream = await resp.Content.ReadAsStreamAsync();
+                using var doc = await JsonDocument.ParseAsync(stream);
+                if (doc.RootElement.TryGetProperty("success", out var success))
+                {
+                    return success.GetBoolean();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "reCAPTCHA verification error");
+            }
+
+            return false;
         }
 
         public async Task<IActionResult> OnPostTotpAsync(string? returnUrl = null)

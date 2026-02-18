@@ -12,10 +12,9 @@ namespace PayRexApplication.Models
      [Column("invoiceId")]
         public int InvoiceId { get; set; }
 
-  [Required]
-     [MaxLength(4)]
-     [Column("companyId")]
- public string CompanyId { get; set; } = string.Empty;
+   [Required]
+       [Column("companyId")]
+ public int CompanyId { get; set; }
 
     [Required]
      [Column("amount", TypeName = "decimal(18,2)")]

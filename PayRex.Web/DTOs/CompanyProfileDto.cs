@@ -4,7 +4,7 @@ namespace PayRex.Web.DTOs
 {
     public class CompanyProfileDto
     {
-        public string CompanyId { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
         public string CompanyName { get; set; } = string.Empty;
         public string? Address { get; set; }
         public string? ContactEmail { get; set; }

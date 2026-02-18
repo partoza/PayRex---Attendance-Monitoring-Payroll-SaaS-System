@@ -13,21 +13,21 @@ namespace PayRexApplication.Services
  {
  public static void EnsureSeed(AppDbContext db)
  {
- // Ensure system company exists
- var systemCompany = db.Companies.Find("0000");
+ // Ensure system company exists (by company code)
+ var systemCompany = db.Companies.FirstOrDefault(c => c.CompanyCode == "0000");
  if (systemCompany == null)
  {
- systemCompany = new Company
- {
- CompanyId = "0000",
- CompanyName = "PayRex System",
- PlanId =3,
- Status = CompanyStatus.Active,
- IsActive = true,
- CreatedAt = DateTime.UtcNow
- };
- db.Companies.Add(systemCompany);
- db.SaveChanges();
+	 systemCompany = new Company
+	 {
+		 CompanyCode = "0000",
+		 CompanyName = "PayRex System",
+		 PlanId = 3,
+		 Status = CompanyStatus.Active,
+		 IsActive = true,
+		 CreatedAt = DateTime.UtcNow
+	 };
+	 db.Companies.Add(systemCompany);
+	 db.SaveChanges();
  }
 
  // Add Admin user (company-level Admin)

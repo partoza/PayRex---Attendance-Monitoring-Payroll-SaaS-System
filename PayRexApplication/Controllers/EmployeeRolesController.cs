@@ -18,18 +18,18 @@ namespace PayRexApplication.Controllers
  [HttpGet]
  public async Task<IActionResult> GetRoles()
  {
- var userCompanyId = User.FindFirst("companyId")?.Value;
- if (string.IsNullOrEmpty(userCompanyId)) return Forbid();
+	 var userCompanyIdStr = User.FindFirst("companyId")?.Value;
+	 if (string.IsNullOrEmpty(userCompanyIdStr) || !int.TryParse(userCompanyIdStr, out var userCompanyId)) return Forbid();
 
- var roles = await _db.EmployeeRoles.Where(r => r.CompanyId == userCompanyId).ToListAsync();
- return Ok(roles);
+	 var roles = await _db.EmployeeRoles.Where(r => r.CompanyId == userCompanyId).ToListAsync();
+	 return Ok(roles);
  }
 
  [HttpPost("sync")]
  public async Task<IActionResult> SyncRoles([FromBody] List<EmployeeRoleDto> roles)
  {
- var userCompanyId = User.FindFirst("companyId")?.Value;
- if (string.IsNullOrEmpty(userCompanyId)) return Forbid();
+ var userCompanyIdStr = User.FindFirst("companyId")?.Value;
+ if (string.IsNullOrEmpty(userCompanyIdStr) || !int.TryParse(userCompanyIdStr, out var userCompanyId)) return Forbid();
 
  // Upsert by RoleId (0/new = insert), ensure CompanyId
  foreach (var r in roles)
@@ -38,13 +38,13 @@ namespace PayRexApplication.Controllers
  {
  var newRole = new EmployeeRole
  {
- CompanyId = userCompanyId,
- RoleName = r.RoleName,
- BasicRate = r.BasicRate,
- RateType = r.RateType,
- Description = r.Description,
- IsActive = true,
- CreatedAt = DateTime.UtcNow
+	 CompanyId = userCompanyId,
+	 RoleName = r.RoleName,
+	 BasicRate = r.BasicRate,
+	 RateType = r.RateType,
+	 Description = r.Description,
+	 IsActive = true,
+	 CreatedAt = DateTime.UtcNow
  };
  _db.EmployeeRoles.Add(newRole);
  }
@@ -70,8 +70,8 @@ namespace PayRexApplication.Controllers
  [HttpDelete("{id}")]
  public async Task<IActionResult> Delete(int id)
  {
- var userCompanyId = User.FindFirst("companyId")?.Value;
- if (string.IsNullOrEmpty(userCompanyId)) return Forbid();
+ var userCompanyIdStr = User.FindFirst("companyId")?.Value;
+ if (string.IsNullOrEmpty(userCompanyIdStr) || !int.TryParse(userCompanyIdStr, out var userCompanyId)) return Forbid();
 
  var role = await _db.EmployeeRoles.FindAsync(id);
  if (role == null || role.CompanyId != userCompanyId) return NotFound();
@@ -86,8 +86,8 @@ namespace PayRexApplication.Controllers
  [HttpPatch("{id}/toggle-active")]
  public async Task<IActionResult> ToggleActive(int id)
  {
- var userCompanyId = User.FindFirst("companyId")?.Value;
- if (string.IsNullOrEmpty(userCompanyId)) return Forbid();
+ var userCompanyIdStr = User.FindFirst("companyId")?.Value;
+ if (string.IsNullOrEmpty(userCompanyIdStr) || !int.TryParse(userCompanyIdStr, out var userCompanyId)) return Forbid();
  var role = await _db.EmployeeRoles.FindAsync(id);
  if (role == null || role.CompanyId != userCompanyId) return NotFound();
  role.IsActive = !role.IsActive;

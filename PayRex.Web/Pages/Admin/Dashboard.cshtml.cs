@@ -195,7 +195,7 @@ namespace PayRex.Web.Pages.Admin
 
         public class CompanyItem
         {
-            public string CompanyId { get; set; } = string.Empty;
+            public int CompanyId { get; set; }
             public string CompanyName { get; set; } = string.Empty;
             public string Status { get; set; } = string.Empty;
             public bool IsActive { get; set; }

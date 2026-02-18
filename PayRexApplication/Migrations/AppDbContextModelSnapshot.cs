@@ -31,10 +31,8 @@ namespace PayRex.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AttendanceId"));
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -160,9 +158,8 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("action");
 
-                    b.Property<string>("CompanyId")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -237,10 +234,8 @@ namespace PayRex.API.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("amount");
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -277,15 +272,23 @@ namespace PayRex.API.Migrations
 
             modelBuilder.Entity("PayRexApplication.Models.Company", b =>
                 {
-                    b.Property<string>("CompanyId")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CompanyId"));
 
                     b.Property<string>("Address")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
                         .HasColumnName("address");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)")
+                        .HasColumnName("companyCode");
 
                     b.Property<string>("CompanyName")
                         .IsRequired()
@@ -335,12 +338,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
 
-                    b.Property<string>("UrlImage")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)")
-                        .HasColumnName("urlImage");
-
                     b.HasKey("CompanyId");
+
+                    b.HasIndex("CompanyCode")
+                        .IsUnique();
 
                     b.HasIndex("CompanyName");
 
@@ -351,7 +352,8 @@ namespace PayRex.API.Migrations
                     b.HasData(
                         new
                         {
-                            CompanyId = "0000",
+                            CompanyId = 1,
+                            CompanyCode = "0000",
                             CompanyName = "PayRex System",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -360,7 +362,8 @@ namespace PayRex.API.Migrations
                         },
                         new
                         {
-                            CompanyId = "1001",
+                            CompanyId = 2,
+                            CompanyCode = "1001",
                             CompanyName = "Demo Company",
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -371,9 +374,8 @@ namespace PayRex.API.Migrations
 
             modelBuilder.Entity("PayRexApplication.Models.CompanySetting", b =>
                 {
-                    b.Property<string>("CompanyId")
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<decimal>("AbsentRate")
@@ -420,33 +422,37 @@ namespace PayRex.API.Migrations
 
             modelBuilder.Entity("PayRexApplication.Models.Employee", b =>
                 {
-                    b.Property<int>("EmployeeId")
+                    b.Property<int>("EmployeeNumber")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("employeeId");
+                        .HasColumnName("employeeNumber");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EmployeeNumber"));
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<DateTime?>("Birthdate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("birthdate");
+
+                    b.Property<string>("CivilStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("civilStatus");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
+
+                    b.Property<string>("ContactNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("contactNumber");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("dateOfBirth");
-
-                    b.Property<string>("Department")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("department");
-
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)")
                         .HasColumnName("email");
@@ -457,19 +463,11 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("employeeCode");
 
-                    b.Property<int>("EmploymentType")
-                        .HasColumnType("int")
-                        .HasColumnName("employmentType");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("firstName");
-
-                    b.Property<DateTime?>("HireDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("hireDate");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -477,37 +475,53 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("lastName");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("phoneNumber");
+                    b.Property<string>("PagIbig")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)")
+                        .HasColumnName("pagIbig");
 
-                    b.Property<string>("Position")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("position");
+                    b.Property<string>("PhilHealth")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)")
+                        .HasColumnName("philHealth");
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int")
                         .HasColumnName("roleId");
 
-                    b.Property<decimal>("SalaryRate")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("salaryRate");
+                    b.Property<string>("SSS")
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)")
+                        .HasColumnName("sss");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("startDate");
 
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
 
+                    b.Property<string>("TIN")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)")
+                        .HasColumnName("tin");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
 
-                    b.HasKey("EmployeeId");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("userId");
+
+                    b.HasKey("EmployeeNumber");
 
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("CompanyId", "EmployeeCode")
                         .IsUnique();
@@ -672,10 +686,8 @@ namespace PayRex.API.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("basicRate");
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -860,10 +872,8 @@ namespace PayRex.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PayrollPeriodId"));
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1013,10 +1023,8 @@ namespace PayRex.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionId"));
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1210,10 +1218,8 @@ namespace PayRex.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
                         .HasColumnName("companyId");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1283,6 +1289,11 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("role");
 
+                    b.Property<string>("SignatureUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("signatureUrl");
+
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
@@ -1309,14 +1320,14 @@ namespace PayRex.API.Migrations
                         new
                         {
                             UserId = 1,
-                            CompanyId = "0000",
+                            CompanyId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "partozajohnrex@gmail.com",
                             FirstName = "John Rex",
                             IsTwoFactorEnabled = true,
                             LastName = "Partoza",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$h1birYnQ28XJ1XC/abSvRe5tGX4b2BPu8uA8aZeGUsYz.C8BpKF2i",
+                            PasswordHash = "$2a$11$Q1Rge9ElQ/AiDCPK6izUTOHPRDyp8VKsGNs/URSR4hV3s0jEteYV.",
                             Role = 0,
                             Status = 0,
                             TotpSecretKey = "JBSWY3DPEHPK3PXP"
@@ -1324,28 +1335,28 @@ namespace PayRex.API.Migrations
                         new
                         {
                             UserId = 2,
-                            CompanyId = "1001",
+                            CompanyId = 2,
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "alice.admin@example.com",
                             FirstName = "Alice",
                             IsTwoFactorEnabled = false,
                             LastName = "Admin",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$s2AVOXu9FqDz.Wp5KGdX6.ivJzK6sUunOowTc4Zdr88keDsslsB1a",
+                            PasswordHash = "$2a$11$6QRhTy7DMFdQ28Ax/SrKcOncut4.3WtzdMFRTNO5j3KjDkZQIUO3q",
                             Role = 1,
                             Status = 0
                         },
                         new
                         {
                             UserId = 3,
-                            CompanyId = "1001",
+                            CompanyId = 2,
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "hannah.hr@example.com",
                             FirstName = "Hannah",
                             IsTwoFactorEnabled = false,
                             LastName = "HR",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$BVl6NC2HIuS80SwGp/rPqOC83K4d.OqcjreeDF9KjErliSJlXnLsO",
+                            PasswordHash = "$2a$11$l5bk3/KI984U6CFLnOcDreAnknvnsznw6aEbG5fONDce7.a09nRYm",
                             Role = 2,
                             Status = 0
                         });
@@ -1515,9 +1526,16 @@ namespace PayRex.API.Migrations
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("PayRexApplication.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Company");
 
                     b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.EmployeeBenefit", b =>

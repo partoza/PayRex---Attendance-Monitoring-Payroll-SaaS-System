@@ -15,6 +15,11 @@ namespace PayRexApplication.Services
    /// Send password reset email
    /// </summary>
         Task SendPasswordResetEmailAsync(string toEmail, string resetUrl);
+
+        /// <summary>
+        /// Send welcome email with generated password to new employee
+        /// </summary>
+        Task SendWelcomeEmailAsync(string toEmail, string employeeName, string companyName, string password, string? companyLogoUrl = null);
     }
 
     /// <summary>
@@ -143,6 +148,122 @@ Body = GeneratePasswordResetEmailBody(resetUrl),
         </div>
         <div class='footer'>
    <p>This is an automated message from PayRex. Please do not reply to this email.</p>
+            <p>&copy; {DateTime.UtcNow.Year} PayRex. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>";
+        }
+
+        public async Task SendWelcomeEmailAsync(string toEmail, string employeeName, string companyName, string password, string? companyLogoUrl = null)
+        {
+            var smtpHost = _config["Smtp:Host"];
+            var smtpPort = _config.GetValue<int>("Smtp:Port");
+            var smtpUsername = _config["Smtp:Username"];
+            var smtpPassword = _config["Smtp:Password"];
+            var smtpFromEmail = _config["Smtp:FromEmail"];
+            var smtpFromName = _config["Smtp:FromName"];
+            var smtpEnableSsl = _config.GetValue<bool>("Smtp:EnableSsl", true);
+
+            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUsername) ||
+                string.IsNullOrWhiteSpace(smtpPassword) || string.IsNullOrWhiteSpace(smtpFromEmail))
+            {
+                _logger.LogError("SMTP configuration is incomplete");
+                throw new InvalidOperationException("SMTP is not properly configured");
+            }
+
+            smtpPassword = smtpPassword?.Trim();
+            if (smtpPassword != null && smtpPassword.Contains(' '))
+            {
+                smtpPassword = smtpPassword.Replace(" ", "");
+            }
+
+            try
+            {
+                using var client = new SmtpClient(smtpHost, smtpPort)
+                {
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+                    EnableSsl = smtpEnableSsl,
+                    Timeout = 100000
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(smtpFromEmail, smtpFromName ?? "PayRex"),
+                    Subject = $"Welcome to {companyName} - Your Account Details",
+                    Body = GenerateWelcomeEmailBody(employeeName, companyName, password, toEmail, companyLogoUrl),
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(toEmail);
+
+                _logger.LogInformation("Sending welcome email to {Email} via {Host}:{Port}", toEmail, smtpHost, smtpPort);
+                await client.SendMailAsync(mailMessage);
+                _logger.LogInformation("Welcome email sent to {Email}", toEmail);
+            }
+            catch (SmtpException smtpEx)
+            {
+                _logger.LogError(smtpEx, "SMTP error sending welcome email to {Email}", toEmail);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}", toEmail);
+                throw;
+            }
+        }
+
+        private string GenerateWelcomeEmailBody(string employeeName, string companyName, string password, string email, string? logoUrl)
+        {
+            var logoHtml = !string.IsNullOrEmpty(logoUrl)
+                ? $"<img src='{logoUrl}' alt='{companyName}' style='max-height:60px;margin-bottom:10px;' /><br/>"
+                : "";
+
+            return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background: #f5f7fa; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #1E88E5, #1565C0); color: white; padding: 30px; text-align: center; border-radius: 12px 12px 0 0; }}
+        .content {{ background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }}
+        .credential-box {{ background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }}
+        .credential-box p {{ margin: 8px 0; }}
+        .credential-label {{ font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .credential-value {{ font-size: 16px; font-weight: 600; color: #1E88E5; font-family: 'Courier New', monospace; }}
+        .warning {{ background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 20px 0; font-size: 14px; }}
+        .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666; text-align: center; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            {logoHtml}
+            <h1 style='margin:0;font-size:24px;'>Welcome to {companyName}!</h1>
+        </div>
+        <div class='content'>
+            <p>Hello <strong>{employeeName}</strong>,</p>
+            <p>Your employee account has been created on <strong>PayRex</strong>. Below are your login credentials:</p>
+            
+            <div class='credential-box'>
+                <p class='credential-label'>Email</p>
+                <p class='credential-value'>{email}</p>
+                <p class='credential-label' style='margin-top:15px;'>Temporary Password</p>
+                <p class='credential-value'>{password}</p>
+            </div>
+
+            <div class='warning'>
+                ⚠️ <strong>Important:</strong> You will be required to change your password upon first login. Please keep your new password secure and do not share it with anyone.
+            </div>
+
+            <p>If you have any questions, please contact your HR administrator.</p>
+        </div>
+        <div class='footer'>
+            <p>This is an automated message from PayRex. Please do not reply to this email.</p>
             <p>&copy; {DateTime.UtcNow.Year} PayRex. All rights reserved.</p>
         </div>
     </div>

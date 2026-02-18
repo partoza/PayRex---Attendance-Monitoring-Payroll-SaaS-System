@@ -84,6 +84,8 @@ namespace PayRexApplication.Controllers
         /// </summary>
         private readonly IActivityLoggerService _activityLogger;
 
+        private readonly ICloudinaryService _cloudinary;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthController"/> class.
         /// </summary>
@@ -103,7 +105,8 @@ namespace PayRexApplication.Controllers
       IEmailService emailService,
        IPasswordResetTokenService tokenService,
        IDataProtectionProvider dataProtectionProvider,
-       IActivityLoggerService activityLogger)
+       IActivityLoggerService activityLogger,
+            ICloudinaryService cloudinary)
         {
             _db = db;
             _config = config;
@@ -113,6 +116,7 @@ namespace PayRexApplication.Controllers
             _tokenService = tokenService;
             _protector = dataProtectionProvider.CreateProtector("PayRex.TotpSecrets");
    _activityLogger = activityLogger;
+            _cloudinary = cloudinary;
         }
 
         /// <summary>
@@ -122,13 +126,13 @@ namespace PayRexApplication.Controllers
         private async Task<string> GenerateUniqueCompanyIdAsync()
         {
             var random = new Random();
-            string companyId;
+            string companyCode;
             do
             {
-                companyId = random.Next(1000, 10000).ToString(); // 1000-9999, excludes 0000 (system)
-            } while (await _db.Companies.AnyAsync(c => c.CompanyId == companyId));
+                companyCode = random.Next(0, 10000).ToString("D4"); // 0000-9999
+            } while (await _db.Companies.AnyAsync(c => c.CompanyCode == companyCode));
 
-            return companyId;
+            return companyCode;
         }
 
         /// <summary>
@@ -146,12 +150,12 @@ namespace PayRexApplication.Controllers
             var userExists = await _db.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
             if (userExists) return Conflict(new { message = "Email already registered" });
 
-            // Generate unique 4-digit company ID
-            var companyId = await GenerateUniqueCompanyIdAsync();
+            // Generate unique 4-digit company code
+            var companyCode = await GenerateUniqueCompanyIdAsync();
 
             var company = new Company
             {
-                CompanyId = companyId,
+                CompanyCode = companyCode,
                 CompanyName = $"{dto.FirstName} {dto.LastName}'s Company",
                 PlanId = 1,
                 Status = CompanyStatus.Active,
@@ -306,7 +310,7 @@ namespace PayRexApplication.Controllers
          // Will add role claim normalized below
          new Claim("uid", user.UserId.ToString()),
 new Claim("userId", user.UserId.ToString()),
-      new Claim("companyId", user.CompanyId),
+    new Claim("companyId", user.CompanyId.ToString()),
                 new Claim("isSuperAdmin", (user.Role == UserRole.SuperAdmin).ToString().ToLower()),
                 new Claim("isTwoFactorEnabled", user.IsTwoFactorEnabled.ToString()),
                 new Claim("mustChangePassword", user.MustChangePassword.ToString().ToLower())
@@ -321,6 +325,12 @@ new Claim("userId", user.UserId.ToString()),
             if (!string.IsNullOrEmpty(user.ProfileImageUrl))
             {
                 claims.Add(new Claim("profileImage", user.ProfileImageUrl));
+            }
+
+            // Add company logo URL if exists
+            if (!string.IsNullOrEmpty(user.Company?.LogoUrl))
+            {
+                claims.Add(new Claim("companyLogo", user.Company.LogoUrl));
             }
 
             var keyBytes = Encoding.UTF8.GetBytes(key);
@@ -899,8 +909,7 @@ user.UpdatedAt = DateTime.UtcNow;
                 ContactEmail = company.ContactEmail,
                 ContactPhone = company.ContactPhone,
                 Tin = company.Tin,
-                    LogoUrl = company.LogoUrl,
-                    UrlImage = company.UrlImage,
+                LogoUrl = company.LogoUrl,
                 PayrollCycle = settings != null ? (int?)settings.PayrollCycle : null,
                 WorkHoursPerDay = settings?.WorkHoursPerDay,
                 OvertimeRate = settings != null ? (decimal?)settings.OvertimeRate : null,
@@ -938,7 +947,6 @@ user.UpdatedAt = DateTime.UtcNow;
  company.ContactPhone = dto.ContactPhone;
  company.Tin = dto.Tin;
  company.LogoUrl = dto.LogoUrl;
- company.UrlImage = dto.UrlImage;
  company.UpdatedAt = DateTime.UtcNow;
 
  // Update or create company settings
@@ -967,10 +975,35 @@ user.UpdatedAt = DateTime.UtcNow;
 
  await _db.SaveChangesAsync();
 
- await _activityLogger.LogAsync(parsedUserId, company.CompanyId, "UpdateCompanyProfile", "Company", company.CompanyId,
+ await _activityLogger.LogAsync(parsedUserId, company.CompanyId, "UpdateCompanyProfile", "Company", company.CompanyId.ToString(),
  System.Text.Json.JsonSerializer.Serialize(oldValues), System.Text.Json.JsonSerializer.Serialize(dto), GetClientIpAddress(), HttpContext.Request.Headers["User-Agent"].FirstOrDefault(), user.Role.ToString(), "Company");
 
  return Ok(new { message = "Company profile updated" });
- }
+        }
+
+        [HttpPost("company/logo")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> UploadCompanyLogo([FromForm] IFormFile file)
+        {
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+            var user = await _db.Users.FindAsync(parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            if (file == null || file.Length == 0) return BadRequest(new { message = "No file uploaded" });
+
+            using var stream = file.OpenReadStream();
+            var url = await _cloudinary.UploadCompanyLogoAsync(stream, file.FileName, user.CompanyId.ToString());
+
+            if (url == null) return BadRequest(new { message = "Failed to upload logo" });
+
+            return Ok(new ProfileImageResponseDto
+            {
+                Success = true,
+                Message = "Logo uploaded successfully",
+                ImageUrl = url
+            });
+        }
     }
 }

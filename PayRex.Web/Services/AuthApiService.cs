@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Diagnostics;
+using System.Linq;
 
 namespace PayRex.Web.Services
 {
@@ -57,22 +58,69 @@ namespace PayRex.Web.Services
  bool isLockedOut = false;
  int lockoutRemaining =0;
 
- if (doc.ValueKind == JsonValueKind.Object)
- {
- if (doc.TryGetProperty("message", out var m))
- {
- message = m.GetString();
- }
- if (doc.TryGetProperty("remainingSeconds", out var rs) && rs.TryGetInt32(out var secs))
- {
- isLockedOut = true;
- lockoutRemaining = secs;
- }
- if (message == null && doc.TryGetProperty("lockedUntil", out var _))
- {
- isLockedOut = true;
- }
- }
+            if (doc.ValueKind == JsonValueKind.Object)
+            {
+                if (doc.TryGetProperty("message", out var m))
+                {
+                    message = m.GetString();
+                }
+                // Handle validation errors (e.g., { "errors": { "Email": ["..."] } })
+                if (message == null && doc.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Object)
+                {
+                    // Prefer Email field errors for login clarity
+                    if (errors.TryGetProperty("Email", out var emailErrors) && emailErrors.ValueKind == JsonValueKind.Array)
+                    {
+                        try
+                        {
+                            var first = emailErrors.EnumerateArray().FirstOrDefault();
+                            var txt = first.ValueKind == JsonValueKind.String ? first.GetString() : null;
+                            if (!string.IsNullOrWhiteSpace(txt))
+                            {
+                                if (txt.IndexOf("valid e-mail", StringComparison.OrdinalIgnoreCase) >= 0 || txt.IndexOf("valid email", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    message = "Invalid email format";
+                                }
+                                else
+                                {
+                                    message = txt;
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    if (message == null)
+                    {
+                        try
+                        {
+                            var collected = new List<string>();
+                            foreach (var prop in errors.EnumerateObject())
+                            {
+                                if (prop.Value.ValueKind == JsonValueKind.Array)
+                                {
+                                    foreach (var item in prop.Value.EnumerateArray())
+                                    {
+                                        if (item.ValueKind == JsonValueKind.String)
+                                            collected.Add(item.GetString() ?? "");
+                                    }
+                                }
+                            }
+                            if (collected.Count > 0)
+                                message = string.Join("; ", collected);
+                        }
+                        catch { }
+                    }
+                }
+                if (doc.TryGetProperty("remainingSeconds", out var rs) && rs.TryGetInt32(out var secs))
+                {
+                    isLockedOut = true;
+                    lockoutRemaining = secs;
+                }
+                if (message == null && doc.TryGetProperty("lockedUntil", out var _))
+                {
+                    isLockedOut = true;
+                }
+            }
 
  // If API didn't provide a message, include a short excerpt of the body for debugging
  var shortBody = string.IsNullOrWhiteSpace(responseContent) ? null : (responseContent.Length >300 ? responseContent[..300] + "..." : responseContent);

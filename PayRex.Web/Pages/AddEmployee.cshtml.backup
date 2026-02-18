@@ -1,0 +1,689 @@
+@page
+@{
+    ViewData["Title"] = "Add Employee";
+    Layout = "_Layout";
+}
+
+
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Header Section -->
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <i class="fas fa-user-plus text-blue-600"></i>
+                Add New Employee
+            </h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Create a new employee profile. Fill in all required information.
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" onclick="window.history.back()" 
+                class="text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <form id="addEmployeeForm" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" id="companyId" name="CompanyId" />
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content Column (2/3 width) -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Personal Information Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-user text-blue-600"></i>
+                            Personal Information
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Employee Code (Readonly) -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Employee Code
+                                </label>
+                                <input type="text" id="employeeCode" name="EmployeeCode" readonly
+                                    class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-not-allowed"
+                                    placeholder="Loading...">
+                            </div>
+
+                            <!-- Company ID (Readonly) -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Company Name
+                                </label>
+                                <input type="text" id="companyName" name="CompanyName" readonly
+                                    class="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 cursor-not-allowed">
+                            </div>
+
+                            <!-- First Name (Required) -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    First Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="firstName" name="FirstName" required maxlength="100"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="Enter first name">
+                            </div>
+
+                            <!-- Last Name (Required) -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Last Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="lastName" name="LastName" required maxlength="100"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="Enter last name">
+                            </div>
+
+                            <!-- Email (Required) -->
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email" id="email" name="Email" required maxlength="256"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="name@company.com">
+                            </div>
+
+                            <!-- Contact Number -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Contact Number
+                                </label>
+                                <input type="tel" id="contactNumber" name="ContactNumber" maxlength="20"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="+63 9XX XXX XXXX">
+                            </div>
+
+                            <!-- Civil Status -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Civil Status
+                                </label>
+                                <select id="civilStatus" name="CivilStatus"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                    <option value="">Select status</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                </select>
+                            </div>
+
+                            <!-- Birthdate -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Birthdate
+                                </label>
+                                <input type="date" id="birthdate" name="Birthdate"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employment Details Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-briefcase text-blue-600"></i>
+                            Employment Details
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Role / Position (Required) -->
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Role / Position <span class="text-red-500">*</span>
+                                </label>
+                                <select id="roleId" name="RoleId" required
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                    <option value="">Select role</option>
+                                </select>
+                            </div>
+
+                            <!-- Salary Display -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Salary
+                                </label>
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <span id="salaryDisplay" class="text-lg font-bold text-blue-700 dark:text-blue-400">₱ 0.00</span>
+                                </div>
+                            </div>
+
+                            <!-- Start Date (Required) -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Start Date <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" id="startDate" name="StartDate" required
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Government Identifiers Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-id-card text-blue-600"></i>
+                            Government Identifiers
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- TIN -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    <img src="https://formsphilippines.com/agencylogo/2.png" 
+                                         class="inline-block w-5 h-5 mr-1" alt="BIR"> TIN
+                                </label>
+                                <input type="text" id="tin" name="TIN" maxlength="15"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="XXX-XXX-XXX-XXX">
+                                <span id="tinError" class="text-xs text-red-600 dark:text-red-400 mt-1"></span>
+                            </div>
+
+                            <!-- SSS -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    <img src="https://diarynigracia.com/wp-content/uploads/2024/02/sss.png" 
+                                         class="inline-block w-5 h-5 mr-1" alt="SSS"> SSS Number
+                                </label>
+                                <input type="text" id="sss" name="SSS" maxlength="12"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="XX-XXXXXXX-X">
+                                <span id="sssError" class="text-xs text-red-600 dark:text-red-400 mt-1"></span>
+                            </div>
+
+                            <!-- PhilHealth -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    <img src="https://philippinesgraphic.com.ph/wp-content/uploads/2023/09/PhilHealth-Logo-1-scaled.jpg" 
+                                         class="inline-block w-5 h-5 mr-1" alt="PhilHealth"> PhilHealth ID
+                                </label>
+                                <input type="text" id="philHealth" name="PhilHealth" maxlength="14"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="XX-XXXXXXXXX-X">
+                                <span id="philHealthError" class="text-xs text-red-600 dark:text-red-400 mt-1"></span>
+                            </div>
+
+                            <!-- Pag-IBIG -->
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    <img src="https://www.bworldonline.com/wp-content/uploads/2022/04/Pag-IBIG-logo-hi-res.png" 
+                                         class="inline-block w-5 h-5 mr-1" alt="Pag-IBIG"> Pag-IBIG MID
+                                </label>
+                                <input type="text" id="pagIbig" name="PagIbig" maxlength="14"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                    placeholder="XXXX-XXXX-XXXX">
+                                <span id="pagIbigError" class="text-xs text-red-600 dark:text-red-400 mt-1"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-end">
+                    <button type="button" onclick="window.history.back()" 
+                        class="text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center justify-center order-2 sm:order-1">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitBtn"
+                        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 inline-flex items-center justify-center order-1 sm:order-2">
+                        <i class="fas fa-save mr-2"></i>
+                        <span>Create Employee</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar Column (1/3 width) -->
+            <div class="space-y-6">
+                <!-- Profile Photo Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-camera text-blue-600"></i>
+                            Profile Photo
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex flex-col items-center">
+                            <!-- Preview Container -->
+                            <div class="w-40 h-40 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-700 mb-4 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                <img id="profilePreview" class="w-full h-full object-cover hidden" alt="Profile Preview">
+                                <div id="profilePlaceholder" class="text-center text-gray-400 dark:text-gray-500">
+                                    <i class="fas fa-user text-5xl"></i>
+                                    <p class="text-xs mt-2">No image</p>
+                                </div>
+                            </div>
+
+                            <!-- Upload Area -->
+                            <div class="w-full">
+                                <label for="profilePhoto" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:border-gray-600">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-2"></i>
+                                        <p class="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                                            <span class="font-semibold">Click to upload</span>
+                                        </p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">JPG, PNG or WebP (max 2MB)</p>
+                                    </div>
+                                    <input id="profilePhoto" name="profilePhoto" type="file" class="hidden" accept="image/*" onchange="previewImage(this, 'profilePreview', 'profilePlaceholder')" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signature Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                        <h3 class="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-signature text-blue-600"></i>
+                            Signature
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex flex-col items-center">
+                            <!-- Preview Container -->
+                            <div class="w-full h-32 border-2 border-gray-300 dark:border-gray-600 rounded-lg mb-4 bg-gray-50 dark:bg-gray-700 flex items-center justify-center p-2">
+                                <img id="signaturePreview" class="max-h-full max-w-full object-contain hidden" alt="Signature Preview">
+                                <div id="signaturePlaceholder" class="text-center text-gray-400 dark:text-gray-500">
+                                    <i class="fas fa-file-signature text-4xl"></i>
+                                    <p class="text-xs mt-1">No signature</p>
+                                </div>
+                            </div>
+
+                            <!-- Upload Area -->
+                            <div class="w-full">
+                                <label for="signature" class="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:border-gray-600">
+                                    <div class="flex flex-col items-center justify-center pt-4 pb-5">
+                                        <i class="fas fa-cloud-upload-alt text-xl text-gray-400 mb-1"></i>
+                                        <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <span class="font-semibold">Upload signature</span>
+                                        </p>
+                                        <p class="text-xs text-gray-400 dark:text-gray-500">PNG with transparency</p>
+                                    </div>
+                                    <input id="signature" name="signature" type="file" class="hidden" accept="image/*" onchange="previewImage(this, 'signaturePreview', 'signaturePlaceholder')" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Toast Notification (Flowbite Toast) -->
+<div id="toast" class="fixed top-4 right-4 z-50 hidden">
+    <div class="flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800" role="alert">
+        <div id="toastIcon" class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-blue-500 bg-blue-100 rounded-lg dark:bg-blue-800 dark:text-blue-200">
+            <i class="fas fa-info"></i>
+        </div>
+        <div id="toastMessage" class="ms-3 text-sm font-normal">Message</div>
+        <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" onclick="hideToast()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Flowbite JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+    
+    <script>
+        const API_URL = (window.ApiBaseUrl || '@ViewData["ApiBaseUrl"]' || '').replace(/"/g, '');
+        let token = '';
+        let roles = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken') || '';
+
+            // Set default start date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+
+            // Load data
+            fetchNextEmployeeCode();
+            fetchRoles();
+            loadCompanyId();
+
+            // Populate company data from token immediately and then try to fetch full company profile
+            populateCompanyFromToken();
+            const cid = document.getElementById('companyId').value;
+            if (cid) fetchCompanyProfile(cid);
+
+            // Setup gov ID masking
+            setupGovIdMasking();
+        });
+
+        function loadCompanyId() {
+            try {
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    // Use token payload as fallback if API doesn't return company info
+                    if (payload.companyId) document.getElementById('companyId').value = payload.companyId;
+                    if (payload.companyName) document.getElementById('companyName').value = payload.companyName;
+                }
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
+        }
+
+        // Read company info from JWT quickly to avoid waiting for API
+        function populateCompanyFromToken() {
+            try {
+                if (!token) return;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.companyName) document.getElementById('companyName').value = payload.companyName;
+                if (payload.companyId) document.getElementById('companyId').value = payload.companyId;
+                // set layout header logo if available
+                if (payload.companyLogo) {
+                    const logo = document.getElementById('layout-header-logo');
+                    if (logo) logo.src = payload.companyLogo;
+                }
+            } catch (e) {
+                console.warn('populateCompanyFromToken failed', e);
+            }
+        }
+
+        // Try to fetch full company profile from API for extras like logo
+        async function fetchCompanyProfile(companyId) {
+            try {
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const res = await fetch(`${API_URL}/api/Companies/${companyId}`, { headers, credentials: 'include' });
+                if (!res.ok) {
+                    // not fatal if endpoint doesn't exist
+                    console.info('Company profile fetch not available or failed', res.status);
+                    return;
+                }
+                const company = await res.json();
+                if (company.companyName) document.getElementById('companyName').value = company.companyName;
+                if (company.companyId) document.getElementById('companyId').value = company.companyId;
+                if (company.logoUrl) {
+                    const logo = document.getElementById('layout-header-logo');
+                    if (logo) logo.src = company.logoUrl;
+                }
+            } catch (e) {
+                console.warn('Failed to fetch company profile (may be 404):', e);
+            }
+        }
+
+        async function fetchNextEmployeeCode() {
+            try {
+                    const headers = {};
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const res = await fetch(`${API_URL}/api/Employees/next-code`, {
+                        headers,
+                        credentials: 'include'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('employeeCode').value = data.employeeCode;
+                    if (data.companyName) document.getElementById('companyName').value = data.companyName;
+                    if (data.companyId) document.getElementById('companyId').value = data.companyId;
+                }
+            } catch (e) {
+                console.error('Error fetching employee code:', e);
+            }
+        }
+
+        async function fetchRoles() {
+            try {
+                console.log('Resolved API base URL:', API_URL);
+                    const headers = {};
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const res = await fetch(`${API_URL}/api/EmployeeRoles`, {
+                        headers,
+                        credentials: 'include'
+                });
+                console.log('/api/EmployeeRoles response status:', res.status);
+                if (res.ok) {
+                    roles = await res.json();
+                    console.log('Roles fetched:', roles);
+                    const select = document.getElementById('roleId');
+                    console.log('Role select element:', select);
+                    // reset options, keep placeholder
+                    select.innerHTML = '<option value="">Select role</option>';
+                    roles.filter(r => r.isActive).forEach(r => {
+                        console.log('Adding role option', r.roleId, r.roleName);
+                        const opt = document.createElement('option');
+                        opt.value = r.roleId;
+                        opt.textContent = r.roleName;
+                        opt.dataset.rate = r.basicRate || 0;
+                        opt.dataset.rateType = r.rateType || '';
+                        select.appendChild(opt);
+                    });
+
+                    // Auto-fill salary when role changes
+                    select.addEventListener('change', function () {
+                        const selected = this.options[this.selectedIndex];
+                        const rate = parseFloat(selected.dataset.rate) || 0;
+                        const rateType = selected.dataset.rateType || '';
+                        const label = rateType ? ` / ${rateType}` : '';
+                        document.getElementById('salaryDisplay').textContent =
+                            `₱ ${rate.toLocaleString('en-PH', { minimumFractionDigits: 2 })}${label}`;
+                    });
+                }
+                else {
+                    // Try to log response body for debugging (may fail for empty responses)
+                    try { const txt = await res.text(); console.warn('EmployeeRoles response body:', txt); } catch(e){ console.warn('Failed to read EmployeeRoles response body', e); }
+                }
+            } catch (e) {
+                console.error('Error fetching roles:', e);
+                console.error('Error fetching roles:', e);
+            }
+        }
+
+        // Government ID Input Masking
+        function setupGovIdMasking() {
+            maskInput('tin', [3, 3, 3, 3], '-');
+            maskInput('sss', [2, 7, 1], '-');
+            maskInput('philHealth', [2, 9, 1], '-');
+            maskInput('pagIbig', [4, 4, 4], '-');
+        }
+
+        function maskInput(id, groups, separator) {
+            const input = document.getElementById(id);
+            input.addEventListener('input', function (e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                const totalDigits = groups.reduce((a, b) => a + b, 0);
+                value = value.substring(0, totalDigits);
+
+                let formatted = '';
+                let pos = 0;
+                for (let i = 0; i < groups.length; i++) {
+                    if (pos >= value.length) break;
+                    if (i > 0) formatted += separator;
+                    formatted += value.substring(pos, pos + groups[i]);
+                    pos += groups[i];
+                }
+                this.value = formatted;
+            });
+        }
+
+        // Image Preview
+        function previewImage(input, previewId, placeholderId) {
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file size (2MB limit)
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('File size exceeds 2MB. Please choose a smaller file.', 'error');
+                    input.value = '';
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.match('image.*')) {
+                    showToast('Please select an image file.', 'error');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    showToast('Image uploaded successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        // Government ID Validation
+        function validateGovIds() {
+            let valid = true;
+
+            const tinVal = document.getElementById('tin').value;
+            if (tinVal && !/^\d{3}-\d{3}-\d{3}-\d{3}$/.test(tinVal)) {
+                document.getElementById('tinError').textContent = 'Format: XXX-XXX-XXX-XXX (12 digits)';
+                document.getElementById('tin').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('tinError').textContent = '';
+                document.getElementById('tin').classList.remove('border-red-500');
+            }
+
+            const sssVal = document.getElementById('sss').value;
+            if (sssVal && !/^\d{2}-\d{7}-\d{1}$/.test(sssVal)) {
+                document.getElementById('sssError').textContent = 'Format: XX-XXXXXXX-X (10 digits)';
+                document.getElementById('sss').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('sssError').textContent = '';
+                document.getElementById('sss').classList.remove('border-red-500');
+            }
+
+            const phVal = document.getElementById('philHealth').value;
+            if (phVal && !/^\d{2}-\d{9}-\d{1}$/.test(phVal)) {
+                document.getElementById('philHealthError').textContent = 'Format: XX-XXXXXXXXX-X (12 digits)';
+                document.getElementById('philHealth').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('philHealthError').textContent = '';
+                document.getElementById('philHealth').classList.remove('border-red-500');
+            }
+
+            const piVal = document.getElementById('pagIbig').value;
+            if (piVal && !/^\d{4}-\d{4}-\d{4}$/.test(piVal)) {
+                document.getElementById('pagIbigError').textContent = 'Format: XXXX-XXXX-XXXX (12 digits)';
+                document.getElementById('pagIbig').classList.add('border-red-500');
+                valid = false;
+            } else {
+                document.getElementById('pagIbigError').textContent = '';
+                document.getElementById('pagIbig').classList.remove('border-red-500');
+            }
+
+            return valid;
+        }
+
+        // Form Submission
+        document.getElementById('addEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!validateGovIds()) {
+                showToast('Please fix government ID format errors.', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+
+            const formData = new FormData(this);
+
+            try {
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                const res = await fetch(`${API_URL}/api/Employees`, {
+                    method: 'POST',
+                    headers,
+                    credentials: 'include',
+                    body: formData
+                });
+
+                console.log('Create employee response status:', res.status);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(data.message || 'Employee created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Employees';
+                    }, 2000);
+                } else if (res.status === 409) {
+                    const err = await res.json();
+                    showToast(err.message || 'Email already exists.', 'error');
+                } else {
+                    // Try to parse JSON error, otherwise show generic
+                    try {
+                        const err = await res.json();
+                        showToast(err.message || 'Failed to create employee.', 'error');
+                    } catch (e) {
+                        const txt = await res.text();
+                        console.error('Create employee error body:', txt);
+                        showToast('Failed to create employee.', 'error');
+                    }
+                }
+            } catch (err) {
+                showToast('Network error. Please try again.', 'error');
+                console.error('Network error creating employee:', err);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Create Employee';
+            }
+        });
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            // Set icon based on type
+            if (type === 'success') {
+                toastIcon.innerHTML = '<i class="fas fa-check"></i>';
+                toastIcon.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200';
+            } else if (type === 'error') {
+                toastIcon.innerHTML = '<i class="fas fa-exclamation"></i>';
+                toastIcon.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg dark:bg-red-800 dark:text-red-200';
+            } else {
+                toastIcon.innerHTML = '<i class="fas fa-info"></i>';
+                toastIcon.className = 'inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-blue-500 bg-blue-100 rounded-lg dark:bg-blue-800 dark:text-blue-200';
+            }
+            
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                hideToast();
+            }, 4000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.add('hidden');
+        }
+    </script>
+}

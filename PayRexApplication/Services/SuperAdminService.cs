@@ -68,14 +68,14 @@ public int? PlanUserLimit { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Role { get; set; } = string.Empty;
    public string Status { get; set; } = string.Empty;
-        public string CompanyId { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
         public string? CompanyName { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
     public class AdminCompanyDto
     {
-        public string CompanyId { get; set; } = string.Empty;
+      public int CompanyId { get; set; }
    public string CompanyName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public bool IsActive { get; set; }
@@ -134,8 +134,8 @@ public int? PlanUserLimit { get; set; }
 
             return new DashboardKpisDto
        {
-     TotalCompanies = await _db.Companies.CountAsync(c => c.CompanyId != "0000"),
-         ActiveCompanies = await _db.Companies.CountAsync(c => c.CompanyId != "0000" && c.IsActive && c.Status == CompanyStatus.Active),
+     TotalCompanies = await _db.Companies.CountAsync(c => c.CompanyCode != "0000"),
+       ActiveCompanies = await _db.Companies.CountAsync(c => c.CompanyCode != "0000" && c.IsActive && c.Status == CompanyStatus.Active),
            TotalUsers = await _db.Users.CountAsync(u => u.Role != UserRole.SuperAdmin),
     ActiveUsers = await _db.Users.CountAsync(u => u.Role != UserRole.SuperAdmin && u.Status == UserStatus.Active),
                 TotalEmployees = await _db.Employees.CountAsync(),
@@ -151,8 +151,8 @@ public int? PlanUserLimit { get; set; }
         {
             var notifications = new List<AdminNotificationDto>();
 
-   var recentCompanies = await _db.Companies
-             .Where(c => c.CompanyId != "0000")
+  var recentCompanies = await _db.Companies
+         .Where(c => c.CompanyCode != "0000")
       .OrderByDescending(c => c.CreatedAt)
       .Take(5)
     .Select(c => new { c.CompanyName, c.CreatedAt })
@@ -201,10 +201,19 @@ public int? PlanUserLimit { get; set; }
 
         public async Task<bool> SetCompanyStatusAsync(string companyId, bool isActive, int actorUserId, string? ipAddress, string? userAgent)
         {
-       if (companyId == "0000") return false; // Can't deactivate system company
+          // Support either numeric companyId or companyCode strings. Find company accordingly.
+          Company? company = null;
+          if (int.TryParse(companyId, out var cid))
+          {
+            company = await _db.Companies.Include(c => c.Users).FirstOrDefaultAsync(c => c.CompanyId == cid);
+          }
+          else
+          {
+            company = await _db.Companies.Include(c => c.Users).FirstOrDefaultAsync(c => c.CompanyCode == companyId);
+          }
 
-            var company = await _db.Companies.Include(c => c.Users).FirstOrDefaultAsync(c => c.CompanyId == companyId);
-     if (company == null) return false;
+       if (company == null) return false;
+       if (company.CompanyCode == "0000") return false; // Can't deactivate system company
 
             var oldIsActive = company.IsActive;
             company.IsActive = isActive;
@@ -223,7 +232,7 @@ public int? PlanUserLimit { get; set; }
 
      await _db.SaveChangesAsync();
 
-    await _audit.LogAsync(actorUserId, companyId, "SetCompanyStatus", "Company", companyId,
+    await _audit.LogAsync(actorUserId, company.CompanyId, "SetCompanyStatus", "Company", company.CompanyId.ToString(),
   oldIsActive.ToString(), isActive.ToString(), ipAddress, userAgent);
 
    _logger.LogInformation("Company {CompanyId} IsActive set to {IsActive} by {ActorId}. {Count} users cascaded.",
@@ -364,7 +373,7 @@ CompanyId = u.CompanyId,
         public async Task<List<AdminCompanyDto>> GetCompaniesAsync()
   {
             return await _db.Companies
-        .Where(c => c.CompanyId != "0000")
+          .Where(c => c.CompanyCode != "0000")
          .Include(c => c.SubscriptionPlan)
      .OrderByDescending(c => c.CreatedAt)
       .Select(c => new AdminCompanyDto

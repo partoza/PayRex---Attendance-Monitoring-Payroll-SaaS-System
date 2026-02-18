@@ -148,7 +148,34 @@ namespace PayRex.Web.Pages.Auth
                 return Page();
             }
 
-            // Removed hCaptcha server-side verification
+            // reCAPTCHA server-side verification (only if secret configured)
+            try
+            {
+                var secret = _config["Recaptcha:SecretKey"];
+                if (!string.IsNullOrWhiteSpace(secret))
+                {
+                    var token = Request.Form["g-recaptcha-response"].ToString();
+                    if (string.IsNullOrWhiteSpace(token))
+                    {
+                        ErrorMessage = "Please complete the CAPTCHA.";
+                        ModelState.AddModelError(string.Empty, ErrorMessage);
+                        return Page();
+                    }
+
+                    var ok = await VerifyRecaptchaAsync(token, secret);
+                    if (!ok)
+                    {
+                        ErrorMessage = "CAPTCHA validation failed. Please try again.";
+                        ModelState.AddModelError(string.Empty, ErrorMessage);
+                        _logger.LogWarning("reCAPTCHA validation failed during registration for {Email}", Input.Email);
+                        return Page();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error verifying reCAPTCHA during registration");
+            }
 
             var registerRequest = new RegisterRequestDto
             {
@@ -172,6 +199,36 @@ namespace PayRex.Web.Pages.Auth
 
             TempData["SuccessMessage"] = "Registration successful! Please log in with your credentials.";
             return RedirectToPage("/Auth/Login");
+        }
+
+        private async Task<bool> VerifyRecaptchaAsync(string token, string secret)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                var values = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "secret", secret },
+                    { "response", token }
+                };
+
+                var content = new FormUrlEncodedContent(values);
+                var resp = await client.PostAsync("https://www.google.com/recaptcha/api/siteverify", content);
+                if (!resp.IsSuccessStatusCode) return false;
+
+                using var stream = await resp.Content.ReadAsStreamAsync();
+                using var doc = await JsonDocument.ParseAsync(stream);
+                if (doc.RootElement.TryGetProperty("success", out var success))
+                {
+                    return success.GetBoolean();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "reCAPTCHA verification error");
+            }
+
+            return false;
         }
     }
 }

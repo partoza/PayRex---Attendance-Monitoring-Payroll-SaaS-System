@@ -22,9 +22,8 @@ namespace PayRexApplication.Models
         /// Gets or sets the CompanyId
         /// </summary>
         [Required]
-        [MaxLength(4)]
         [Column("companyId")]
-        public string CompanyId { get; set; } = string.Empty;
+        public int CompanyId { get; set; }
 
         /// <summary>
         /// Gets or sets the FirstName
@@ -93,6 +92,13 @@ namespace PayRexApplication.Models
         [MaxLength(512)]
         [Column("profileImageUrl")]
         public string? ProfileImageUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the SignatureUrl stored for the user (Cloudinary URL)
+        /// </summary>
+        [MaxLength(512)]
+        [Column("signatureUrl")]
+        public string? SignatureUrl { get; set; }
 
         // TOTP (Two-Factor Authentication) fields
 

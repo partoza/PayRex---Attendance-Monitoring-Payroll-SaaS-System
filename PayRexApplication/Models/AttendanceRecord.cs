@@ -16,10 +16,9 @@ namespace PayRexApplication.Models
        [Column("employeeId")]
         public int EmployeeId { get; set; }
 
-   [Required]
-    [MaxLength(4)]
-   [Column("companyId")]
-        public string CompanyId { get; set; } = string.Empty;
+     [Required]
+      [Column("companyId")]
+       public int CompanyId { get; set; }
 
    [Required]
         [Column("date")]

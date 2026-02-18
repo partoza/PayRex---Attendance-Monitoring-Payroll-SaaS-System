@@ -6,52 +6,15 @@
 }
 
 <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-4 md:top-6 md:right-6 max-w-sm w-full">
-        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
-        {
-            <div class="toast-message group relative overflow-hidden bg-white border border-green-100 rounded-2xl shadow-lg shadow-green-100/50 p-4 animate-slide-in" role="alert">
-                 <div class="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-[3000ms] w-full animate-progress"></div>
-                <div class="flex items-start gap-4">
-                    <div class="p-2 bg-green-50 rounded-xl shrink-0">
-                        <svg class="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div class="flex-1 pt-0.5">
-                        <h3 class="text-sm font-semibold text-gray-900">Success</h3>
-                        <p class="text-sm text-gray-600 mt-1">@Model.SuccessMessage</p>
-                    </div>
-                    <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        }
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="toast-message group relative overflow-hidden bg-white border border-red-100 rounded-2xl shadow-lg shadow-red-100/50 p-4 animate-slide-in" role="alert">
-                 <div class="absolute bottom-0 left-0 h-1 bg-red-500 transition-all duration-[3000ms] w-full animate-progress"></div>
-                <div class="flex items-start gap-4">
-                    <div class="p-2 bg-red-50 rounded-xl shrink-0">
-                        <svg class="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div class="flex-1 pt-0.5">
-                        <h3 class="text-sm font-semibold text-gray-900">Error</h3>
-                        <p class="text-sm text-gray-600 mt-1">@Model.ErrorMessage</p>
-                    </div>
-                    <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        }
-    </div>
+    @* Server messages show via global toasts *@
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SuccessMessage)), 'success'); });</script>
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorMessage)), 'error'); });</script>
+    }
     <!-- Header -->
     <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
@@ -83,9 +46,20 @@
             <!-- Company Profile & Logo -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <h2 class="text-lg font-bold text-gray-900 mb-6 flex items-center">Company Profile</h2>
-                    </div>
+                    <div class="flex items-center mb-4 gap-3">
+    <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+  <path fill-rule="evenodd" d="M3 2.25a.75.75 0 0 0 0 1.5v16.5h-.75a.75.75 0 0 0 0 1.5H15v-18a.75.75 0 0 0 0-1.5H3ZM6.75 19.5v-2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75ZM6 6.75A.75.75 0 0 1 6.75 6h.75a.75.75 0 0 1 0 1.5h-.75A.75.75 0 0 1 6 6.75ZM6.75 9a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM6 12.75a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 6a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75Zm-.75 3.75A.75.75 0 0 1 10.5 9h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 12a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM16.5 6.75v15h5.25a.75.75 0 0 0 0-1.5H21v-12a.75.75 0 0 0 0-1.5h-4.5Zm1.5 4.5a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Zm.75 2.25a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-.008a.75.75 0 0 0-.75-.75h-.008ZM18 17.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
+</svg>
+
+    </div>
+
+    <h2 class="text-lg font-bold text-gray-900">
+        Company Profile
+    </h2>
+</div>
+
 
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
     <!-- Header -->
@@ -278,9 +252,19 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h2 class="text-lg font-bold text-gray-900 flex items-center">Employee Roles & Salary Rates</h2>
-                        </div>
+                                <div>
+                                    <div class="flex items-center mb-0 gap-3">
+                                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+  <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
+  <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+</svg>
+
+
+                                        </div>
+                                        <h2 class="text-lg font-bold text-gray-900 flex items-center">Employee Roles & Salary Rates</h2>
+                                    </div>
+                                </div>
                         <div class="flex items-center space-x-2">
                             @if (!Model.IsEditMode)
                             {
@@ -330,7 +314,16 @@
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4">Payroll Configuration</h2>
+                    <div class="flex items-center mb-4 gap-3">
+                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+  <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
+</svg>
+
+
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">Payroll Configuration</h2>
+                    </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
@@ -438,44 +431,7 @@
 </div>
 
 <script>
-    // Toast helper (auto-dismiss) - client-side usable
-    function showToastFromServer() {
-        const toasts = document.querySelectorAll('.toast-message');
-        toasts.forEach(t => {
-            setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.transform = 'translateY(-10px)';
-                setTimeout(() => t.remove(), 300);
-            }, 3000);
-        });
-    }
-
-    function showToast(message, type) {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        const toast = document.createElement('div');
-        toast.className = 'toast-message group relative overflow-hidden bg-white border rounded-2xl shadow-lg p-4 animate-slide-in';
-        if (type === 'success') toast.classList.add('border-green-100');
-        if (type === 'error') toast.classList.add('border-red-100');
-        toast.innerHTML = `<div class="absolute bottom-0 left-0 h-1 ${type==='success'? 'bg-green-500':'bg-red-500'} transition-all duration-[3000ms] w-full animate-progress"></div>
-            <div class="flex items-start gap-4">
-                <div class="p-2 ${type==='success'? 'bg-green-50':'bg-red-50'} rounded-xl shrink-0">
-                    <svg class="w-6 h-6 ${type==='success'? 'text-green-600':'text-red-600'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div class="flex-1 pt-0.5">
-                    <h3 class="text-sm font-semibold text-gray-900">${type==='success' ? 'Success' : 'Notice'}</h3>
-                    <p class="text-sm text-gray-600 mt-1">${message}</p>
-                </div>
-                <button type="button" onclick="this.closest('.toast-message').remove()" class="text-gray-400 hover:text-gray-600 transition-colors">&times;</button>
-            </div>`;
-        container.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-10px)'; setTimeout(() => toast.remove(),300); },3000);
-    }
-
-    // Run on load to auto-dismiss any server-rendered toasts
-    document.addEventListener('DOMContentLoaded', showToastFromServer);
+    // Toast helpers moved to shared layout. Page uses global showToast / showUploadToast / hideUploadToast.
 
     // Load roles from model
 
@@ -494,46 +450,7 @@
         }
     });
 
-    // Upload toast functions
-    function showUploadToast() {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        
-        // Remove any existing upload toast
-        const existing = document.getElementById('upload-toast');
-        if (existing) existing.remove();
-        
-        const toast = document.createElement('div');
-        toast.id = 'upload-toast';
-        toast.className = 'toast-message group relative overflow-hidden bg-white border border-blue-100 rounded-2xl shadow-lg shadow-blue-100/50 p-4 animate-slide-in';
-        toast.innerHTML = `
-            <div class="flex items-start gap-4">
-                <div class="p-2 bg-blue-50 rounded-xl shrink-0">
-                    <svg class="w-6 h-6 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1 pt-0.5">
-                    <h3 class="text-sm font-semibold text-gray-900">Uploading</h3>
-                    <p class="text-sm text-gray-600 mt-1">Uploading company logo...</p>
-                </div>
-            </div>
-        `;
-        container.appendChild(toast);
-    }
-
-    function hideUploadToast() {
-        const toast = document.getElementById('upload-toast');
-        if (toast) {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-10px)';
-            setTimeout(() => toast.remove(), 300);
-        }
-    }
-
-    // Hide upload toast on page load (after redirect from upload)
-    window.addEventListener('DOMContentLoaded', hideUploadToast);
+    // upload toast helpers are provided globally in layout (showUploadToast/hideUploadToast)
 
 
     let roles = @Html.Raw(JsonSerializer.Serialize(Model.Roles));
@@ -611,14 +528,33 @@
             document.getElementById('editingRoleId').value = r.RoleId;
             document.getElementById('roleName').value = r.RoleName || '';
             document.getElementById('basicRate').value = r.BasicRate || '';
-            document.getElementById('rateType').value = r.RateType || 'Semi-Monthly';
+            const rtEl = document.getElementById('rateType');
+            if (roleRateTypeLocked) {
+                // If locked to company payroll, use mapped value instead of role value
+                const payrollEl = document.getElementsByName('PayrollCycle')[0];
+                const payrollVal = payrollEl ? payrollEl.value : null;
+                rtEl.value = mapPayrollToRateType(payrollVal);
+                rtEl.disabled = true;
+            } else {
+                rtEl.value = r.RateType || 'Semi-Monthly';
+                rtEl.disabled = false;
+            }
             document.getElementById('roleDesc').value = r.Description || '';
             document.getElementById('roleActive').checked = r.IsActive;
         } else {
             document.getElementById('editingRoleId').value = '';
             document.getElementById('roleName').value = '';
             document.getElementById('basicRate').value = '';
-            document.getElementById('rateType').value = 'Semi-Monthly';
+            const rtEl = document.getElementById('rateType');
+            if (roleRateTypeLocked) {
+                const payrollEl = document.getElementsByName('PayrollCycle')[0];
+                const payrollVal = payrollEl ? payrollEl.value : null;
+                rtEl.value = mapPayrollToRateType(payrollVal);
+                rtEl.disabled = true;
+            } else {
+                rtEl.value = 'Semi-Monthly';
+                rtEl.disabled = false;
+            }
             document.getElementById('roleDesc').value = '';
             document.getElementById('roleActive').checked = true;
         }
@@ -710,6 +646,34 @@
             });
         }
 
+        // Track whether role rate type should be locked to company payroll cycle
+        let roleRateTypeLocked = false;
+
+        function mapPayrollToRateType(payrollCycle) {
+            // payrollCycle mapping: 0 = Semi-Monthly, 1 = Monthly, 2 = Weekly
+            // When payroll is Weekly we map role rate type to Daily (company-wide policy)
+            switch (Number(payrollCycle)) {
+                case 1: return 'Monthly';
+                case 2: return 'Daily';
+                default: return 'Semi-Monthly';
+            }
+        }
+
+        function applyRateTypeLock(payrollCycle) {
+            const rtEl = document.getElementById('rateType');
+            if (!rtEl) return;
+            // If company payrollCycle is defined, lock rate type to mapped value
+            if (typeof payrollCycle !== 'undefined' && payrollCycle !== null) {
+                const mapped = mapPayrollToRateType(payrollCycle);
+                rtEl.value = mapped;
+                rtEl.disabled = true;
+                roleRateTypeLocked = true;
+            } else {
+                rtEl.disabled = false;
+                roleRateTypeLocked = false;
+            }
+        }
+
         // Fetch latest profile and roles without blocking initial render
         async function loadRemoteData() {
             try {
@@ -744,6 +708,8 @@
                     setIf('ContactPhone', profile.contactPhone ?? '');
                     setIf('Tin', profile.tin ?? '');
                     setIf('PayrollCycle', profile.payrollCycle ?? 0);
+                    // Apply rate type lock based on fetched payroll cycle
+                    applyRateTypeLock(profile?.payrollCycle);
                     setIf('WorkHoursPerDay', profile.workHoursPerDay ?? 8);
                     setIf('OvertimeRate', profile.overtimeRate ?? 1.25);
                     setIf('LateGraceMinutes', profile.lateGraceMinutes ?? 15);
@@ -795,19 +761,4 @@
     <input type="hidden" id="RolesJson" name="RolesJson" />
 </form>
 
-<style>
-    @@keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    @@keyframes progress {
-        from { width: 100%; }
-        to { width: 0%; }
-    }
-    .animate-slide-in {
-        animation: slideIn 0.3s ease-out forwards;
-    }
-    .animate-progress {
-        animation: progress 3s linear forwards;
-    }
-</style>
+    @* Toast animations moved to shared layout *@

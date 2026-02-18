@@ -58,17 +58,17 @@ if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return Redi
        return RedirectToPage();
         }
 
-        public class UserItem
-  {
-       public int UserId { get; set; }
-       public string FirstName { get; set; } = "";
- public string LastName { get; set; } = "";
-            public string Email { get; set; } = "";
-    public string Role { get; set; } = "";
-            public string Status { get; set; } = "";
-    public string CompanyId { get; set; } = "";
- public string? CompanyName { get; set; }
-   public DateTime CreatedAt { get; set; }
-        }
+            public class UserItem
+          {
+               public int UserId { get; set; }
+               public string FirstName { get; set; } = "";
+         public string LastName { get; set; } = "";
+                public string Email { get; set; } = "";
+            public string Role { get; set; } = "";
+                public string Status { get; set; } = "";
+            public int CompanyId { get; set; }
+         public string? CompanyName { get; set; }
+           public DateTime CreatedAt { get; set; }
+            }
     }
 }

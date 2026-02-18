@@ -1,5 +1,6 @@
 @page
 @model PayRex.Web.Pages.Auth.RegisterModel
+@inject Microsoft.Extensions.Configuration.IConfiguration AppConfig
 @{
  Layout = "~/Pages/Shared/_AuthLayout.cshtml";
  ViewData["Title"] = "Create Account";
@@ -96,11 +97,8 @@
  </div>
  <span asp-validation-for="Input.AcceptTerms" class="text-red-500 text-sm"></span>
 
- @* 
- <div class="mt-4">
- <partial name="_Captcha" />
- </div>
- *@
+ @* reCAPTCHA placeholder *@
+  <div class="g-recaptcha mt-4" data-sitekey="@AppConfig["Recaptcha:SiteKey"]"></div>
 
  <button id="submitButton" type="submit" class="w-full bg-primary text-white py-4 rounded-xl font-semibold hover:brightness-95 transition shadow flex items-center justify-center">
  <span id="btnText">Create Account</span>
@@ -137,5 +135,21 @@
  if (eyeSlash) eyeSlash.classList.remove('hidden');
  }
  }
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('registerForm');
+            if (!form) return;
+            form.addEventListener('submit', function(e) {
+                var resp = (typeof grecaptcha !== 'undefined') ? grecaptcha.getResponse() : '';
+                if (!resp) {
+                    if (!document.querySelector('.g-recaptcha').getAttribute('data-sitekey')) {
+                        console.error('reCAPTCHA SiteKey is missing from configuration');
+                        return true;
+                    }
+                    e.preventDefault();
+                    alert('Please complete the CAPTCHA');
+                    return false;
+                }
+            });
+        });
  </script>
 }
