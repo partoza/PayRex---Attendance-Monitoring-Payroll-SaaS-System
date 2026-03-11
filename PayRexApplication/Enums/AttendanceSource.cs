@@ -5,6 +5,7 @@ namespace PayRexApplication.Enums
     /// </summary>
     public enum AttendanceSource
     {
-        Qr = 0
+        Qr = 0,
+        Manual = 1
     }
 }

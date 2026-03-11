@@ -92,8 +92,8 @@ namespace PayRex.Web.Pages.Auth
             /// </summary>
             [Required(ErrorMessage = "Password is required")]
             [DataType(DataType.Password)]
-            [MinLength(8, ErrorMessage = "Password must be at least8 characters")]
-            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$",
+            [MinLength(12, ErrorMessage = "Password must be at least 12 characters")]
+            [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{12,}$",
  ErrorMessage = "Password must contain uppercase, lowercase, number, and special character")]
             [Display(Name = "Password")]
             public string Password { get; set; } = string.Empty;
@@ -197,7 +197,7 @@ namespace PayRex.Web.Pages.Auth
 
             _logger.LogInformation("User {Email} registered successfully with ID: {Id}", response.Email, response.Id);
 
-            TempData["SuccessMessage"] = "Registration successful! Please log in with your credentials.";
+            TempData["Auth_SuccessMessage"] = "Registration successful! Please log in with your credentials.";
             return RedirectToPage("/Auth/Login");
         }
 

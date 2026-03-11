@@ -1,0 +1,205 @@
+================================================================================
+                         PAYROLL FLOW — PayRex Application
+================================================================================
+
+OVERVIEW
+--------
+The payroll process moves through four stages involving three roles:
+  Employee  →  HR  →  Accountant  →  Admin
+
+Each role has specific responsibilities that ensure accuracy, compliance,
+and proper authorization before salaries are released.
+
+
+================================================================================
+STAGE 1 — EMPLOYEE (Daily Input)
+================================================================================
+
+Responsibility: Clock in/out, request leaves, review personal payslips.
+
+  1. Clock In / Clock Out
+     - Employee scans their QR code at the attendance terminal.
+     - System validates that the QR code belongs to the employee's company.
+     - Records TimeIn, TimeOut, LateMinutes, OvertimeHours, and Status.
+     - Late minutes beyond the grace period (from Company Settings) are tracked.
+
+  2. Leave Requests
+     - Employee submits leave requests (Vacation, Sick, Emergency, etc.)
+       via the Employee Portal.
+     - Pending leaves await HR approval.
+
+  3. View My Payslips
+     - After payroll is released, employees can view their payslip details
+       including earnings breakdown (Basic, OT, Holiday, Allowances) and
+       deductions (SSS, PhilHealth, Pag-IBIG, Withholding Tax).
+     - Payslips can be exported to PDF.
+
+  4. View My Attendance
+     - Employee reviews their own attendance history and statistics.
+
+
+================================================================================
+STAGE 2 — HR (Data Preparation & Validation)
+================================================================================
+
+Responsibility: Manage employees, approve leaves, verify attendance.
+
+  1. Employee Management
+     - Add/edit employees: personal info, employment type, salary rate,
+       position, department, and assigned roles.
+     - Assign employee codes and generate QR codes.
+     - Activate or deactivate employees.
+
+  2. Leave Approval
+     - Review pending leave requests.
+     - Approve or reject with optional notes.
+     - Approved leaves are reflected as "On Leave" in attendance records.
+
+  3. Attendance Review
+     - Monitor daily attendance logs.
+     - Verify late arrivals, absences, and overtime entries.
+     - Archive attendance records for historical reference.
+
+  4. Compensation Setup
+     - Add employee-specific deductions (loans, advances, etc.).
+     - Add employee-specific benefits/allowances (rice, transport, etc.).
+     - These are factored into payroll computation automatically.
+
+
+================================================================================
+STAGE 3 — ACCOUNTANT (Payroll Computation & Contributions)
+================================================================================
+
+Responsibility: Create payroll periods, compute salaries, manage contributions.
+
+  1. Create Payroll Period
+     - Define the pay period (start date → end date, period name).
+     - Example: "Mar 01 - 15, 2026" for semi-monthly payroll.
+
+  2. Compute Salaries  [POST /api/payroll/compute/{periodId}]
+     - System automatically calculates for all active employees:
+
+       a) Basic Pay
+          - Uses Period Rate based on Payroll Frequency (Company Settings):
+            * Semi-Monthly: Monthly Salary / 2
+            * Monthly: Full Monthly Salary
+          - Daily Rate = Period Rate / Working Days in Period
+          - Basic Pay = Daily Rate × Days Present
+
+       b) Overtime Pay
+          - Hourly Rate = Daily Rate / Work Hours Per Day (Company Settings)
+          - OT Pay = OT Hours × Hourly Rate × Overtime Multiplier (Company Settings)
+
+       c) Holiday Pay
+          - Holiday Pay = Daily Rate × Holiday Rate Multiplier (Company Settings)
+            for each holiday day the employee was present.
+
+       d) Allowances
+          - Sum of all employee benefits/allowances.
+
+       e) Gross Pay = Basic + Overtime + Holiday + Allowances
+
+       f) Government Contributions (based on System Settings rates):
+          - SSS: Gross Pay × SSS Rate
+          - PhilHealth: Gross Pay × PhilHealth Rate
+          - Pag-IBIG: Gross Pay × Pag-IBIG Rate (capped at PHP 200)
+
+       g) Other Deductions
+          - Employee-specific deductions (loans, advances, etc.)
+          - Late deduction: minutes beyond grace period × per-minute rate
+
+       h) Total Deductions = SSS + PhilHealth + Pag-IBIG + Other Deductions + Late
+
+       i) Net Pay = Gross Pay - Total Deductions
+
+  3. Review Summaries
+     - Accountant reviews computed payroll summaries per employee.
+     - Verify all amounts, deductions, and contributions are correct.
+
+  4. Government Contributions Report
+     - View SSS, PhilHealth, Pag-IBIG breakdowns per employee per period.
+     - Both Employee Share and Employer Share are recorded.
+
+
+================================================================================
+STAGE 4 — ADMIN (Approval & Release)
+================================================================================
+
+Responsibility: Approve payroll, generate payslips, release to employees.
+
+  1. Approve Payroll Period
+     - Admin reviews the computed payroll summaries.
+     - Changes period status from Draft → Approved.
+
+  2. Generate Payslips  [POST /api/payroll/payslips/generate/{periodId}]
+     - Creates individual payslip records for each employee in the period.
+     - Each payslip includes: Basic Pay, Overtime, Holiday Pay, Allowances,
+       Gross Pay, Total Deductions, and Net Pay.
+
+  3. Release Payslips
+     - Changes payroll period status to Released.
+     - Employees can now view their payslips in the Employee Portal.
+
+  4. Finance Tracking
+     - Track income and expenses for the company.
+     - Monitor overall payroll costs per period.
+
+
+================================================================================
+COMPANY SETTINGS (Configuration Reference)
+================================================================================
+
+These settings affect payroll computation:
+
+  Setting                     | Default    | Effect
+  ----------------------------+------------+--------------------------------------------
+  Payroll Cycle (Frequency)   | Semi-Mthly | Determines how monthly salary is divided
+  Work Hours Per Day          | 8.0        | Used for hourly/OT rate calculation
+  Overtime Rate Multiplier    | 1.25×      | Applied to overtime hours
+  Late Grace Minutes          | 15 min     | Minutes before late deduction kicks in
+  Holiday Rate Multiplier     | 2.0×       | Applied to holiday present days
+  Scheduled Time In           | 08:00      | Expected clock-in time
+  Scheduled Time Out          | 17:00      | Auto-calculated from TimeIn + WorkHours + 1hr lunch
+  Vacation Leave Days         | 15         | Annual/monthly leave allocation
+  Vacation Leave Reset Type   | Yearly     | Monthly (0) or Yearly (1)
+
+
+================================================================================
+PAYROLL PERIOD STATUS LIFECYCLE
+================================================================================
+
+  Draft  ──►  Approved  ──►  Released
+    │                           │
+    │  (Accountant computes)    │  (Admin generates payslips)
+    │                           │
+    ▼                           ▼
+  Can recompute              Employees can view payslips
+
+
+================================================================================
+API ENDPOINTS REFERENCE
+================================================================================
+
+  Payroll Periods:
+    GET    /api/payroll/periods              List all periods
+    POST   /api/payroll/periods              Create a new period
+
+  Computation:
+    POST   /api/payroll/compute/{periodId}   Compute salaries for a period
+
+  Summaries:
+    GET    /api/payroll/summaries/{periodId} Get computed summaries
+
+  Contributions:
+    GET    /api/payroll/contributions        Get government contributions
+
+  Compensation:
+    GET    /api/payroll/compensation         Get deductions & benefits
+    POST   /api/payroll/deductions           Add employee deduction
+    POST   /api/payroll/benefits             Add employee benefit
+
+  Payslips:
+    GET    /api/payroll/payslips             Get payslips for current user
+    POST   /api/payroll/payslips/generate/{periodId}  Generate payslips
+
+================================================================================

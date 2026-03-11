@@ -32,10 +32,10 @@ namespace PayRex.Web.Pages.Auth
      public string CurrentPassword { get; set; } = string.Empty;
 
 [Required(ErrorMessage = "New password is required")]
-   [DataType(DataType.Password)]
-[MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
-  [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$",
-                ErrorMessage = "Password must contain uppercase, lowercase, number, and special character")]
+  [DataType(DataType.Password)]
+[MinLength(12, ErrorMessage = "Password must be at least 12 characters")]
+  [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{12,}$",
+           ErrorMessage = "Password must contain uppercase, lowercase, number, and special character")]
   public string NewPassword { get; set; } = string.Empty;
 
   [Required(ErrorMessage = "Please confirm your new password")]
@@ -45,70 +45,83 @@ namespace PayRex.Web.Pages.Auth
         }
 
         public IActionResult OnGet(bool forced = false)
-  {
-            if (!Request.Cookies.ContainsKey("PayRex.AuthToken"))
-            {
-                return RedirectToPage("/Auth/Login");
-    }
+        {
+          if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token) || string.IsNullOrEmpty(token))
+          {
+            return RedirectToPage("/Auth/Login");
+          }
 
-            IsForced = forced;
-    return Page();
+          if (forced)
+          {
+            // Check mustChangePassword claim
+            var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            var mustChangePassword = jwtToken.Claims.FirstOrDefault(c => c.Type == "mustChangePassword")?.Value;
+            if (string.IsNullOrEmpty(mustChangePassword) || mustChangePassword == "0")
+            {
+              // Not allowed to access forced change password
+              return RedirectToPage("/Dashboard");
+            }
+          }
+
+          IsForced = forced;
+          return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-       if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token) || string.IsNullOrEmpty(token))
-            {
-return RedirectToPage("/Auth/Login");
-  }
-
-    if (!ModelState.IsValid)
+          if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token) || string.IsNullOrEmpty(token))
           {
-    return Page();
-      }
+            return RedirectToPage("/Auth/Login");
+          }
 
-  var client = _httpClientFactory.CreateClient("PayRexApi");
-  client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-   var payload = new
-     {
-                CurrentPassword = Input.CurrentPassword,
-                NewPassword = Input.NewPassword,
-                ConfirmPassword = Input.ConfirmPassword
-     };
-
-var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-
-      try
-            {
-                var response = await client.PostAsync("api/auth/change-password", content);
-
-        if (response.IsSuccessStatusCode)
-    {
-             // Password changed successfully - clear cookie and redirect to login
-Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
- TempData["SuccessMessage"] = "Password changed successfully. Please login with your new password.";
-  return RedirectToPage("/Auth/Login");
-}
-
-       var errorJson = await response.Content.ReadAsStringAsync();
-    try
+          if (!ModelState.IsValid)
           {
-      var errorObj = JsonSerializer.Deserialize<JsonElement>(errorJson);
-         ErrorMessage = errorObj.TryGetProperty("message", out var msg) ? msg.GetString() : "Failed to change password.";
- }
-         catch
-         {
-                    ErrorMessage = "Failed to change password. Please try again.";
-         }
+            return Page();
+          }
+
+          var client = _httpClientFactory.CreateClient("PayRexApi");
+          client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+          var payload = new
+          {
+            CurrentPassword = Input.CurrentPassword,
+            NewPassword = Input.NewPassword,
+            ConfirmPassword = Input.ConfirmPassword
+          };
+
+          var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+          try
+          {
+            var response = await client.PostAsync("api/auth/change-password", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+              // Password changed successfully - clear cookie and show modal
+              Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
+              SuccessMessage = "Password changed successfully. You will be logged out and need to log in with your new credentials.";
+              return Page();
             }
-            catch (Exception ex)
-            {
-         _logger.LogError(ex, "Error changing password");
-        ErrorMessage = "An error occurred. Please try again.";
-        }
 
-     return Page();
-      }
+            var errorJson = await response.Content.ReadAsStringAsync();
+            try
+            {
+              var errorObj = JsonSerializer.Deserialize<JsonElement>(errorJson);
+              ErrorMessage = errorObj.TryGetProperty("message", out var msg) ? msg.GetString() : "Failed to change password.";
+            }
+            catch
+            {
+              ErrorMessage = "Failed to change password. Please try again.";
+            }
+          }
+          catch (Exception ex)
+          {
+            _logger.LogError(ex, "Error changing password");
+            ErrorMessage = "An error occurred. Please try again.";
+          }
+
+          return Page();
+        }
     }
 }

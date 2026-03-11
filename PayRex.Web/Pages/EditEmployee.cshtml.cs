@@ -41,12 +41,15 @@ namespace PayRex.Web.Pages
         {
             if (!employeeNumber.HasValue) return RedirectToPage("/Employees");
 
+            var companyIdClaim = User.FindFirst("companyId")?.Value;
+            if (!int.TryParse(companyIdClaim, out var companyId)) return Forbid();
+
             var emp = await _db.Employees
                 .Include(e => e.Role)
                 .Include(e => e.Company)
                 .Include(e => e.User)
                 .AsNoTracking()
-                .FirstOrDefaultAsync(e => e.EmployeeNumber == employeeNumber.Value);
+                .FirstOrDefaultAsync(e => e.EmployeeNumber == employeeNumber.Value && e.CompanyId == companyId);
 
             if (emp == null) return RedirectToPage("/Employees");
 

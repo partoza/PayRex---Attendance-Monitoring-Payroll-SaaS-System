@@ -36,13 +36,35 @@ namespace PayRexApplication.Models
  [Column("createdAt")]
   public DateTime CreatedAt { get; set; }
 
-     [Column("updatedAt")]
-   public DateTime? UpdatedAt { get; set; }
+        [Column("updatedAt")]
+        public DateTime? UpdatedAt { get; set; }
 
-  // Navigation properties
-  [ForeignKey("CompanyId")]
+        [Column("subscriptionId")]
+        public int? SubscriptionId { get; set; }
+
+        [Column("periodStart")]
+        public DateTime? PeriodStart { get; set; }
+
+        [Column("periodEnd")]
+        public DateTime? PeriodEnd { get; set; }
+
+        [Column("paidAt")]
+        public DateTime? PaidAt { get; set; }
+
+        [Column("vatAmount", TypeName = "decimal(18,2)")]
+        public decimal VatAmount { get; set; }
+
+        [MaxLength(500)]
+        [Column("description")]
+        public string? Description { get; set; }
+
+        // Navigation properties
+        [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; } = null!;
 
-     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        [ForeignKey("SubscriptionId")]
+        public virtual Subscription? Subscription { get; set; }
+
+        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

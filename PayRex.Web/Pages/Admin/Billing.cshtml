@@ -16,9 +16,10 @@
                     <p class="mt-2 text-gray-600">Manage subscription plans and view invoice history</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="window.print()" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md print:hidden">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
-                        Print / Download
+                    <button onclick="openBillingRenewalModal()" id="upgradeBtn"
+                        class="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-sm transition-all">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                        Renew / Upgrade
                     </button>
                 </div>
             </div>
@@ -26,9 +27,10 @@
     </div>
 
     <!-- KPI Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-6">
         @{
             var totalRevenue = Model.Invoices.Where(i => i.Status == "Paid").Sum(i => i.Amount);
+            var totalVat = Model.Invoices.Where(i => i.Status == "Paid").Sum(i => i.VatAmount);
             var pendingAmount = Model.Invoices.Where(i => i.Status == "Pending").Sum(i => i.Amount);
             var overdueCount = Model.Invoices.Count(i => i.Status == "Overdue");
         }
@@ -47,6 +49,19 @@
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                 Paid invoices
             </span>
+        </div>
+        <!-- VAT Total -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total VAT (12%)</p>
+                    <p class="mt-1 text-2xl font-bold text-gray-900">₱@totalVat.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+            <span class="inline-flex items-center mt-3 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700">Tax collected</span>
         </div>
         <!-- Pending -->
         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
@@ -92,7 +107,22 @@
             else
             {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    @foreach (var plan in Model.Plans)
+                    <!-- Free Plan Card -->
+                    <div class="relative rounded-2xl border border-gray-200 p-6 hover:shadow-md transition-all">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 mb-3">FREE</span>
+                        <h3 class="text-lg font-bold text-gray-900">Free</h3>
+                        <p class="text-sm text-gray-500 mt-1">Get started at no cost</p>
+                        <div class="mt-4">
+                            <span class="text-3xl font-extrabold text-gray-900">₱0</span>
+                            <span class="text-sm text-gray-500">/month</span>
+                        </div>
+                        <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                            <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>Up to 5 employees</li>
+                            <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>1 user</li>
+                            <li class="flex items-center"><svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>Active</li>
+                        </ul>
+                    </div>
+                    @foreach (var plan in Model.Plans.Where(p => !string.Equals(p.Name, "Enterprise", StringComparison.OrdinalIgnoreCase)))
                     {
                         var isPopular = plan.Name?.ToLower() == "professional" || plan.Name?.ToLower() == "pro";
                         <div class="relative rounded-2xl border @(isPopular ? "border-blue-300 ring-2 ring-blue-100" : "border-gray-200") p-6 hover:shadow-md transition-all">
@@ -127,7 +157,6 @@
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 class="text-base font-semibold text-gray-900 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>
                 Invoices
             </h2>
         </div>
@@ -184,56 +213,27 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoice #</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">VAT (12%)</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                @{
-                    var demoInvoices = new[] {
-                        new { Num = "INV-2026-001", Company = "TechVision Corp", Amount = 4999.00m, Status = "Paid", Due = "Jan 15, 2026", Created = "Jan 01, 2026", DueRaw = "2026-01-15" },
-                        new { Num = "INV-2026-002", Company = "CloudSync Inc", Amount = 2499.00m, Status = "Paid", Due = "Jan 20, 2026", Created = "Jan 05, 2026", DueRaw = "2026-01-20" },
-                        new { Num = "INV-2026-003", Company = "DataFlow Systems", Amount = 9999.00m, Status = "Pending", Due = "Feb 15, 2026", Created = "Feb 01, 2026", DueRaw = "2026-02-15" },
-                        new { Num = "INV-2026-004", Company = "NexGen Solutions", Amount = 4999.00m, Status = "Paid", Due = "Feb 10, 2026", Created = "Jan 25, 2026", DueRaw = "2026-02-10" },
-                        new { Num = "INV-2026-005", Company = "SmartPay Inc", Amount = 2499.00m, Status = "Overdue", Due = "Jan 05, 2026", Created = "Dec 20, 2025", DueRaw = "2026-01-05" },
-                        new { Num = "INV-2026-006", Company = "PayWell Group", Amount = 9999.00m, Status = "Paid", Due = "Jan 30, 2026", Created = "Jan 15, 2026", DueRaw = "2026-01-30" },
-                        new { Num = "INV-2026-007", Company = "HR Direct", Amount = 4999.00m, Status = "Pending", Due = "Feb 20, 2026", Created = "Feb 05, 2026", DueRaw = "2026-02-20" },
-                        new { Num = "INV-2026-008", Company = "WorkForce PH", Amount = 2499.00m, Status = "Paid", Due = "Jan 25, 2026", Created = "Jan 10, 2026", DueRaw = "2026-01-25" },
-                        new { Num = "INV-2026-009", Company = "EasyPay Corp", Amount = 9999.00m, Status = "Overdue", Due = "Jan 10, 2026", Created = "Dec 25, 2025", DueRaw = "2026-01-10" },
-                        new { Num = "INV-2026-010", Company = "TechVision Corp", Amount = 4999.00m, Status = "Pending", Due = "Feb 28, 2026", Created = "Feb 10, 2026", DueRaw = "2026-02-28" },
-                        new { Num = "INV-2026-011", Company = "CloudSync Inc", Amount = 2499.00m, Status = "Paid", Due = "Feb 05, 2026", Created = "Jan 20, 2026", DueRaw = "2026-02-05" },
-                        new { Num = "INV-2026-012", Company = "DataFlow Systems", Amount = 9999.00m, Status = "Paid", Due = "Jan 18, 2026", Created = "Jan 03, 2026", DueRaw = "2026-01-18" },
-                    };
-                }
                 <tbody class="divide-y divide-gray-100" id="invoicesBody">
                     @if (Model.Invoices.Count == 0)
                     {
-                        @foreach (var inv in demoInvoices)
-                        {
-                            var statusColor = inv.Status switch {
-                                "Paid" => "bg-green-100 text-green-700",
-                                "Pending" => "bg-yellow-100 text-yellow-700",
-                                "Overdue" => "bg-red-100 text-red-700",
-                                _ => "bg-gray-100 text-gray-700"
-                            };
-                            var dotColor = inv.Status switch {
-                                "Paid" => "bg-green-500",
-                                "Pending" => "bg-yellow-500",
-                                "Overdue" => "bg-red-500",
-                                _ => "bg-gray-500"
-                            };
-                            <tr class="hover:bg-gray-50/50 transition-colors data-row"
-                                data-search="@inv.Num @inv.Company"
-                                data-status="@inv.Status"
-                                data-due="@inv.DueRaw">
-                                <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">@inv.Num</td>
-                                <td class="px-6 py-4 text-sm font-medium text-gray-900">@inv.Company</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-gray-900">₱@inv.Amount.ToString("N2")</td>
-                                <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @statusColor"><span class="w-1.5 h-1.5 rounded-full @dotColor mr-1.5"></span>@inv.Status</span></td>
-                                <td class="px-6 py-4 text-sm text-gray-500">@inv.Due</td>
-                                <td class="px-6 py-4 text-sm text-gray-500">@inv.Created</td>
-                            </tr>
-                        }
+                        <tr id="emptyRow">
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No invoices found</p>
+                                    <p class="text-sm text-gray-400 mt-1">Invoices will appear here when subscriptions are made</p>
+                                </div>
+                            </td>
+                        </tr>
                     }
                     else
                     {
@@ -254,13 +254,33 @@
                             <tr class="hover:bg-gray-50/50 transition-colors data-row"
                                 data-search="@inv.InvoiceNumber @inv.CompanyName"
                                 data-status="@inv.Status"
-                                data-due="@inv.DueDate.ToString("yyyy-MM-dd")">
+                                data-due="@inv.DueDate.ToString("yyyy-MM-dd")"
+                                data-id="@inv.InvoiceId"
+                                data-invoice-number="@inv.InvoiceNumber"
+                                data-company="@inv.CompanyName"
+                                data-amount="₱@inv.Amount.ToString("N2")"
+                                data-vat="₱@inv.VatAmount.ToString("N2")"
+                                data-due-display="@inv.DueDate.ToString("MMM dd, yyyy")"
+                                data-created="@inv.CreatedAt.ToString("MMM dd, yyyy")">
                                 <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">@inv.InvoiceNumber</td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">@inv.CompanyName</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">₱@inv.Amount.ToString("N2")</td>
+                                <td class="px-6 py-4 text-sm font-semibold text-gray-500">₱@inv.VatAmount.ToString("N2")</td>
                                 <td class="px-6 py-4"><span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @statusColor"><span class="w-1.5 h-1.5 rounded-full @dotColor mr-1.5"></span>@inv.Status</span></td>
                                 <td class="px-6 py-4 text-sm text-gray-500">@inv.DueDate.ToString("MMM dd, yyyy")</td>
                                 <td class="px-6 py-4 text-sm text-gray-500">@inv.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button onclick="viewInvoice(this)" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            View
+                                        </button>
+                                        <button onclick="archiveInvoice(this)" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                            Archive
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     }
@@ -275,6 +295,103 @@
                     Showing <span class="font-semibold" id="showStart">1</span> to <span class="font-semibold" id="showEnd">10</span> of <span class="font-semibold" id="showTotal">0</span> invoices
                 </div>
                 <nav class="flex items-center gap-1" id="paginationNav"></nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice View Modal (Employee Details style) -->
+<div id="invoiceViewModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="inv-modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeInvoiceViewModal()"></div>
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[75%] lg:w-[60%] xl:w-[50%] max-w-2xl mx-auto">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-900" id="inv-modal-title">Invoice Details</h3>
+                    <button onclick="closeInvoiceViewModal()" class="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                <!-- Body -->
+                <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 max-h-[70vh] overflow-y-auto">
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 border-b border-gray-100 pb-4 sm:pb-6">
+                            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg class="w-7 h-7 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div class="text-center sm:text-left flex-1">
+                                <h4 class="text-xl sm:text-2xl font-bold text-gray-900 font-mono" id="invModalNumber">—</h4>
+                                <p class="mt-1 text-sm text-gray-500" id="invModalCompany">—</p>
+                                <div class="mt-2">
+                                    <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800" id="invModalStatus">—</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="mb-3 text-xs sm:text-sm font-medium uppercase tracking-wider text-gray-500">Invoice Information</h5>
+                            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Amount</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="invModalAmount">—</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">VAT (12%)</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="invModalVat">—</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Due Date</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="invModalDue">—</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Created</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="invModalCreated">—</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+                    <div class="flex justify-end">
+                        <button type="button" onclick="closeInvoiceViewModal()" class="inline-flex justify-center rounded-lg bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-colors w-full sm:w-auto">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Archive Confirm Modal (Inactivate style) -->
+<div id="invoiceArchiveModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="hideArchiveModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[50%] max-w-md mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900">Confirm Archive</h3>
+                <button type="button" onclick="hideArchiveModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-6 md:py-6">
+                <div class="text-center">
+                    <p class="mb-4 text-sm text-gray-700">
+                        Are you sure you want to archive invoice
+                        <span class="font-semibold archive-inv-number">—</span>?
+                    </p>
+                    <div class="flex justify-center gap-3">
+                        <button type="button" onclick="hideArchiveModal()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300">
+                            No, Cancel
+                        </button>
+                        <button type="button" onclick="confirmArchive()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-300">
+                            Yes, Archive
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -383,7 +500,144 @@
         if (current >= total - 3) { const p = [1, '...']; for (let i = total - 4; i <= total; i++) p.push(i); return p; }
         return [1, '...', current - 1, current, current + 1, '...', total];
     }
+
+    function viewInvoice(btn) {
+        const row = btn.closest('tr');
+        document.getElementById('invModalNumber').textContent = row.dataset.invoiceNumber;
+        document.getElementById('invModalCompany').textContent = row.dataset.company;
+        document.getElementById('invModalAmount').textContent = row.dataset.amount;
+        document.getElementById('invModalVat').textContent = row.dataset.vat;
+        document.getElementById('invModalStatus').textContent = row.dataset.status;
+        document.getElementById('invModalDue').textContent = row.dataset.dueDisplay;
+        document.getElementById('invModalCreated').textContent = row.dataset.created;
+        document.getElementById('invoiceViewModal').classList.remove('hidden');
+    }
+
+    function closeInvoiceViewModal() {
+        document.getElementById('invoiceViewModal').classList.add('hidden');
+    }
+
+    let _archiveInvoiceId = null;
+    function archiveInvoice(btn) {
+        const row = btn.closest('tr');
+        _archiveInvoiceId = row.dataset.id;
+        document.querySelector('.archive-inv-number').textContent = row.dataset.invoiceNumber;
+        document.getElementById('invoiceArchiveModal').classList.remove('hidden');
+    }
+
+    function hideArchiveModal() {
+        document.getElementById('invoiceArchiveModal').classList.add('hidden');
+        _archiveInvoiceId = null;
+    }
+
+    function confirmArchive() {
+        if (!_archiveInvoiceId) return;
+        const token = document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('PayRex.AuthToken='))?.split('=')[1];
+        fetch(`/api/superadmin/billing/${_archiveInvoiceId}/archive`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => {
+            if (r.ok) {
+                const row = document.querySelector(`tr[data-id="${_archiveInvoiceId}"]`);
+                if (row) {
+                    allRows = allRows.filter(r => r !== row);
+                    filteredRows = filteredRows.filter(r => r !== row);
+                    row.remove();
+                    renderPage();
+                }
+                hideArchiveModal();
+                showToast('Invoice archived successfully', 'success');
+            } else {
+                hideArchiveModal();
+                showToast('Failed to archive invoice', 'error');
+            }
+        }).catch(() => { hideArchiveModal(); showToast('Failed to archive invoice', 'error'); });
+    }
+    // ── Checkout Functions ──
+    function getAuthToken() {
+        return document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('PayRex.AuthToken='))?.split('=').slice(1).join('=');
+    }
+
+    // ── Renewal/Upgrade Modal ──
+    function openBillingRenewalModal() {
+        var modal = document.getElementById('billingRenewalModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+    function closeBillingRenewalModal() {
+        var modal = document.getElementById('billingRenewalModal');
+        if (modal) modal.classList.add('hidden');
+    }
 </script>
+
+<!-- ═══════════════════════════ RENEWAL PLAN MODAL ═══════════════════════════ -->
+<div id="billingRenewalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden" onclick="if(event.target===this)closeBillingRenewalModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-gray-100" style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Renew or Upgrade Plan</h2>
+                        <p class="text-sm text-gray-500">Choose a plan to continue using PayRex</p>
+                    </div>
+                </div>
+                <button onclick="closeBillingRenewalModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Plan Cards -->
+        <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+            @foreach (var plan in Model.Plans.Where(p => p.Price > 0))
+            {
+            <div class="bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-1">@plan.Name</h3>
+                        <p class="text-sm text-gray-500 mb-2">@(plan.Description ?? "PayRex Subscription Plan")</p>
+                        <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                @plan.MaxEmployees employees
+                            </span>
+                            @if (plan.PlanUserLimit.HasValue)
+                            {
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                @plan.PlanUserLimit users
+                            </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                        <div class="text-right">
+                            <span class="text-2xl font-extrabold text-gray-900">₱@plan.Price.ToString("N2")</span>
+                            <span class="text-xs text-gray-400">/mo</span>
+                        </div>
+                        <a href="/Checkout?planId=@plan.PlanId" class="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                            Select Plan
+                            <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+            <p class="text-xs text-gray-400 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                Secure payment via PayMongo
+            </p>
+            <button onclick="closeBillingRenewalModal()" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
+        </div>
+    </div>
+</div>
 
 <!-- Print Styles -->
 <style>

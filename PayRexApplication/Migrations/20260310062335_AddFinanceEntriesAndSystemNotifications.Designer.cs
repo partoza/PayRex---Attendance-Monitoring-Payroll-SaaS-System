@@ -12,8 +12,8 @@ using PayRexApplication.Data;
 namespace PayRex.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260217194620_newMigration")]
-    partial class newMigration
+    [Migration("20260310062335_AddFinanceEntriesAndSystemNotifications")]
+    partial class AddFinanceEntriesAndSystemNotifications
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,6 +50,15 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("employeeId");
 
+                    b.Property<string>("HolidayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("holidayName");
+
+                    b.Property<bool>("IsHoliday")
+                        .HasColumnType("bit")
+                        .HasColumnName("isHoliday");
+
                     b.Property<int?>("LateMinutes")
                         .HasColumnType("int")
                         .HasColumnName("lateMinutes");
@@ -62,9 +71,20 @@ namespace PayRex.API.Migrations
                         .HasColumnType("decimal(5,2)")
                         .HasColumnName("overtimeHours");
 
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("remarks");
+
                     b.Property<int>("Source")
                         .HasColumnType("int")
                         .HasColumnName("source");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("status");
 
                     b.Property<TimeOnly?>("TimeIn")
                         .HasColumnType("time")
@@ -245,6 +265,11 @@ namespace PayRex.API.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("description");
+
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("dueDate");
@@ -254,13 +279,33 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("invoiceNumber");
 
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("paidAt");
+
+                    b.Property<DateTime?>("PeriodEnd")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("periodEnd");
+
+                    b.Property<DateTime?>("PeriodStart")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("periodStart");
+
                     b.Property<int>("Status")
                         .HasColumnType("int")
                         .HasColumnName("status");
 
+                    b.Property<int?>("SubscriptionId")
+                        .HasColumnType("int")
+                        .HasColumnName("subscriptionId");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("vatAmount");
 
                     b.HasKey("InvoiceId");
 
@@ -269,6 +314,8 @@ namespace PayRex.API.Migrations
                     b.HasIndex("InvoiceNumber")
                         .IsUnique()
                         .HasFilter("[invoiceNumber] IS NOT NULL");
+
+                    b.HasIndex("SubscriptionId");
 
                     b.ToTable("billingInvoices");
                 });
@@ -319,10 +366,19 @@ namespace PayRex.API.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("isActive");
 
+                    b.Property<bool>("IsSetupComplete")
+                        .HasColumnType("bit")
+                        .HasColumnName("isSetupComplete");
+
                     b.Property<string>("LogoUrl")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)")
                         .HasColumnName("logoUrl");
+
+                    b.Property<string>("OwnerSignatureUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("ownerSignatureUrl");
 
                     b.Property<int>("PlanId")
                         .HasColumnType("int")
@@ -360,7 +416,8 @@ namespace PayRex.API.Migrations
                             CompanyName = "PayRex System",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
-                            PlanId = 3,
+                            IsSetupComplete = false,
+                            PlanId = 2,
                             Status = 0
                         },
                         new
@@ -370,6 +427,7 @@ namespace PayRex.API.Migrations
                             CompanyName = "Demo Company",
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
+                            IsSetupComplete = false,
                             PlanId = 1,
                             Status = 0
                         });
@@ -380,10 +438,6 @@ namespace PayRex.API.Migrations
                     b.Property<int>("CompanyId")
                         .HasColumnType("int")
                         .HasColumnName("companyId");
-
-                    b.Property<decimal>("AbsentRate")
-                        .HasColumnType("decimal(4,2)")
-                        .HasColumnName("absentRate");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -410,9 +464,25 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(4000)")
                         .HasColumnName("rolesJson");
 
+                    b.Property<TimeSpan?>("ScheduledTimeIn")
+                        .HasColumnType("time")
+                        .HasColumnName("scheduledTimeIn");
+
+                    b.Property<TimeSpan?>("ScheduledTimeOut")
+                        .HasColumnType("time")
+                        .HasColumnName("scheduledTimeOut");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("updatedAt");
+
+                    b.Property<int>("VacationLeaveDays")
+                        .HasColumnType("int")
+                        .HasColumnName("vacationLeaveDays");
+
+                    b.Property<int>("VacationLeaveResetType")
+                        .HasColumnType("int")
+                        .HasColumnName("vacationLeaveResetType");
 
                     b.Property<decimal?>("WorkHoursPerDay")
                         .HasColumnType("decimal(4,2)")
@@ -421,6 +491,22 @@ namespace PayRex.API.Migrations
                     b.HasKey("CompanyId");
 
                     b.ToTable("companySettings");
+
+                    b.HasData(
+                        new
+                        {
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            HolidayRate = 2.00m,
+                            LateGraceMinutes = 15,
+                            OvertimeRate = 1.25m,
+                            PayrollCycle = 1,
+                            ScheduledTimeIn = new TimeSpan(0, 8, 0, 0, 0),
+                            ScheduledTimeOut = new TimeSpan(0, 17, 0, 0, 0),
+                            VacationLeaveDays = 15,
+                            VacationLeaveResetType = 1,
+                            WorkHoursPerDay = 8.0m
+                        });
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.Employee", b =>
@@ -497,6 +583,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(12)")
                         .HasColumnName("sss");
 
+                    b.Property<decimal>("SalaryRate")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("salaryRate");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("startDate");
@@ -530,6 +620,228 @@ namespace PayRex.API.Migrations
                         .IsUnique();
 
                     b.ToTable("employees");
+
+                    b.HasData(
+                        new
+                        {
+                            EmployeeNumber = 1,
+                            Birthdate = new DateTime(1990, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234501",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "anacruz@gmail.com",
+                            EmployeeCode = "1001-0001",
+                            FirstName = "Ana",
+                            LastName = "Cruz",
+                            PagIbig = "1234-5678-9011",
+                            PhilHealth = "12-345678901-1",
+                            RoleId = 1,
+                            SSS = "33-1234561-1",
+                            SalaryRate = 800.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-781",
+                            UserId = 4
+                        },
+                        new
+                        {
+                            EmployeeNumber = 2,
+                            Birthdate = new DateTime(1988, 8, 22, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Married",
+                            CompanyId = 2,
+                            ContactNumber = "09171234502",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "mariasantos@gmail.com",
+                            EmployeeCode = "1001-0002",
+                            FirstName = "Maria",
+                            LastName = "Santos",
+                            PagIbig = "1234-5678-9022",
+                            PhilHealth = "12-345678902-2",
+                            RoleId = 2,
+                            SSS = "33-1234562-2",
+                            SalaryRate = 750.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-782",
+                            UserId = 3
+                        },
+                        new
+                        {
+                            EmployeeNumber = 3,
+                            Birthdate = new DateTime(1995, 3, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234503",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "juandelacruz@gmail.com",
+                            EmployeeCode = "1001-0003",
+                            FirstName = "Juan",
+                            LastName = "Dela Cruz",
+                            PagIbig = "1234-5678-9033",
+                            PhilHealth = "12-345678903-3",
+                            RoleId = 3,
+                            SSS = "33-1234563-3",
+                            SalaryRate = 600.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-783",
+                            UserId = 5
+                        },
+                        new
+                        {
+                            EmployeeNumber = 4,
+                            Birthdate = new DateTime(1992, 11, 28, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Married",
+                            CompanyId = 2,
+                            ContactNumber = "09171234504",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "rosagarcia@gmail.com",
+                            EmployeeCode = "1001-0004",
+                            FirstName = "Rosa",
+                            LastName = "Garcia",
+                            PagIbig = "1234-5678-9044",
+                            PhilHealth = "12-345678904-4",
+                            RoleId = 3,
+                            SSS = "33-1234564-4",
+                            SalaryRate = 600.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-784",
+                            UserId = 6
+                        },
+                        new
+                        {
+                            EmployeeNumber = 5,
+                            Birthdate = new DateTime(1997, 7, 4, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234505",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "pedroreyes@gmail.com",
+                            EmployeeCode = "1001-0005",
+                            FirstName = "Pedro",
+                            LastName = "Reyes",
+                            PagIbig = "1234-5678-9055",
+                            PhilHealth = "12-345678905-5",
+                            RoleId = 3,
+                            SSS = "33-1234565-5",
+                            SalaryRate = 600.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-785",
+                            UserId = 7
+                        },
+                        new
+                        {
+                            EmployeeNumber = 6,
+                            Birthdate = new DateTime(1994, 1, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234506",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "lizamendoza@gmail.com",
+                            EmployeeCode = "1001-0006",
+                            FirstName = "Liza",
+                            LastName = "Mendoza",
+                            PagIbig = "1234-5678-9066",
+                            PhilHealth = "12-345678906-6",
+                            RoleId = 3,
+                            SSS = "33-1234566-6",
+                            SalaryRate = 620.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-786",
+                            UserId = 8
+                        },
+                        new
+                        {
+                            EmployeeNumber = 7,
+                            Birthdate = new DateTime(1991, 6, 12, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Married",
+                            CompanyId = 2,
+                            ContactNumber = "09171234507",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "markvillanueva@gmail.com",
+                            EmployeeCode = "1001-0007",
+                            FirstName = "Mark",
+                            LastName = "Villanueva",
+                            PagIbig = "1234-5678-9077",
+                            PhilHealth = "12-345678907-7",
+                            RoleId = 3,
+                            SSS = "33-1234567-7",
+                            SalaryRate = 650.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-787",
+                            UserId = 9
+                        },
+                        new
+                        {
+                            EmployeeNumber = 8,
+                            Birthdate = new DateTime(1996, 9, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234508",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "carmenlopez@gmail.com",
+                            EmployeeCode = "1001-0008",
+                            FirstName = "Carmen",
+                            LastName = "Lopez",
+                            PagIbig = "1234-5678-9088",
+                            PhilHealth = "12-345678908-8",
+                            RoleId = 3,
+                            SSS = "33-1234568-8",
+                            SalaryRate = 600.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-788",
+                            UserId = 10
+                        },
+                        new
+                        {
+                            EmployeeNumber = 9,
+                            Birthdate = new DateTime(1993, 12, 18, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Single",
+                            CompanyId = 2,
+                            ContactNumber = "09171234509",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "angeloramos@gmail.com",
+                            EmployeeCode = "1001-0009",
+                            FirstName = "Angelo",
+                            LastName = "Ramos",
+                            PagIbig = "1234-5678-9099",
+                            PhilHealth = "12-345678909-9",
+                            RoleId = 3,
+                            SSS = "33-1234569-9",
+                            SalaryRate = 630.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-789",
+                            UserId = 11
+                        },
+                        new
+                        {
+                            EmployeeNumber = 10,
+                            Birthdate = new DateTime(1998, 4, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CivilStatus = "Married",
+                            CompanyId = 2,
+                            ContactNumber = "09171234510",
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sofiatan@gmail.com",
+                            EmployeeCode = "1001-0010",
+                            FirstName = "Sofia",
+                            LastName = "Tan",
+                            PagIbig = "1234-5678-9100",
+                            PhilHealth = "12-345678910-0",
+                            RoleId = 3,
+                            SSS = "33-1234570-0",
+                            SalaryRate = 610.00m,
+                            StartDate = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0,
+                            TIN = "123-456-790",
+                            UserId = 12
+                        });
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.EmployeeBenefit", b =>
@@ -674,6 +986,88 @@ namespace PayRex.API.Migrations
                         .IsUnique();
 
                     b.ToTable("employeeQrCodes");
+
+                    b.HasData(
+                        new
+                        {
+                            QrId = 1,
+                            EmployeeId = 1,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0001"
+                        },
+                        new
+                        {
+                            QrId = 2,
+                            EmployeeId = 2,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0002"
+                        },
+                        new
+                        {
+                            QrId = 3,
+                            EmployeeId = 3,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0003"
+                        },
+                        new
+                        {
+                            QrId = 4,
+                            EmployeeId = 4,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0004"
+                        },
+                        new
+                        {
+                            QrId = 5,
+                            EmployeeId = 5,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0005"
+                        },
+                        new
+                        {
+                            QrId = 6,
+                            EmployeeId = 6,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0006"
+                        },
+                        new
+                        {
+                            QrId = 7,
+                            EmployeeId = 7,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0007"
+                        },
+                        new
+                        {
+                            QrId = 8,
+                            EmployeeId = 8,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0008"
+                        },
+                        new
+                        {
+                            QrId = 9,
+                            EmployeeId = 9,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0009"
+                        },
+                        new
+                        {
+                            QrId = 10,
+                            EmployeeId = 10,
+                            IsActive = true,
+                            IssuedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            QrValue = "1001-0010"
+                        });
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.EmployeeRole", b =>
@@ -706,6 +1100,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
 
+                    b.Property<bool>("IsBuiltIn")
+                        .HasColumnType("bit")
+                        .HasColumnName("isBuiltIn");
+
                     b.Property<string>("RateType")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
@@ -726,6 +1124,137 @@ namespace PayRex.API.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("employeeRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Human Resource Manager - manages employees and attendance",
+                            IsActive = true,
+                            IsBuiltIn = true,
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Accountant - manages salary, finance, and payslips",
+                            IsActive = true,
+                            IsBuiltIn = true,
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            BasicRate = 600.00m,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Regular staff member",
+                            IsActive = true,
+                            IsBuiltIn = false,
+                            RateType = "Daily",
+                            RoleName = "Staff"
+                        });
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.ExpenseRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("category");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
+                        .HasColumnName("companyId");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("Payee")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("payee");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("expenseRecords");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.FinanceEntry", b =>
+                {
+                    b.Property<int>("EntryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("entryId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EntryId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("createdAt");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("createdBy");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsAutoGenerated")
+                        .HasColumnType("bit")
+                        .HasColumnName("isAutoGenerated");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("type");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("vatAmount");
+
+                    b.HasKey("EntryId");
+
+                    b.ToTable("financeEntries");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.GovernmentContribution", b =>
@@ -773,6 +1302,121 @@ namespace PayRex.API.Migrations
                     b.ToTable("governmentContributions");
                 });
 
+            modelBuilder.Entity("PayRexApplication.Models.IncomeRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("category");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
+                        .HasColumnName("companyId");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("source");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("incomeRecords");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.LeaveRequest", b =>
+                {
+                    b.Property<int>("LeaveRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("leaveRequestId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LeaveRequestId"));
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int")
+                        .HasColumnName("companyId");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("createdAt");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employeeId");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("endDate");
+
+                    b.Property<int>("LeaveType")
+                        .HasColumnType("int")
+                        .HasColumnName("leaveType");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("ReviewRemarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("reviewRemarks");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("reviewedAt");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("reviewedBy");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("startDate");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TotalDays")
+                        .HasColumnType("int")
+                        .HasColumnName("totalDays");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updatedAt");
+
+                    b.HasKey("LeaveRequestId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ReviewedBy");
+
+                    b.ToTable("leaveRequests");
+                });
+
             modelBuilder.Entity("PayRexApplication.Models.Payment", b =>
                 {
                     b.Property<int>("PaymentId")
@@ -786,9 +1430,24 @@ namespace PayRex.API.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("amount");
 
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int")
+                        .HasColumnName("companyId");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("description");
 
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int")
@@ -797,6 +1456,21 @@ namespace PayRex.API.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("paidAt");
+
+                    b.Property<string>("PayMongoCheckoutSessionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("payMongoCheckoutSessionId");
+
+                    b.Property<string>("PayMongoPaymentIntentId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("payMongoPaymentIntentId");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("paymentMethod");
 
                     b.Property<string>("Provider")
                         .IsRequired()
@@ -816,7 +1490,13 @@ namespace PayRex.API.Migrations
 
                     b.HasKey("PaymentId");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PayMongoCheckoutSessionId");
+
+                    b.HasIndex("PayMongoPaymentIntentId");
 
                     b.HasIndex("ReferenceNo");
 
@@ -1017,6 +1697,494 @@ namespace PayRex.API.Migrations
                     b.ToTable("payslips");
                 });
 
+            modelBuilder.Entity("PayRexApplication.Models.RolePermission", b =>
+                {
+                    b.Property<int>("PermissionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("permissionId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PermissionId"));
+
+                    b.Property<bool>("CanAdd")
+                        .HasColumnType("bit")
+                        .HasColumnName("canAdd");
+
+                    b.Property<bool>("CanInactivate")
+                        .HasColumnType("bit")
+                        .HasColumnName("canInactivate");
+
+                    b.Property<bool>("CanUpdate")
+                        .HasColumnType("bit")
+                        .HasColumnName("canUpdate");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("createdAt");
+
+                    b.Property<string>("ModuleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("moduleName");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("roleName");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updatedAt");
+
+                    b.HasKey("PermissionId");
+
+                    b.ToTable("rolePermissions");
+
+                    b.HasData(
+                        new
+                        {
+                            PermissionId = 1,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "User Management",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 2,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Employee Management",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 3,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Attendance",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 4,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Salary Computation",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 5,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Tax & Contributions",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 6,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Finance",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 7,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Compensation",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 8,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Payslips",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 9,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Company Settings",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 10,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 11,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "Admin"
+                        },
+                        new
+                        {
+                            PermissionId = 12,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "User Management",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 13,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Employee Management",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 14,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Attendance",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 15,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Salary Computation",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 16,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Tax & Contributions",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 17,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Finance",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 18,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Compensation",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 19,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Payslips",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 20,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Company Settings",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 21,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 22,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 23,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "User Management",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 24,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Employee Management",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 25,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Attendance",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 26,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Salary Computation",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 27,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Tax & Contributions",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 28,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Finance",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 29,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Compensation",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 30,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Payslips",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 31,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Company Settings",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 32,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 33,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 34,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "User Management",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 35,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Employee Management",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 36,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Attendance",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 37,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Salary Computation",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 38,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Tax & Contributions",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 39,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Finance",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 40,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Compensation",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 41,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Payslips",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 42,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Company Settings",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 43,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 44,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "Employee"
+                        });
+                });
+
             modelBuilder.Entity("PayRexApplication.Models.Subscription", b =>
                 {
                     b.Property<int>("SubscriptionId")
@@ -1025,6 +2193,14 @@ namespace PayRex.API.Migrations
                         .HasColumnName("subscriptionId");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionId"));
+
+                    b.Property<bool>("AutoRenew")
+                        .HasColumnType("bit")
+                        .HasColumnName("autoRenew");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("cancelledAt");
 
                     b.Property<int>("CompanyId")
                         .HasColumnType("int")
@@ -1037,6 +2213,14 @@ namespace PayRex.API.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("endDate");
+
+                    b.Property<int>("GracePeriodDays")
+                        .HasColumnType("int")
+                        .HasColumnName("gracePeriodDays");
+
+                    b.Property<int?>("LastPaymentId")
+                        .HasColumnType("int")
+                        .HasColumnName("lastPaymentId");
 
                     b.Property<int>("PlanId")
                         .HasColumnType("int")
@@ -1058,9 +2242,25 @@ namespace PayRex.API.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("LastPaymentId");
+
                     b.HasIndex("PlanId");
 
                     b.ToTable("subscriptions");
+
+                    b.HasData(
+                        new
+                        {
+                            SubscriptionId = 1,
+                            AutoRenew = false,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EndDate = new DateTime(2026, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            GracePeriodDays = 7,
+                            PlanId = 1,
+                            StartDate = new DateTime(2025, 3, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Status = 0
+                        });
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.SubscriptionPlan", b =>
@@ -1141,18 +2341,56 @@ namespace PayRex.API.Migrations
                             PlanUserLimit = 10,
                             Price = 4999.00m,
                             Status = 0
-                        },
-                        new
-                        {
-                            PlanId = 3,
-                            BillingCycle = 0,
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Unlimited employees with dedicated support",
-                            MaxEmployees = 10000,
-                            Name = "Enterprise",
-                            Price = 9999.00m,
-                            Status = 0
                         });
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.SystemNotification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notificationId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("createdAt");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("createdBy");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("TargetRoles")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("targetRoles");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("NotificationId");
+
+                    b.ToTable("systemNotifications");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.SystemSetting", b =>
@@ -1330,7 +2568,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = true,
                             LastName = "Partoza",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$Q1Rge9ElQ/AiDCPK6izUTOHPRDyp8VKsGNs/URSR4hV3s0jEteYV.",
+                            PasswordHash = "$2a$11$4/Be9fB.kAu0aNQJj1z/te5oCLNZzmo8HLgse9B4vW7r9QgoIB.te",
                             Role = 0,
                             Status = 0,
                             TotpSecretKey = "JBSWY3DPEHPK3PXP"
@@ -1340,13 +2578,27 @@ namespace PayRex.API.Migrations
                             UserId = 2,
                             CompanyId = 2,
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "alice.admin@example.com",
-                            FirstName = "Alice",
+                            Email = "dencysamson@gmail.com",
+                            FirstName = "Dency",
                             IsTwoFactorEnabled = false,
-                            LastName = "Admin",
+                            LastName = "Samson",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$6QRhTy7DMFdQ28Ax/SrKcOncut4.3WtzdMFRTNO5j3KjDkZQIUO3q",
+                            PasswordHash = "$2a$11$wncMZ6v.EMamgCDqlLWHYOWDTVagC/umOxet9TETnturZpN76Umii",
                             Role = 1,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 4,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "anacruz@gmail.com",
+                            FirstName = "Ana",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Cruz",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$kaXYPZ0pc4WTuFNDMMxOu.GIZYPMDY2RKwNxDUDGpa2Ls9dde8pRu",
+                            Role = 2,
                             Status = 0
                         },
                         new
@@ -1354,13 +2606,125 @@ namespace PayRex.API.Migrations
                             UserId = 3,
                             CompanyId = 2,
                             CreatedAt = new DateTime(2025, 2, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "hannah.hr@example.com",
-                            FirstName = "Hannah",
+                            Email = "mariasantos@gmail.com",
+                            FirstName = "Maria",
                             IsTwoFactorEnabled = false,
-                            LastName = "HR",
+                            LastName = "Santos",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$l5bk3/KI984U6CFLnOcDreAnknvnsznw6aEbG5fONDce7.a09nRYm",
-                            Role = 2,
+                            PasswordHash = "$2a$11$4VXDIRMmp645NR/.yckSQuRwGhJSIC71X3/huI56g0n2nI7IBCqpa",
+                            Role = 4,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 5,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "juandelacruz@gmail.com",
+                            FirstName = "Juan",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Dela Cruz",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$1ct3nl5djmiXbHOnJclrJuGYSYVaka.CQYTRncWW0cPfhpsfYK8zm",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 6,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "rosagarcia@gmail.com",
+                            FirstName = "Rosa",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Garcia",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$84dy53jznpdOAdY7E2gLZeDuEsJM25l3bqSiUzy8MDn/KjDcxoeGm",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 7,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "pedroreyes@gmail.com",
+                            FirstName = "Pedro",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Reyes",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$BGdIBqAEPZw6/Wr2zkssWehpMybqWTSUA285Y0UL7Ks3tMyrES6J.",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 8,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "lizamendoza@gmail.com",
+                            FirstName = "Liza",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Mendoza",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$ySmzbRInLrVuGghLg5AtLuC6W9CgvugzCsC7wAd2y4VRowfkm.Vgu",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 9,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "markvillanueva@gmail.com",
+                            FirstName = "Mark",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Villanueva",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$51JNfW/Y2BdyHJXEtOeyj.vCoMQZMH4P/HxPQ4STRxXYkAZN4MEqW",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 10,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "carmenlopez@gmail.com",
+                            FirstName = "Carmen",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Lopez",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$d/0mN0YErsFnphLHTT1XKeeOoTT2dTCkqbhCa1kz/vtHeaROT4gp6",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 11,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "angeloramos@gmail.com",
+                            FirstName = "Angelo",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Ramos",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$rpLD89tIZuYhWpcWZxbEFOAzn2zAO6VpUMNsLKxLTPEWOgej8oEeu",
+                            Role = 3,
+                            Status = 0
+                        },
+                        new
+                        {
+                            UserId = 12,
+                            CompanyId = 2,
+                            CreatedAt = new DateTime(2025, 2, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Email = "sofiatan@gmail.com",
+                            FirstName = "Sofia",
+                            IsTwoFactorEnabled = false,
+                            LastName = "Tan",
+                            MustChangePassword = false,
+                            PasswordHash = "$2a$11$o8IsQupZxiyV.yonuYXTneVwMWAn6m4s8Ak3QduE/01dj.FBu5HnW",
+                            Role = 3,
                             Status = 0
                         });
                 });
@@ -1488,10 +2852,17 @@ namespace PayRex.API.Migrations
                     b.HasOne("PayRexApplication.Models.Company", "Company")
                         .WithMany("BillingInvoices")
                         .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("PayRexApplication.Models.Subscription", "Subscription")
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Company");
+
+                    b.Navigation("Subscription");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.Company", b =>
@@ -1585,6 +2956,17 @@ namespace PayRex.API.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("PayRexApplication.Models.ExpenseRecord", b =>
+                {
+                    b.HasOne("PayRexApplication.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("PayRexApplication.Models.GovernmentContribution", b =>
                 {
                     b.HasOne("PayRexApplication.Models.Employee", "Employee")
@@ -1604,8 +2986,50 @@ namespace PayRex.API.Migrations
                     b.Navigation("PayrollPeriod");
                 });
 
+            modelBuilder.Entity("PayRexApplication.Models.IncomeRecord", b =>
+                {
+                    b.HasOne("PayRexApplication.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.LeaveRequest", b =>
+                {
+                    b.HasOne("PayRexApplication.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("PayRexApplication.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("PayRexApplication.Models.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Company");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Reviewer");
+                });
+
             modelBuilder.Entity("PayRexApplication.Models.Payment", b =>
                 {
+                    b.HasOne("PayRexApplication.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("PayRexApplication.Models.BillingInvoice", "BillingInvoice")
                         .WithMany("Payments")
                         .HasForeignKey("InvoiceId")
@@ -1613,6 +3037,8 @@ namespace PayRex.API.Migrations
                         .IsRequired();
 
                     b.Navigation("BillingInvoice");
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.PayrollApproval", b =>
@@ -1683,6 +3109,11 @@ namespace PayRex.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("PayRexApplication.Models.Payment", "LastPayment")
+                        .WithMany()
+                        .HasForeignKey("LastPaymentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("PayRexApplication.Models.SubscriptionPlan", "SubscriptionPlan")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PlanId")
@@ -1690,6 +3121,8 @@ namespace PayRex.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Company");
+
+                    b.Navigation("LastPayment");
 
                     b.Navigation("SubscriptionPlan");
                 });

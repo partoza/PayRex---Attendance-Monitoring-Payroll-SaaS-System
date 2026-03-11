@@ -1,0 +1,568 @@
+@page
+@model PayRex.Web.Pages.EmployeeQRModel
+@{
+    ViewData["Title"] = "My QR Code";
+}
+
+<!-- Add html2canvas library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <!-- Header with consistent gradient -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-8 py-10 relative z-10">
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">My QR Code</h1>
+            <p class="mt-2 text-gray-600 text-lg">View Employee Information and Download QR Code.</p>
+            @if (!string.IsNullOrEmpty(Model.CompanyName) || !string.IsNullOrEmpty(Model.CompanyAddress) || !string.IsNullOrEmpty(Model.CompanyContact))
+            {
+                <div class="mt-4 flex items-center gap-4">
+                    @if (!string.IsNullOrEmpty(Model.CompanyLogoUrl))
+                    {
+                        <img src="@Model.CompanyLogoUrl" alt="Company Logo" class="w-20 h-12 object-contain rounded-md bg-white p-1 border" />
+                    }
+                    <div class="text-sm text-gray-700">
+                        <div class="font-semibold">@Model.CompanyName</div>
+                        <div class="text-xs text-gray-500">@Model.CompanyAddress</div>
+                        <div class="text-xs text-gray-500">@Model.CompanyContact</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Model.NotFoundEmployee)
+    {
+        <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-xl shadow-sm">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-amber-700 font-medium">Employee record not found for the current user.</p>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Right Column: QR Code (Appears first in mobile) -->
+            <div class="lg:col-span-1 order-first lg:order-last">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                <path fill-rule="evenodd" d="M3 4.875C3 3.839 3.84 3 4.875 3h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 0 1 3 9.375v-4.5ZM4.875 4.5a.375.375 0 0 0-.375.375v4.5c0 .207.168.375.375.375h4.5a.375.375 0 0 0 .375-.375v-4.5a.375.375 0 0 0-.375-.375h-4.5Zm7.875.375c0-1.036.84-1.875 1.875-1.875h4.5C20.16 3 21 3.84 21 4.875v4.5c0 1.036-.84 1.875-1.875 1.875h-4.5a1.875 1.875 0 0 1-1.875-1.875v-4.5Zm1.875-.375a.375.375 0 0 0-.375.375v4.5c0 .207.168.375.375.375h4.5a.375.375 0 0 0 .375-.375v-4.5a.375.375 0 0 0-.375-.375h-4.5ZM6 6.75A.75.75 0 0 1 6.75 6h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75A.75.75 0 0 1 6 7.5v-.75Zm9.75 0A.75.75 0 0 1 16.5 6h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75ZM3 14.625c0-1.036.84-1.875 1.875-1.875h4.5c1.036 0 1.875.84 1.875 1.875v4.5c0 1.035-.84 1.875-1.875 1.875h-4.5A1.875 1.875 0 0 1 3 19.125v-4.5Zm1.875-.375a.375.375 0 0 0-.375.375v4.5c0 .207.168.375.375.375h4.5a.375.375 0 0 0 .375-.375v-4.5a.375.375 0 0 0-.375-.375h-4.5Zm7.875-.75a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75Zm6 0a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75ZM6 16.5a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75Zm9.75 0a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75Zm-3 3a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75Zm6 0a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 .75.75v.75a.75.75 0 0 1-.75.75h-.75a.75.75 0 0 1-.75-.75v-.75Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Attendance QR Code</h2>
+                    </div>
+
+                    <div class="flex flex-col items-center p-4">
+                        @if (!string.IsNullOrEmpty(Model.QrBase64))
+                        {
+                            <div class="p-3 bg-white rounded-xl border-2 border-gray-100 shadow-lg mb-3" style="box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5), 0 8px 10px -6px rgba(59, 130, 246, 0.3);">
+                                <img src="data:image/png;base64,@Model.QrBase64" 
+                                        alt="QR Code" 
+                                        class="w-56 h-56 object-contain" />
+                            </div>
+                            
+                            <div class="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-full mb-4">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>QR Code Active</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="w-56 h-56 flex flex-col items-center justify-center bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 mb-3">
+                                <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                                </svg>
+                                <p class="text-sm text-gray-500">QR Code not available</p>
+                            </div>
+                        }
+
+                        <div class="text-center text-xs text-gray-400 mb-4">
+                            Scan this QR code at the attendance terminal
+                        </div>
+                    </div>
+
+                    <!-- Preview & Download ID Card Button -->
+                    <div class="mt-2">
+                        <button type="button" 
+                                onclick="openPreviewModal()"
+                                class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                            
+                            <span>Preview & Download ID Card</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Left Column: Employee Details (Appears second in mobile) -->
+            <div class="lg:col-span-2 space-y-6 order-last lg:order-first">
+                <!-- Employee Profile Card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                <path fill-rule="evenodd" d="M7.5 5.25a3 3 0 0 1 3-3h3a3 3 0 0 1 3 3v.205c.933.085 1.857.197 2.774.334 1.454.218 2.476 1.483 2.476 2.917v3.033c0 1.211-.734 2.352-1.936 2.752A24.726 24.726 0 0 1 12 15.75c-2.73 0-5.357-.442-7.814-1.259-1.202-.4-1.936-1.541-1.936-2.752V8.706c0-1.434 1.022-2.7 2.476-2.917A48.814 48.814 0 0 1 7.5 5.455V5.25Zm7.5 0v.09a49.488 49.488 0 0 0-6 0v-.09a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5Zm-3 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                                <path d="M3 18.4v-2.796a4.3 4.3 0 0 0 .713.31A26.226 26.226 0 0 0 12 17.25c2.892 0 5.68-.468 8.287-1.335.252-.084.49-.189.713-.311V18.4c0 1.452-1.047 2.728-2.523 2.923-2.12.282-4.282.427-6.477.427a49.19 49.19 0 0 1-6.477-.427C4.047 21.128 3 19.852 3 18.4Z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Employee Information</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Basic Info -->
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Full Name</div>
+                                <div class="text-lg font-bold text-gray-900">@Model.Name</div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Employee ID</div>
+                                    <div class="text-sm font-semibold text-gray-900">@Model.EmployeeCode</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Role</div>
+                                    <div class="text-sm font-semibold text-gray-900">@Model.Role</div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Start Date</div>
+                                    <div class="text-sm font-semibold text-gray-900">@Model.StartDate.ToString("MMM dd, yyyy")</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                    <div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Age</div>
+                                    <div class="text-sm font-semibold text-gray-900">@Model.Age years</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Salary Info -->
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+                            <div class="text-xs text-blue-600 uppercase tracking-wider mb-2">Monthly Salary</div>
+                            <div class="text-3xl font-bold text-blue-700 mb-1">₱@Model.Salary.ToString("N2")</div>
+                            <div class="text-xs text-blue-500">Based on @Model.Role role</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Government Numbers Card -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                                <path fill-rule="evenodd" d="M4.5 3.75a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V6.75a3 3 0 0 0-3-3h-15Zm4.125 3a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Zm-3.873 8.703a4.126 4.126 0 0 1 7.746 0 .75.75 0 0 1-.351.92 7.47 7.47 0 0 1-3.522.877 7.47 7.47 0 0 1-3.522-.877.75.75 0 0 1-.351-.92ZM15 8.25a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 0-1.5H15ZM14.25 12a.75.75 0 0 1 .75-.75h3.75a.75.75 0 0 1 0 1.5H15a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5h3.75a.75.75 0 0 0 0-1.5H15Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900">Government ID's</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                            <div class="p-2 bg-white rounded-lg shadow-sm">
+                                <img src="https://formsphilippines.com/agencylogo/2.png" class="w-8 h-8 object-contain" alt="BIR" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider">TIN</div>
+                                <div class="text-sm font-semibold text-gray-900">@Model.Tin</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                            <div class="p-2 bg-white rounded-lg shadow-sm">
+                                <img src="https://tse4.mm.bing.net/th/id/OIP.0GLbCninHJbyVckS0ssGYQHaFj?pid=Api&P=0&h=180" class="w-8 h-8 object-contain" alt="SSS" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider">SSS</div>
+                                <div class="text-sm font-semibold text-gray-900">@Model.Sss</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                            <div class="p-2 bg-white rounded-lg shadow-sm">
+                                <img src="https://business.gov.ph/static/media/logo-philhealth.2bf2cf4d.png" class="w-8 h-8 object-contain" alt="PhilHealth" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider">PhilHealth</div>
+                                <div class="text-sm font-semibold text-gray-900">@Model.PhilHealth</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-colors">
+                            <div class="p-2 bg-white rounded-lg shadow-sm">
+                                <img src="https://www.bworldonline.com/wp-content/uploads/2022/04/Pag-IBIG-logo-hi-res.png" class="w-8 h-8 object-contain" alt="PagIbig" />
+                            </div>
+                            <div>
+                                <div class="text-xs text-gray-500 uppercase tracking-wider">Pag-IBIG</div>
+                                <div class="text-sm font-semibold text-gray-900">@Model.PagIbig</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="bg-blue-50/30 rounded-xl border border-blue-100 p-4 flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-blue-700">This QR code is your attendance identifier. Present this QR when clocking in/out for attendance monitoring.</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Preview ID Card Modal - Matching style from Employee.cshtml -->
+<div id="previewModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop with blur -->
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closePreviewModal()"></div>
+
+    <!-- Modal container -->
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+            <!-- Modal content - responsive -->
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[55%] 2xl:w-[45%] max-w-2xl mx-auto">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-900" id="modal-title">
+                        Employee ID Card Preview
+                    </h3>
+                    <button onclick="closePreviewModal()" class="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body - Centered Card -->
+                <div class="px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10 max-h-[70vh] overflow-y-auto">
+                    <div class="flex flex-col items-center justify-center gap-6">
+                        
+                        <!-- ID Card Container -->
+                        <div class="id-card" id="previewCard">
+                            <div class="content">
+                                <!-- LEFT -->
+                                <div class="left">
+                                    <img src="@(!string.IsNullOrEmpty(Model.CompanyLogoUrl) ? Model.CompanyLogoUrl : "https://res.cloudinary.com/dxyhmtaqw/image/upload/v1771753213/logo_bxbeyr.png")" class="logo" alt="Company Logo">
+                                    
+                                    <div class="profile-row">
+                                        <img src="@(!string.IsNullOrEmpty(Model.ProfileImageUrl) ? Model.ProfileImageUrl : "https://i.pinimg.com/originals/1d/ec/e2/1dece2c8357bdd7cee3b15036344faf5.jpg?nii=t")" class="employee-photo" alt="Employee Photo">
+                                        <div>
+                                            <div class="name">@Model.Name</div>
+                                            <div class="info">
+                                                Company: @(!string.IsNullOrEmpty(Model.CompanyName) ? Model.CompanyName : "Unknown")<br>
+                                                Employee ID: @Model.EmployeeCode<br>
+                                                Position: @Model.Role
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <img src="@Model.SignatureUrl" class="signature" alt="Signature">
+                                        <div class="signature-label">Employee Signature</div>
+                                        <div class="note">Use QR Code during Attendance</div>
+                                    </div>
+                                </div>
+
+                                <!-- RIGHT -->
+                                <div class="right">
+                                    <div class="company-info">
+                                        @(!string.IsNullOrEmpty(Model.CompanyAddress) ? Model.CompanyAddress : " ")<br>
+                                        @(!string.IsNullOrEmpty(Model.CompanyContact) ? Model.CompanyContact : " ")
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(Model.QrBase64))
+                                    {
+                                        <img src="data:image/png;base64,@Model.QrBase64" class="qr" alt="QR Code">
+                                    }
+                                    else
+                                    {
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" class="qr" alt="QR Code">
+                                    }
+
+                                    <div class="powered">
+                                        Powered by:<br>
+                                        <img src="https://res.cloudinary.com/dxyhmtaqw/image/upload/v1771753213/logo_bxbeyr.png" class="payrex" alt="PayRex">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Download Button -->
+                        <button class="download-btn" onclick="downloadPreviewCard(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download as JPG
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+                    <div class="flex justify-end">
+                        <button type="button" 
+        class="inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 transition-colors w-full sm:w-auto" 
+        onclick="closePreviewModal()">
+    Close
+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Modal Animation */
+    .fixed {
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    /* ID Card Styles */
+    .id-card{
+        width: 85.6mm;
+        height: 54mm;
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+        background:
+            radial-gradient(circle at 80% 50%, rgba(0,140,255,0.25), rgba(0,140,255,0.1) 40%, transparent 65%),
+            linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)),
+            url('https://res.cloudinary.com/dxyhmtaqw/image/upload/v1771694059/loginbg_ffsmqq.png');
+        background-size: cover;
+        background-position: center;
+        background-blend-mode: overlay, normal;
+    }
+
+    .content{
+        height: 100%;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        box-sizing: border-box;
+        color: #111;
+    }
+
+    /* LEFT */
+    .left{
+        width: 55%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .logo{ 
+        width: 60px; 
+    }
+
+    .profile-row{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .employee-photo{
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255,255,255,0.8);
+    }
+
+    .name{
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .info{
+        font-size: 8px;
+        line-height: 1.4;
+    }
+
+    .signature{ 
+        width: 75px; 
+    }
+    
+    .signature-label{ 
+        font-size: 6px; 
+    }
+    
+    .note{ 
+        font-size: 6px; 
+        font-style: italic; 
+    }
+
+    /* RIGHT */
+    .right{
+        width: 42%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .company-info{
+        font-size: 7px;
+        text-align: right;
+        width: 100%;
+        margin-bottom: 6px;
+    }
+
+    .qr{
+        width: 85px;
+        height: 85px;
+        background: white;
+        padding: 2px;
+        border-radius: 6px;
+        box-shadow: none;
+    }
+
+    .powered{
+        font-size: 7px;
+        text-align: center;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        margin-top: 4px;
+    }
+
+    .payrex{
+        width: 60px;
+        display: block;
+        margin: 0 auto;
+    }
+
+    /* Download Button */
+    .download-btn{
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #007bff, #0056d2);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+    
+    .download-btn:hover{
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(0,123,255,0.3);
+    }
+
+    .download-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @@keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+</style>
+
+<script>
+    // Modal functions
+    function openPreviewModal() {
+        document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function closePreviewModal() {
+        document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    // Download card as JPG (uses centralized toasts from shared layout)
+    async function downloadPreviewCard(downloadBtn) {
+        const card = document.getElementById('previewCard');
+        if (!card) return;
+
+        // Save original button content
+        const originalText = downloadBtn ? downloadBtn.innerHTML : null;
+
+        // Show centralized loading toast (if available) and local button state
+        if (typeof showLoadingToast === 'function') showLoadingToast('Preparing download...');
+        if (downloadBtn) {
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = `
+                <svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Processing...
+            `;
+        }
+
+        try {
+            const canvas = await html2canvas(card, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: null,
+                logging: false,
+                allowTaint: true
+            });
+
+            const link = document.createElement('a');
+            // Build filename using server-side Model values: Name_Company (sanitized)
+            const empNameRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Name ?? ""));
+            const compNameRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CompanyName ?? ""));
+            const sanitize = (s) => (s || '').toString().replace(/\s+/g, '').replace(/[^a-zA-Z0-9_\-]/g, '');
+            const base = (sanitize(empNameRaw) || 'Employee') + '_' + (sanitize(compNameRaw) || 'Company');
+            link.download = `${base}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 1.0);
+            link.click();
+
+            if (typeof showToast === 'function') showToast('ID Card downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading card:', error);
+            if (typeof showToast === 'function') showToast('Failed to download ID card. Please try again.', 'error');
+        } finally {
+            // Restore button and hide centralized loading toast
+            if (downloadBtn) {
+                downloadBtn.disabled = false;
+                if (originalText !== null) downloadBtn.innerHTML = originalText;
+            }
+            if (typeof hideUploadToast === 'function') hideUploadToast();
+        }
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePreviewModal();
+        }
+    });
+
+    // Make functions globally available
+    window.openPreviewModal = openPreviewModal;
+    window.closePreviewModal = closePreviewModal;
+    window.downloadPreviewCard = downloadPreviewCard;
+</script>

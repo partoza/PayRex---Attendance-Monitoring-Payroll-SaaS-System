@@ -5,9 +5,42 @@
 }
 
 <div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+
+<!-- Confirm Deactivate Modal -->
+<div id="popup-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="hideConfirmModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[50%] max-w-md mx-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-6 md:py-4">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900">Confirm Inactivate</h3>
+                <button type="button" onclick="hideConfirmModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-6 md:py-6">
+                <div class="text-center">
+                    <p class="mb-4 text-sm text-gray-700">
+                        Are you sure you want to inactivate
+                        <span class="font-semibold confirm-company-name">Company Name</span>?
+                    </p>
+                    <div class="flex justify-center gap-3">
+                        <button type="button" onclick="hideConfirmModal()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300">No, Cancel</button>
+                        <button id="confirmDeactivateBtn" type="button" onclick="confirmDeactivateCompany()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-300">Yes, I'm sure</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden deactivate form (submitted by JS confirm) -->
+<form id="deactivateCompanyForm" method="post" asp-page-handler="ToggleActive" class="hidden">
+    <input type="hidden" name="companyId" id="deactivateCompanyId" />
+    <input type="hidden" name="isActive" value="true" />
+</form>
     <!-- Welcome Header (Dashboard Style) -->
     <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
-        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-green-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
         <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
         <div class="px-6 py-8 sm:px-10 relative z-10">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -16,7 +49,7 @@
                     <p class="mt-2 text-gray-600">View and manage all registered companies on the platform</p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-700">
+                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700">
                         <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" /></svg>
                         @Model.Companies.Count Total Companies
                     </span>
@@ -25,25 +58,16 @@
         </div>
     </div>
 
-    <!-- Status Message -->
     @if (!string.IsNullOrEmpty(Model.StatusMessage))
     {
-        <div class="flex items-center p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 shadow-sm" id="statusAlert">
-            <svg class="w-5 h-5 mr-3 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-            <span class="text-sm font-medium flex-1">@Model.StatusMessage</span>
-            <button onclick="document.getElementById('statusAlert').remove()" class="ml-3 text-green-600 hover:text-green-800">
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            </button>
-        </div>
+        <script>document.addEventListener('DOMContentLoaded',()=>showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatusMessage)), '@(Model.StatusMessage!.StartsWith("Failed") ? "error" : "success")'));</script>
     }
 
     <!-- Filters Card -->
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <h2 class="text-base font-semibold text-gray-900 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" /></svg>
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" /></svg>
                 Filters & Search
             </h2>
         </div>
@@ -76,7 +100,6 @@
                     <select id="statusFilter" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
                         <option value="">All Status</option>
                         <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
                     </select>
                 </div>
             </div>
@@ -126,8 +149,8 @@
                         <tr id="emptyRow">
                             <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
-                                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                                        <svg class="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clip-rule="evenodd" /></svg>
+                                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clip-rule="evenodd" /></svg>
                                     </div>
                                     <p class="text-gray-500 font-medium">No companies found</p>
                                     <p class="text-sm text-gray-400 mt-1">Try adjusting your filters</p>
@@ -154,12 +177,21 @@
                                 <!-- Company -->
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-3 shadow-sm">
-                                            <span class="text-xs font-bold text-white">@company.CompanyName?.Substring(0, Math.Min(2, company.CompanyName?.Length ?? 0)).ToUpper()</span>
+                                        <div class="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
+                                            @if (!string.IsNullOrEmpty(company.LogoUrl))
+                                            {
+                                                <img src="@company.LogoUrl" alt="Logo" class="w-9 h-9 object-contain" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                                    <span class="text-xs font-bold text-white">@company.CompanyName?.Substring(0, Math.Min(2, company.CompanyName?.Length ?? 0)).ToUpper()</span>
+                                                </div>
+                                            }
                                         </div>
                                         <div>
                                             <p class="text-sm font-semibold text-gray-900">@company.CompanyName</p>
-                                            <p class="text-xs text-gray-500">ID: @company.CompanyId</p>
+                                            <p class="text-xs text-gray-500">ID: @company.CompanyCode</p>
                                         </div>
                                     </div>
                                 </td>
@@ -179,14 +211,16 @@
                                 <!-- Employees -->
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <svg class="w-4 h-4 text-green-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+                                        <svg class="w-4 h-4 text-blue-400 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
                                         <span class="text-sm font-semibold text-gray-900">@company.EmployeeCount</span>
                                     </div>
                                 </td>
                                 <!-- Status -->
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @(statusActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
-                                        <span class="w-1.5 h-1.5 rounded-full @(statusActive ? "bg-green-500" : "bg-red-500") mr-1.5"></span>
+                                    @{
+                                        var statusClass = statusActive ? "text-blue-700" : "text-red-700";
+                                    }
+                                    <span class="text-xs sm:text-sm font-semibold @statusClass">
                                         @(statusActive ? "Active" : "Inactive")
                                     </span>
                                 </td>
@@ -196,37 +230,27 @@
                                 </td>
                                 <!-- Actions -->
                                 <td class="px-6 py-4">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <!-- View -->
+                                    <div class="flex items-center justify-center gap-2">
                                         <button type="button"
-                                                data-modal-target="companyModal"
-                                                data-modal-toggle="companyModal"
-                                                onclick="loadCompanyDetails('@company.CompanyId', '@company.CompanyName', '@company.PlanName', '@company.UserCount', '@company.EmployeeCount', '@(statusActive ? "Active" : "Inactive")', '@company.CreatedAt.ToString("MMM dd, yyyy")')"
-                                                class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                                title="View Details">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                            </svg>
+                                                onclick="openCompanyModal('@company.CompanyId', '@company.CompanyCode', '@company.CompanyName', '@company.PlanName', '@company.UserCount', '@company.EmployeeCount', '@(statusActive ? "Active" : "Inactive")', '@company.CreatedAt.ToString("MMM dd, yyyy")', '@(company.LogoUrl ?? "")')"
+                                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            View
                                         </button>
-                                        <!-- Toggle Status -->
-                                        <form method="post" asp-page-handler="ToggleActive" class="inline">
-                                            <input type="hidden" name="companyId" value="@company.CompanyId" />
-                                            <input type="hidden" name="isActive" value="@(statusActive ? "false" : "true")" />
-                                            <button type="submit"
-                                                    onclick="return confirm('@(statusActive ? "Deactivate this company?" : "Activate this company?")')"
-                                                    class="p-2 @(statusActive ? "text-gray-400 hover:text-red-600 hover:bg-red-50" : "text-gray-400 hover:text-green-600 hover:bg-green-50") rounded-lg transition-all"
-                                                    title="@(statusActive ? "Deactivate" : "Activate")">
-                                                @if (statusActive)
-                                                {
-                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 008.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" /></svg>
-                                                }
-                                                else
-                                                {
-                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                                }
+                                        @if (statusActive)
+                                        {
+                                            <button type="button"
+                                                    data-name="@company.CompanyName"
+                                                    onclick="deactivateCompany(this, '@company.CompanyId')"
+                                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                Inactive
                                             </button>
-                                        </form>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">Inactive</span>
+                                        }
                                     </div>
                                 </td>
                             </tr>
@@ -237,64 +261,100 @@
         </div>
 
         <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50" id="paginationContainer">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/50" id="paginationContainer">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <div class="text-sm text-gray-600" id="paginationInfo">
+                <div class="text-xs sm:text-sm text-gray-600" id="paginationInfo">
                     Showing <span class="font-semibold" id="showStart">1</span> to <span class="font-semibold" id="showEnd">10</span> of <span class="font-semibold" id="showTotal">0</span> companies
                 </div>
-                <nav class="flex items-center gap-1" id="paginationNav"></nav>
+                <nav class="flex items-center gap-1 flex-wrap justify-center" id="paginationNav"></nav>
             </div>
         </div>
     </div>
 </div>
 
 <!-- View Company Modal -->
-<div id="companyModal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true" class="hidden fixed top-0 left-0 right-0 z-50 w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative w-full max-w-md max-h-full">
-        <div class="relative bg-white rounded-2xl shadow-xl border border-gray-200">
-            <div class="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white rounded-t-2xl">
-                <h3 class="text-lg font-bold text-gray-900">Company Details</h3>
-                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center transition-all" data-modal-hide="companyModal">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 space-y-5">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
-                        <span class="text-lg font-bold text-white" id="companyInitials">TC</span>
-                    </div>
-                    <div>
-                        <h4 class="text-lg font-bold text-gray-900" id="companyName">TechCorp</h4>
-                        <p class="text-sm text-gray-500" id="companyId">—</p>
+<div id="companyModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop with blur -->
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeCompanyModal()"></div>
+
+    <!-- Modal container -->
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[75%] lg:w-[60%] xl:w-[50%] max-w-2xl mx-auto">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-900" id="modal-title">
+                        Company Details
+                    </h3>
+                    <button onclick="closeCompanyModal()" class="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 max-h-[70vh] overflow-y-auto">
+                    <div class="space-y-5 sm:space-y-6">
+
+                        <!-- Company header (logo + name) -->
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 border-b border-gray-100 pb-4 sm:pb-6">
+                            <div class="relative flex-shrink-0">
+                                <div id="modalLogoWrapper" class="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 overflow-hidden rounded-xl shadow-lg ring-4 ring-white flex items-center justify-center">
+                                    <img id="modalCompanyLogo" class="h-full w-full object-contain hidden" alt="Company Logo" />
+                                    <div id="modalCompanyInitials" class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                        <span class="text-xl sm:text-2xl font-bold text-white" id="modalInitialsText">TC</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center sm:text-left flex-1">
+                                <h4 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900" id="modalCompanyName">Company Name</h4>
+                                <p class="mt-1 text-sm text-gray-500" id="modalCompanyId">—</p>
+                            </div>
+                        </div>
+
+                        <!-- Company Details -->
+                        <div>
+                            <h5 class="mb-3 text-xs sm:text-sm font-medium uppercase tracking-wider text-gray-500">Company Information</h5>
+                            <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Plan</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="modalCompanyPlan">—</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Status</p>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" id="modalCompanyStatus">
+                                        <span class="w-1.5 h-1.5 rounded-full mr-1.5" id="modalStatusDot"></span>
+                                        <span id="modalStatusText">Active</span>
+                                    </span>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Users</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="modalCompanyUsers">0</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Employees</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="modalCompanyEmployees">0</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg col-span-2">
+                                    <p class="text-xs text-gray-500 mb-1">Registered On</p>
+                                    <p class="text-xs sm:text-sm font-semibold text-gray-900" id="modalCompanyCreated">—</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 rounded-xl p-3">
-                        <p class="text-xs text-gray-500 mb-1">Plan</p>
-                        <p class="text-sm font-semibold text-gray-900" id="companyPlan">—</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-3">
-                        <p class="text-xs text-gray-500 mb-1">Status</p>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" id="companyStatus">
-                            <span class="w-1.5 h-1.5 rounded-full mr-1.5"></span>Active
-                        </span>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-3">
-                        <p class="text-xs text-gray-500 mb-1">Users</p>
-                        <p class="text-sm font-semibold text-gray-900" id="companyUsers">0</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl p-3">
-                        <p class="text-xs text-gray-500 mb-1">Employees</p>
-                        <p class="text-sm font-semibold text-gray-900" id="companyEmployees">0</p>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+                    <div class="flex justify-end">
+                        <button type="button" class="inline-flex justify-center rounded-lg bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-colors w-full sm:w-auto" onclick="closeCompanyModal()">
+                            Close
+                        </button>
                     </div>
                 </div>
-                <div class="bg-gray-50 rounded-xl p-3">
-                    <p class="text-xs text-gray-500 mb-1">Registered On</p>
-                    <p class="text-sm font-semibold text-gray-900" id="companyCreated">—</p>
-                </div>
-            </div>
-            <div class="flex items-center p-5 border-t border-gray-100 rounded-b-2xl">
-                <button type="button" class="w-full px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all" data-modal-hide="companyModal">Close</button>
             </div>
         </div>
     </div>
@@ -412,25 +472,67 @@
         return pages;
     }
 
-    function loadCompanyDetails(id, name, plan, users, employees, status, created) {
-        document.getElementById('companyInitials').textContent = (name || '').substring(0, 2).toUpperCase();
-        document.getElementById('companyName').textContent = name;
-        document.getElementById('companyId').textContent = 'ID: ' + id;
-        document.getElementById('companyPlan').textContent = plan || 'No Plan';
-        document.getElementById('companyUsers').textContent = users;
-        document.getElementById('companyEmployees').textContent = employees;
-        document.getElementById('companyCreated').textContent = created;
+    function closeCompanyModal() {
+        document.getElementById('companyModal').classList.add('hidden');
+    }
 
-        const statusEl = document.getElementById('companyStatus');
-        const dot = statusEl.querySelector('span');
+    let pendingDeactivateCompanyId = null;
+
+    function deactivateCompany(btn, companyId) {
+        pendingDeactivateCompanyId = companyId;
+        const name = btn && btn.dataset && btn.dataset.name ? btn.dataset.name : 'this company';
+        document.querySelectorAll('.confirm-company-name').forEach(el => {
+            el.textContent = name;
+        });
+        document.getElementById('popup-modal').classList.remove('hidden');
+    }
+
+    function hideConfirmModal() {
+        document.getElementById('popup-modal').classList.add('hidden');
+    }
+
+    function confirmDeactivateCompany() {
+        if (!pendingDeactivateCompanyId) return;
+        const confirmBtn = document.getElementById('confirmDeactivateBtn');
+        if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'Processing...'; }
+        document.getElementById('deactivateCompanyId').value = pendingDeactivateCompanyId;
+        document.getElementById('deactivateCompanyForm').submit();
+    }
+
+    function openCompanyModal(id, code, name, plan, users, employees, status, created, logoUrl) {
+        document.getElementById('modalCompanyName').textContent = name;
+        document.getElementById('modalCompanyId').textContent = 'ID: ' + code;
+        document.getElementById('modalCompanyPlan').textContent = plan || 'No Plan';
+        document.getElementById('modalCompanyUsers').textContent = users;
+        document.getElementById('modalCompanyEmployees').textContent = employees;
+        document.getElementById('modalCompanyCreated').textContent = created;
+        document.getElementById('modalInitialsText').textContent = (name || '').substring(0, 2).toUpperCase();
+
+        const logoEl = document.getElementById('modalCompanyLogo');
+        const initialsEl = document.getElementById('modalCompanyInitials');
+        if (logoUrl && logoUrl.trim() !== '') {
+            logoEl.src = logoUrl;
+            logoEl.classList.remove('hidden');
+            initialsEl.classList.add('hidden');
+        } else {
+            logoEl.src = '';
+            logoEl.classList.add('hidden');
+            initialsEl.classList.remove('hidden');
+        }
+
+        const statusEl = document.getElementById('modalCompanyStatus');
+        const dot = document.getElementById('modalStatusDot');
+        const statusText = document.getElementById('modalStatusText');
         if (status === 'Active') {
-            statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
-            dot.className = 'w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5';
+            statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
+            dot.className = 'w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5';
         } else {
             statusEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
             dot.className = 'w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5';
         }
-        statusEl.lastChild.textContent = status;
+        statusText.textContent = status;
+
+        document.getElementById('companyModal').classList.remove('hidden');
     }
 </script>
 }

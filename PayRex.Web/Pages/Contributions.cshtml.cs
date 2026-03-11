@@ -1,38 +1,52 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PayRex.Web.Services;
 
 namespace PayRex.Web.Pages
 {
-    [Authorize(Roles = "Admin,HR,Employee")]
+    [Authorize(Roles = "Admin,HR,Accountant,Employee")]
     public class ContributionsModel : PageModel
     {
-        public List<ContributionItem> Contributions { get; set; } = new();
+        private readonly IPayrollApiService _payroll;
+        public List<ContributionDto> Contributions { get; set; } = new();
+        public List<PayrollPeriodDto> Periods { get; set; } = new();
+        public int? SelectedPeriodId { get; set; }
+        public string CurrentPeriod { get; set; } = "No Period Selected";
         public ContributionStats Stats { get; set; } = new();
 
-        public void OnGet()
+        public ContributionsModel(IPayrollApiService payroll) => _payroll = payroll;
+
+        public async Task OnGetAsync(int? periodId)
         {
-            // Static demo data
-            Contributions = new List<ContributionItem>
-            {
-                new ContributionItem { EmployeeName = "Juan Cruz", Type = "SSS", EmployeeShare = 1350.00m, EmployerShare = 2550.00m, Period = "Jan 2026", Status = "Remitted" },
-                new ContributionItem { EmployeeName = "Juan Cruz", Type = "PhilHealth", EmployeeShare = 450.00m, EmployerShare = 450.00m, Period = "Jan 2026", Status = "Remitted" },
-                new ContributionItem { EmployeeName = "Juan Cruz", Type = "Pag-IBIG", EmployeeShare = 100.00m, EmployerShare = 100.00m, Period = "Jan 2026", Status = "Remitted" },
-                
-                new ContributionItem { EmployeeName = "Maria Santos", Type = "SSS", EmployeeShare = 1350.00m, EmployerShare = 2550.00m, Period = "Jan 2026", Status = "Remitted" },
-                new ContributionItem { EmployeeName = "Maria Santos", Type = "PhilHealth", EmployeeShare = 675.00m, EmployerShare = 675.00m, Period = "Jan 2026", Status = "Remitted" },
-                new ContributionItem { EmployeeName = "Maria Santos", Type = "Pag-IBIG", EmployeeShare = 100.00m, EmployerShare = 100.00m, Period = "Jan 2026", Status = "Remitted" },
+            var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            var isEmployeeView = Request.Cookies["PayRex.ViewMode"] == "employee";
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+            var selfOnly = isEmployeeView || role == "Employee";
+            Periods = await _payroll.GetPeriodsAsync(token);
 
-                new ContributionItem { EmployeeName = "Jose Reyes", Type = "SSS", EmployeeShare = 1575.00m, EmployerShare = 2975.00m, Period = "Jan 2026", Status = "Pending" },
-                new ContributionItem { EmployeeName = "Jose Reyes", Type = "PhilHealth", EmployeeShare = 525.00m, EmployerShare = 525.00m, Period = "Jan 2026", Status = "Pending" },
-                new ContributionItem { EmployeeName = "Jose Reyes", Type = "Pag-IBIG", EmployeeShare = 100.00m, EmployerShare = 100.00m, Period = "Jan 2026", Status = "Pending" }
-            };
-
-            Stats = new ContributionStats 
+            if (periodId.HasValue)
             {
-                TotalSSS = 15600.00m,
-                TotalPhilHealth = 5200.00m,
-                TotalPagIBIG = 2400.00m
+                SelectedPeriodId = periodId;
+            }
+            else if (Periods.Any())
+            {
+                SelectedPeriodId = Periods.First().PayrollPeriodId;
+            }
+
+            if (SelectedPeriodId.HasValue)
+            {
+                var period = Periods.FirstOrDefault(p => p.PayrollPeriodId == SelectedPeriodId.Value);
+                CurrentPeriod = period?.PeriodName ?? "Unknown Period";
+            }
+
+            Contributions = await _payroll.GetContributionsAsync(token, SelectedPeriodId, selfOnly);
+
+            Stats = new ContributionStats
+            {
+                TotalSSS = Contributions.Where(c => c.Type == "SSS").Sum(c => c.EmployeeShare + c.EmployerShare),
+                TotalPhilHealth = Contributions.Where(c => c.Type == "PhilHealth").Sum(c => c.EmployeeShare + c.EmployerShare),
+                TotalPagIBIG = Contributions.Where(c => c.Type is "PagIBIG" or "Pag-IBIG" or "PagIig" or "PagIbig").Sum(c => c.EmployeeShare + c.EmployerShare)
             };
         }
 
@@ -41,16 +55,6 @@ namespace PayRex.Web.Pages
             public decimal TotalSSS { get; set; }
             public decimal TotalPhilHealth { get; set; }
             public decimal TotalPagIBIG { get; set; }
-        }
-
-        public class ContributionItem
-        {
-            public string EmployeeName { get; set; } = "";
-            public string Type { get; set; } = "";
-            public decimal EmployeeShare { get; set; }
-            public decimal EmployerShare { get; set; }
-            public string Period { get; set; } = "";
-            public string Status { get; set; } = ""; // Remitted, Pending
         }
     }
 }

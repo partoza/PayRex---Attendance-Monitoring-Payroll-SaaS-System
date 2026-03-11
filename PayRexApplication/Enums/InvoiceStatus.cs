@@ -8,6 +8,7 @@ namespace PayRexApplication.Enums
         Unpaid = 0,
       Paid = 1,
        Failed = 2,
-       Voided = 3
+       Voided = 3,
+       Archived = 4
     }
 }

@@ -21,6 +21,13 @@
  <p class="text-gray-500 text-lg mb-8">Log in to access your payroll and attendance dashboard.</p>
 
  <div class="bg-white rounded-2xl shadow-lg p-8 text-left">
+ @if (!string.IsNullOrEmpty(Model.AuthSuccessMessage))
+ {
+ <div class="mb-4 rounded-lg bg-green-100 text-green-700 px-4 py-3 text-sm flex items-center gap-2">
+ <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+ @Model.AuthSuccessMessage
+ </div>
+ }
  <div id="globalError" class="mb-4 rounded-lg bg-red-100 text-red-700 px-4 py-3 text-sm @((string.IsNullOrEmpty(Model.ErrorMessage) || Model.IsLockedOut) ? "hidden" : "")">
  @Model.ErrorMessage
  </div>

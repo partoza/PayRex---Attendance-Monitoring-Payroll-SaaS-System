@@ -36,6 +36,12 @@ namespace PayRexApplication.Models
  [Column("isActive")]
  public bool IsActive { get; set; } = true;
 
+ /// <summary>
+ /// Built-in roles (HR, Accountant) cannot be deleted but can be edited.
+ /// </summary>
+ [Column("isBuiltIn")]
+ public bool IsBuiltIn { get; set; } = false;
+
  [Required]
  [Column("createdAt")]
  public DateTime CreatedAt { get; set; }

@@ -75,6 +75,22 @@ namespace PayRexApplication.Controllers
             // Generate password: CompanyName + "_" + 8 random chars
             var password = GeneratePassword(company.CompanyName);
 
+            // Determine the correct UserRole based on the selected EmployeeRole
+            var userRole = UserRole.Employee;
+            if (dto.RoleId.HasValue)
+            {
+                var selectedRole = await _db.EmployeeRoles.FindAsync(dto.RoleId.Value);
+                if (selectedRole != null && selectedRole.CompanyId == companyId)
+                {
+                    userRole = selectedRole.RoleName?.Trim() switch
+                    {
+                        "HR" => UserRole.Hr,
+                        "Accountant" => UserRole.Accountant,
+                        _ => UserRole.Employee
+                    };
+                }
+            }
+
             // Create User account first (need UserId for Cloudinary uploads)
             var user = new User
             {
@@ -83,7 +99,7 @@ namespace PayRexApplication.Controllers
                 LastName = dto.LastName.Trim(),
                 Email = dto.Email.Trim(),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-                Role = UserRole.Employee,
+                Role = userRole,
                 Status = UserStatus.Active,
                 MustChangePassword = true,
                 CreatedAt = DateTime.UtcNow,
@@ -115,7 +131,7 @@ namespace PayRexApplication.Controllers
                 try
                 {
                     using var stream = signature.OpenReadStream();
-                    signatureUrl = await _cloudinary.UploadProfileImageAsync(stream, signature.FileName, $"{user.UserId}_sig");
+                    signatureUrl = await _cloudinary.UploadSignatureAsync(stream, signature.FileName, $"{user.UserId}_sig");
                 }
                 catch (Exception ex)
                 {
@@ -226,6 +242,22 @@ namespace PayRexApplication.Controllers
                     if (user != null)
                     {
                         if (!string.IsNullOrWhiteSpace(dto.Email)) user.Email = dto.Email.Trim();
+
+                        // Sync User.Role when EmployeeRole changes
+                        if (dto.RoleId.HasValue)
+                        {
+                            var newRole = await _db.EmployeeRoles.FindAsync(dto.RoleId.Value);
+                            if (newRole != null && newRole.CompanyId == emp.CompanyId)
+                            {
+                                user.Role = newRole.RoleName?.Trim() switch
+                                {
+                                    "HR" => UserRole.Hr,
+                                    "Accountant" => UserRole.Accountant,
+                                    _ => UserRole.Employee
+                                };
+                            }
+                        }
+
                         user.UpdatedAt = DateTime.UtcNow;
 
                         // Handle profile photo upload
@@ -249,7 +281,7 @@ namespace PayRexApplication.Controllers
                             try
                             {
                                 using var stream = signature.OpenReadStream();
-                                var url = await _cloudinary.UploadProfileImageAsync(stream, signature.FileName, $"{user.UserId}_sig");
+                                var url = await _cloudinary.UploadSignatureAsync(stream, signature.FileName, $"{user.UserId}_sig");
                                 user.SignatureUrl = url;
                             }
                             catch (Exception ex)

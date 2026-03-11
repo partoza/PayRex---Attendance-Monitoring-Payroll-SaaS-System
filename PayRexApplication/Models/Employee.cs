@@ -57,6 +57,12 @@ namespace PayRexApplication.Models
         [Column("status")]
         public EmployeeStatus Status { get; set; }
 
+        /// <summary>
+        /// Monthly salary rate (used for payroll computation)
+        /// </summary>
+        [Column("salaryRate", TypeName = "decimal(18,2)")]
+        public decimal SalaryRate { get; set; }
+
         // Government Identifiers
         [MaxLength(15)]
         [Column("tin")]

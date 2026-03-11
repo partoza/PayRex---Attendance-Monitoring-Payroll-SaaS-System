@@ -29,9 +29,9 @@ namespace PayRexApplication.DTOs
       public string CurrentPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "New password is required")]
-        [MinLength(8, ErrorMessage = "Password must be at least 8 characters")]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$",
-            ErrorMessage = "Password must contain uppercase, lowercase, number, and special character")]
+        [MinLength(12, ErrorMessage = "Password must be at least 12 characters")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{12,}$",
+          ErrorMessage = "Password must contain uppercase, lowercase, number, and special character")]
         public string NewPassword { get; set; } = string.Empty;
 
       [Required(ErrorMessage = "Confirm password is required")]

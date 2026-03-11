@@ -85,28 +85,19 @@ namespace PayRexApplication.Controllers
         private readonly IActivityLoggerService _activityLogger;
 
         private readonly ICloudinaryService _cloudinary;
+        private readonly ISubscriptionService _subscriptionService;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AuthController"/> class.
-        /// </summary>
-        /// <param name="db">The db<see cref="AppDbContext"/></param>
-        /// <param name="config">The config<see cref="IConfiguration"/></param>
-        /// <param name="logger">The logger<see cref="ILogger{AuthController}"/></param>
-        /// <param name="totpService">The totpService<see cref="ITotpService"/></param>
-        /// <param name="emailService">The emailService<see cref="IEmailService"/></param>
-        /// <param name="tokenService">The tokenService<see cref="IPasswordResetTokenService"/></param>
-        /// <param name="dataProtectionProvider">The dataProtectionProvider<see cref="IDataProtectionProvider"/></param>
-        /// <param name="activityLogger">The activityLogger<see cref="IActivityLoggerService"/></param>
         public AuthController(
-        AppDbContext db,
+            AppDbContext db,
             IConfiguration config,
-       ILogger<AuthController> logger,
-        ITotpService totpService,
-      IEmailService emailService,
-       IPasswordResetTokenService tokenService,
-       IDataProtectionProvider dataProtectionProvider,
-       IActivityLoggerService activityLogger,
-            ICloudinaryService cloudinary)
+            ILogger<AuthController> logger,
+            ITotpService totpService,
+            IEmailService emailService,
+            IPasswordResetTokenService tokenService,
+            IDataProtectionProvider dataProtectionProvider,
+            IActivityLoggerService activityLogger,
+            ICloudinaryService cloudinary,
+            ISubscriptionService subscriptionService)
         {
             _db = db;
             _config = config;
@@ -115,8 +106,9 @@ namespace PayRexApplication.Controllers
             _emailService = emailService;
             _tokenService = tokenService;
             _protector = dataProtectionProvider.CreateProtector("PayRex.TotpSecrets");
-   _activityLogger = activityLogger;
+            _activityLogger = activityLogger;
             _cloudinary = cloudinary;
+            _subscriptionService = subscriptionService;
         }
 
         /// <summary>
@@ -165,6 +157,31 @@ namespace PayRexApplication.Controllers
             _db.Companies.Add(company);
             await _db.SaveChangesAsync();
 
+            // Seed built-in HR and Accountant roles for the new company
+            var builtInRoles = new[]
+            {
+                new EmployeeRole
+                {
+                    CompanyId = company.CompanyId,
+                    RoleName = "HR",
+                    Description = "Human Resource Manager - manages employees and attendance",
+                    IsBuiltIn = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new EmployeeRole
+                {
+                    CompanyId = company.CompanyId,
+                    RoleName = "Accountant",
+                    Description = "Accountant - manages salary, finance, and payslips",
+                    IsBuiltIn = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+            _db.EmployeeRoles.AddRange(builtInRoles);
+            await _db.SaveChangesAsync();
+
             var user = new User
             {
                 CompanyId = company.CompanyId,
@@ -181,7 +198,26 @@ namespace PayRexApplication.Controllers
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
+            // Create 14-day trial subscription for the new company
+            try
+            {
+                await _subscriptionService.CreateTrialSubscriptionAsync(company.CompanyId, company.PlanId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create trial subscription for company {CompanyId}", company.CompanyId);
+            }
+
             _logger.LogInformation("New user registered: {Email}, CompanyId: {CompanyId}", user.Email, company.CompanyId);
+
+            await _activityLogger.LogAsync(
+                user.UserId, company.CompanyId, "Register",
+                entityType: "User", entityId: user.UserId.ToString(),
+                newValue: user.Email,
+                ipAddress: GetClientIpAddress(),
+                userAgent: HttpContext.Request.Headers["User-Agent"].FirstOrDefault(),
+                role: user.Role.ToString(),
+                entityAffected: "User");
 
             return CreatedAtAction(null, new
             {
@@ -215,7 +251,8 @@ namespace PayRexApplication.Controllers
                 {
                     IsLockedOut = true,
                     LockoutRemainingSeconds = lockoutInfo.RemainingSeconds,
-                    Message = $"Account locked. Try again in {lockoutInfo.RemainingSeconds} seconds."
+                    Message =
+                    "Account locked. Try again in {lockoutInfo.RemainingSeconds} seconds."
                 });
             }
 
@@ -258,7 +295,20 @@ namespace PayRexApplication.Controllers
                 await ClearLoginAttemptsAsync(normalizedEmail);
                 await PersistLoginAttemptAsync(normalizedEmail, user.UserId, ipAddress, userAgent, true, null);
 
-                var token = GenerateJwtForUser(user);
+                // Check and update subscription status on login
+                string? subscriptionStatus = null;
+                if (user.CompanyId > 0 && user.Role != UserRole.SuperAdmin)
+                {
+                    try
+                    {
+                        await _subscriptionService.CheckAndUpdateSubscriptionStatusAsync(user.CompanyId);
+                        var sub = await _subscriptionService.GetCompanySubscriptionAsync(user.CompanyId);
+                        subscriptionStatus = sub?.Status;
+                    }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Subscription check failed for company {CompanyId}", user.CompanyId); }
+                }
+
+                var token = GenerateJwtForUser(user, subscriptionStatus);
 
                 return Ok(new LoginResponseDto
                 {
@@ -283,7 +333,7 @@ namespace PayRexApplication.Controllers
         /// </summary>
         /// <param name="user">The user<see cref="User"/></param>
         /// <returns>The <see cref="string"/></returns>
-        private string GenerateJwtForUser(User user)
+        private string GenerateJwtForUser(User user, string? subscriptionStatus = null)
         {
             var jwtSection = _config.GetSection("Jwt");
             var key = jwtSection.GetValue<string>("Key");
@@ -316,8 +366,13 @@ new Claim("userId", user.UserId.ToString()),
                 new Claim("mustChangePassword", user.MustChangePassword.ToString().ToLower())
         };
 
-            // Normalize role string to expected values used in Authorize attributes (e.g., "HR")
-            string normalizedRole = user.Role == UserRole.Hr ? "HR" : user.Role.ToString();
+            // Normalize role string to expected values used in Authorize attributes (e.g., "HR", "Accountant")
+            string normalizedRole = user.Role switch
+            {
+                UserRole.Hr => "HR",
+                UserRole.Accountant => "Accountant",
+                _ => user.Role.ToString()
+            };
             // Ensure a single role claim with normalized value
             claims.Add(new Claim(ClaimTypes.Role, normalizedRole));
 
@@ -331,6 +386,18 @@ new Claim("userId", user.UserId.ToString()),
             if (!string.IsNullOrEmpty(user.Company?.LogoUrl))
             {
                 claims.Add(new Claim("companyLogo", user.Company.LogoUrl));
+            }
+
+            // Add subscription status for non-SuperAdmin users
+            if (!string.IsNullOrEmpty(subscriptionStatus))
+            {
+                claims.Add(new Claim("subscriptionStatus", subscriptionStatus));
+            }
+
+            // Add company setup completion status for non-SuperAdmin users
+            if (user.Role != UserRole.SuperAdmin)
+            {
+                claims.Add(new Claim("isSetupComplete", (user.Company?.IsSetupComplete ?? false).ToString().ToLower()));
             }
 
             var keyBytes = Encoding.UTF8.GetBytes(key);
@@ -349,7 +416,7 @@ new Claim("userId", user.UserId.ToString()),
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        /// <summary>
+        /// <summary>m
         /// Get current user info from JWT token
         /// </summary>
         /// <returns>The <see cref="Task{IActionResult}"/></returns>
@@ -410,89 +477,89 @@ new Claim("userId", user.UserId.ToString()),
         private async Task<(bool IsLocked, int RemainingSeconds)> GetAccountLockoutInfoAsync(string email)
         {
             // Only look at the lockout-tracking row (the one with AttemptCount > 0 or IsLocked = true)
-       // Exclude audit-only rows (AttemptCount == 0 && IsLocked == false && Success is set)
- var attempt = await _db.UserLoginAttempts
-   .Where(a => a.Email.ToLower() == email.ToLower() && a.Reason == null)
-   .FirstOrDefaultAsync();
+            // Exclude audit-only rows (AttemptCount == 0 && IsLocked == false && Success is set)
+            var attempt = await _db.UserLoginAttempts
+              .Where(a => a.Email.ToLower() == email.ToLower() && a.Reason == null)
+              .FirstOrDefaultAsync();
 
-         if (attempt == null) return (false, 0);
+            if (attempt == null) return (false, 0);
 
-         if (attempt.IsLocked && attempt.LockUntil.HasValue)
+            if (attempt.IsLocked && attempt.LockUntil.HasValue)
             {
-      if (attempt.LockUntil.Value > DateTime.UtcNow)
-  {
-     var remainingSeconds = (int)(attempt.LockUntil.Value - DateTime.UtcNow).TotalSeconds;
-     return (true, remainingSeconds);
-   }
+                if (attempt.LockUntil.Value > DateTime.UtcNow)
+                {
+                    var remainingSeconds = (int)(attempt.LockUntil.Value - DateTime.UtcNow).TotalSeconds;
+                    return (true, remainingSeconds);
+                }
 
-        // Lock expired - reset
- attempt.IsLocked = false;
-   attempt.LockUntil = null;
+                // Lock expired - reset
+                attempt.IsLocked = false;
+                attempt.LockUntil = null;
                 attempt.AttemptCount = 0;
-    await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync();
             }
 
-       return (false, 0);
- }
+            return (false, 0);
+        }
 
-     /// <summary>
+        /// <summary>
         /// Record a failed login attempt
         /// </summary>
-  private async Task RecordFailedLoginAttemptAsync(string email, int? userId, string? ipAddress)
-      {
-    // Only update the lockout-tracking row (Reason == null)
-        var attempt = await _db.UserLoginAttempts
-        .Where(a => a.Email.ToLower() == email.ToLower() && a.Reason == null)
-     .FirstOrDefaultAsync();
+        private async Task RecordFailedLoginAttemptAsync(string email, int? userId, string? ipAddress)
+        {
+            // Only update the lockout-tracking row (Reason == null)
+            var attempt = await _db.UserLoginAttempts
+            .Where(a => a.Email.ToLower() == email.ToLower() && a.Reason == null)
+         .FirstOrDefaultAsync();
 
-        if (attempt == null)
-    {
-    attempt = new UserLoginAttempt
-              {
- Email = email,
-        UserId = userId,
-             IpAddress = ipAddress,
-    AttemptCount = 1,
-         IsLocked = false,
-   LastAttemptAt = DateTime.UtcNow,
-     CreatedAt = DateTime.UtcNow
-     };
-     _db.UserLoginAttempts.Add(attempt);
-     }
+            if (attempt == null)
+            {
+                attempt = new UserLoginAttempt
+                {
+                    Email = email,
+                    UserId = userId,
+                    IpAddress = ipAddress,
+                    AttemptCount = 1,
+                    IsLocked = false,
+                    LastAttemptAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.UserLoginAttempts.Add(attempt);
+            }
             else
             {
-        attempt.AttemptCount++;
-            attempt.IpAddress = ipAddress;
-          attempt.LastAttemptAt = DateTime.UtcNow;
+                attempt.AttemptCount++;
+                attempt.IpAddress = ipAddress;
+                attempt.LastAttemptAt = DateTime.UtcNow;
 
-  if (attempt.AttemptCount >= MaxLoginAttempts)
-  {
-      attempt.IsLocked = true;
-        attempt.LockUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
-   attempt.AttemptCount = 0;
-             _logger.LogWarning("Account locked for email {Email} due to {Max} failed attempts", email, MaxLoginAttempts);
+                if (attempt.AttemptCount >= MaxLoginAttempts)
+                {
+                    attempt.IsLocked = true;
+                    attempt.LockUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
+                    attempt.AttemptCount = 0;
+                    _logger.LogWarning("Account locked for email {Email} due to {Max} failed attempts", email, MaxLoginAttempts);
                 }
-    }
+            }
 
-          await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
         }
 
         /// <summary>
         /// Clear login attempts on successful login
         /// </summary>
         private async Task ClearLoginAttemptsAsync(string email)
-    {
+        {
             var attempt = await _db.UserLoginAttempts
      .Where(a => a.Email.ToLower() == email.ToLower() && a.Reason == null)
   .FirstOrDefaultAsync();
 
-     if (attempt != null)
-{
-         attempt.AttemptCount = 0;
+            if (attempt != null)
+            {
+                attempt.AttemptCount = 0;
                 attempt.IsLocked = false;
-             attempt.LockUntil = null;
-          await _db.SaveChangesAsync();
-      }
+                attempt.LockUntil = null;
+                await _db.SaveChangesAsync();
+            }
         }
 
         /// <summary>
@@ -511,75 +578,75 @@ new Claim("userId", user.UserId.ToString()),
         }
 
         /// <summary>
- /// Persist an individual login attempt record for audit purposes.
+        /// Persist an individual login attempt record for audit purposes.
         /// </summary>
         private async Task PersistLoginAttemptAsync(string email, int? userId, string? ipAddress, string? userAgent, bool success, string? reason)
- {
-     try
+        {
+            try
             {
-   var attempt = new UserLoginAttempt
-   {
-   Email = email,
-         UserId = userId,
- IpAddress = ipAddress,
-          UserAgent = userAgent?.Length > 1024 ? userAgent[..1024] : userAgent,
-         Success = success,
-         Reason = reason ?? (success ? "Success" : "Unknown"),
-         Timestamp = DateTime.UtcNow,
- AttemptCount = 0,
-  IsLocked = false,
-        CreatedAt = DateTime.UtcNow
-           };
-  _db.UserLoginAttempts.Add(attempt);
-   await _db.SaveChangesAsync();
-      }
-catch (Exception ex)
-         {
-        _logger.LogError(ex, "Failed to persist login attempt for {Email}", email);
-   }
- }
+                var attempt = new UserLoginAttempt
+                {
+                    Email = email,
+                    UserId = userId,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent?.Length > 1024 ? userAgent[..1024] : userAgent,
+                    Success = success,
+                    Reason = reason ?? (success ? "Success" : "Unknown"),
+                    Timestamp = DateTime.UtcNow,
+                    AttemptCount = 0,
+                    IsLocked = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.UserLoginAttempts.Add(attempt);
+                await _db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to persist login attempt for {Email}", email);
+            }
+        }
 
-      // ==========================================
+        // ==========================================
         // Change Password Endpoint
-     // ==========================================
+        // ==========================================
 
         /// <summary>
-      /// Change password for authenticated user (used for forced password change and voluntary change)
-    /// </summary>
-     [HttpPost("change-password")]
-     [Authorize]
-     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        /// Change password for authenticated user (used for forced password change and voluntary change)
+        /// </summary>
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
-    if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-  var userId = User.FindFirst("uid")?.Value;
-  if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId))
-   return Unauthorized();
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId))
+                return Unauthorized();
 
-      var user = await _db.Users.FindAsync(parsedUserId);
-   if (user == null) return NotFound(new { message = "User not found" });
+            var user = await _db.Users.FindAsync(parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
 
-  if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
-     return BadRequest(new { message = "Current password is incorrect" });
+            if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+                return BadRequest(new { message = "Current password is incorrect" });
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-      user.MustChangePassword = false;
-          user.LastPasswordChangeAt = DateTime.UtcNow;
-user.UpdatedAt = DateTime.UtcNow;
-   await _db.SaveChangesAsync();
+            user.MustChangePassword = false;
+            user.LastPasswordChangeAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
 
             await _activityLogger.LogAsync(user.UserId, user.CompanyId, "PasswordChanged",
        "User", user.UserId.ToString(), null, null,
        GetClientIpAddress(), HttpContext.Request.Headers["User-Agent"].FirstOrDefault(),
         user.Role.ToString(), "User");
 
-    _logger.LogInformation("Password changed for user {Email}", user.Email);
+            _logger.LogInformation("Password changed for user {Email}", user.Email);
             return Ok(new { message = "Password changed successfully" });
-    }
+        }
 
-      // ==========================================
+        // ==========================================
         // Password Reset Endpoints
-     // ==========================================
+        // ==========================================
 
         /// <summary>
         /// Request password reset - sends email with reset link
@@ -597,14 +664,14 @@ user.UpdatedAt = DateTime.UtcNow;
             if (string.IsNullOrEmpty(frontendUrl))
             {
                 var urls = _config.GetSection("AppSettings:FrontendUrls").Get<string[]?>();
-                if (urls != null && urls.Length >0)
+                if (urls != null && urls.Length > 0)
                 {
                     frontendUrl = urls[0];
                 }
             }
             frontendUrl ??= "https://localhost:7002";
             var tokenExpiryMinutes = _config.GetSection("Security").GetValue<int>("PasswordResetTokenExpiryMinutes");
-            if (tokenExpiryMinutes <=0) tokenExpiryMinutes = PasswordResetTokenExpiryMinutes;
+            if (tokenExpiryMinutes <= 0) tokenExpiryMinutes = PasswordResetTokenExpiryMinutes;
 
             var user = await _db.Users.SingleOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
             if (user != null)
@@ -859,7 +926,20 @@ user.UpdatedAt = DateTime.UtcNow;
 
                 await ClearLoginAttemptsAsync(normalizedEmail);
 
-                var token = GenerateJwtForUser(user);
+                // Check subscription status for TOTP login
+                string? subStatus = null;
+                if (user.CompanyId > 0 && user.Role != UserRole.SuperAdmin)
+                {
+                    try
+                    {
+                        await _subscriptionService.CheckAndUpdateSubscriptionStatusAsync(user.CompanyId);
+                        var sub = await _subscriptionService.GetCompanySubscriptionAsync(user.CompanyId);
+                        subStatus = sub?.Status;
+                    }
+                    catch (Exception ex) { _logger.LogWarning(ex, "Subscription check failed during TOTP login for company {CompanyId}", user.CompanyId); }
+                }
+
+                var token = GenerateJwtForUser(user, subStatus);
 
                 if (string.IsNullOrEmpty(token))
                 {
@@ -880,7 +960,7 @@ user.UpdatedAt = DateTime.UtcNow;
             }
 
             return Unauthorized(new { message = "Invalid credentials" });
-   }
+        }
 
         /// <summary>
         /// Get current user's company profile
@@ -910,75 +990,122 @@ user.UpdatedAt = DateTime.UtcNow;
                 ContactPhone = company.ContactPhone,
                 Tin = company.Tin,
                 LogoUrl = company.LogoUrl,
+                OwnerSignatureUrl = company.OwnerSignatureUrl,
                 PayrollCycle = settings != null ? (int?)settings.PayrollCycle : null,
                 WorkHoursPerDay = settings?.WorkHoursPerDay,
                 OvertimeRate = settings != null ? (decimal?)settings.OvertimeRate : null,
                 LateGraceMinutes = settings?.LateGraceMinutes,
                 HolidayRate = settings?.HolidayRate,
-                AbsentRate = settings?.AbsentRate,
-                // expose roles JSON so frontend can show/edit roles list
+                ScheduledTimeIn = settings?.ScheduledTimeIn?.ToString(@"hh\:mm"),
+                ScheduledTimeOut = settings?.ScheduledTimeOut?.ToString(@"hh\:mm"),
+                TimeInCutoffHours = settings?.TimeInCutoffHours,
+                VacationLeaveDays = settings?.VacationLeaveDays,
+                VacationLeaveResetType = settings?.VacationLeaveResetType,
                 RolesJson = settings?.RolesJson
             });
         }
 
         /// <summary>
- /// Update current user's company profile
- /// </summary>
- [HttpPut("company")]
- [Authorize(Roles = "SuperAdmin,Admin")]
- public async Task<IActionResult> UpdateCompanyProfile([FromBody] UpdateCompanyProfileDto dto)
- {
- if (!ModelState.IsValid) return BadRequest(ModelState);
+        /// Update current user's company profile
+        /// </summary>
+        [HttpPut("company")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> UpdateCompanyProfile([FromBody] UpdateCompanyProfileDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
- var userId = User.FindFirst("uid")?.Value;
- if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
 
- var user = await _db.Users.FindAsync(parsedUserId);
- if (user == null) return NotFound(new { message = "User not found" });
+            var user = await _db.Users.FindAsync(parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
 
- var company = await _db.Companies.FindAsync(user.CompanyId);
- if (company == null) return NotFound(new { message = "Company not found" });
+            var company = await _db.Companies.FindAsync(user.CompanyId);
+            if (company == null) return NotFound(new { message = "Company not found" });
 
- var oldValues = new { company.CompanyName, company.Address, company.ContactEmail, company.ContactPhone, company.Tin, company.LogoUrl };
+            var oldValues = new { company.CompanyName, company.Address, company.ContactEmail, company.ContactPhone, company.Tin, company.LogoUrl };
 
- company.CompanyName = dto.CompanyName;
- company.Address = dto.Address;
- company.ContactEmail = dto.ContactEmail;
- company.ContactPhone = dto.ContactPhone;
- company.Tin = dto.Tin;
- company.LogoUrl = dto.LogoUrl;
- company.UpdatedAt = DateTime.UtcNow;
+            company.CompanyName = dto.CompanyName;
+            company.Address = dto.Address;
+            company.ContactEmail = dto.ContactEmail;
+            company.ContactPhone = dto.ContactPhone;
+            company.Tin = dto.Tin;
+            company.LogoUrl = dto.LogoUrl;
+            company.OwnerSignatureUrl = dto.OwnerSignatureUrl;
+            
+            // Sync owner signature with the admin user
+            user.SignatureUrl = dto.OwnerSignatureUrl;
+            user.UpdatedAt = DateTime.UtcNow;
+            company.IsSetupComplete = true;
+            company.UpdatedAt = DateTime.UtcNow;
 
- // Update or create company settings
- var settings = await _db.CompanySettings.FindAsync(company.CompanyId);
- if (settings == null)
- {
- settings = new CompanySetting
- {
- CompanyId = company.CompanyId,
- CreatedAt = DateTime.UtcNow
- };
- _db.CompanySettings.Add(settings);
- }
+            // Update or create company settings
+            var settings = await _db.CompanySettings.FindAsync(company.CompanyId);
+            if (settings == null)
+            {
+                settings = new CompanySetting
+                {
+                    CompanyId = company.CompanyId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.CompanySettings.Add(settings);
+            }
 
- if (dto.PayrollCycle.HasValue) settings.PayrollCycle = (Enums.PayrollCycle)dto.PayrollCycle.Value;
- if (dto.WorkHoursPerDay.HasValue) settings.WorkHoursPerDay = dto.WorkHoursPerDay.Value;
- if (dto.OvertimeRate.HasValue) settings.OvertimeRate = dto.OvertimeRate.Value;
- if (dto.LateGraceMinutes.HasValue) settings.LateGraceMinutes = dto.LateGraceMinutes.Value;
- if (dto.HolidayRate.HasValue) settings.HolidayRate = dto.HolidayRate.Value;
- if (dto.AbsentRate.HasValue) settings.AbsentRate = dto.AbsentRate.Value;
+            if (dto.PayrollCycle.HasValue) settings.PayrollCycle = (Enums.PayrollCycle)dto.PayrollCycle.Value;
+            if (dto.WorkHoursPerDay.HasValue) settings.WorkHoursPerDay = dto.WorkHoursPerDay.Value;
+            if (dto.OvertimeRate.HasValue) settings.OvertimeRate = dto.OvertimeRate.Value;
+            if (dto.LateGraceMinutes.HasValue) settings.LateGraceMinutes = dto.LateGraceMinutes.Value;
+            if (dto.HolidayRate.HasValue) settings.HolidayRate = dto.HolidayRate.Value;
+            if (!string.IsNullOrEmpty(dto.ScheduledTimeIn) && TimeSpan.TryParse(dto.ScheduledTimeIn, out var timeIn)) settings.ScheduledTimeIn = timeIn;
+            if (!string.IsNullOrEmpty(dto.ScheduledTimeOut) && TimeSpan.TryParse(dto.ScheduledTimeOut, out var timeOut)) settings.ScheduledTimeOut = timeOut;
+            if (dto.TimeInCutoffHours.HasValue) settings.TimeInCutoffHours = dto.TimeInCutoffHours.Value;
+            if (dto.VacationLeaveDays.HasValue) settings.VacationLeaveDays = dto.VacationLeaveDays.Value;
+            if (dto.VacationLeaveResetType.HasValue) settings.VacationLeaveResetType = dto.VacationLeaveResetType.Value;
 
- // Roles JSON persisted on settings
- if (!string.IsNullOrWhiteSpace(dto.RolesJson)) settings.RolesJson = dto.RolesJson;
+            // Roles JSON persisted on settings
+            if (!string.IsNullOrWhiteSpace(dto.RolesJson)) settings.RolesJson = dto.RolesJson;
 
- settings.UpdatedAt = DateTime.UtcNow;
+            settings.UpdatedAt = DateTime.UtcNow;
 
- await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync();
 
- await _activityLogger.LogAsync(parsedUserId, company.CompanyId, "UpdateCompanyProfile", "Company", company.CompanyId.ToString(),
- System.Text.Json.JsonSerializer.Serialize(oldValues), System.Text.Json.JsonSerializer.Serialize(dto), GetClientIpAddress(), HttpContext.Request.Headers["User-Agent"].FirstOrDefault(), user.Role.ToString(), "Company");
+            await _activityLogger.LogAsync(parsedUserId, company.CompanyId, "UpdateCompanyProfile", "Company", company.CompanyId.ToString(),
+            System.Text.Json.JsonSerializer.Serialize(oldValues), System.Text.Json.JsonSerializer.Serialize(dto), GetClientIpAddress(), HttpContext.Request.Headers["User-Agent"].FirstOrDefault(), user.Role.ToString(), "Company");
 
- return Ok(new { message = "Company profile updated" });
+            return Ok(new { message = "Company profile updated" });
+        }
+
+        /// <summary>
+        /// Refresh the JWT for the currently authenticated user with fresh claims from the database.
+        /// Call this after any action that changes JWT-embedded data (e.g. company setup complete).
+        /// </summary>
+        [HttpPost("refresh-token")]
+        [Authorize]
+        public async Task<IActionResult> RefreshToken()
+        {
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId))
+                return Unauthorized();
+
+            var user = await _db.Users.Include(u => u.Company).FirstOrDefaultAsync(u => u.UserId == parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            string? subscriptionStatus = null;
+            if (user.CompanyId > 0 && user.Role != UserRole.SuperAdmin)
+            {
+                try
+                {
+                    await _subscriptionService.CheckAndUpdateSubscriptionStatusAsync(user.CompanyId);
+                    var sub = await _subscriptionService.GetCompanySubscriptionAsync(user.CompanyId);
+                    subscriptionStatus = sub?.Status;
+                }
+                catch (Exception ex) { _logger.LogWarning(ex, "Subscription check failed during token refresh for company {CompanyId}", user.CompanyId); }
+            }
+
+            var token = GenerateJwtForUser(user, subscriptionStatus);
+            if (string.IsNullOrEmpty(token)) return StatusCode(500, new { message = "Failed to generate token" });
+
+            return Ok(new { token });
         }
 
         [HttpPost("company/logo")]
@@ -998,10 +1125,57 @@ user.UpdatedAt = DateTime.UtcNow;
 
             if (url == null) return BadRequest(new { message = "Failed to upload logo" });
 
+            // Persist immediately so it is available even before UpdateCompanyProfile is called
+            var company = await _db.Companies.FindAsync(user.CompanyId);
+            if (company != null)
+            {
+                company.LogoUrl = url;
+                company.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+            }
+
             return Ok(new ProfileImageResponseDto
             {
                 Success = true,
                 Message = "Logo uploaded successfully",
+                ImageUrl = url
+            });
+        }
+
+        [HttpPost("company/signature")]
+        [Authorize(Roles = "SuperAdmin,Admin")]
+        public async Task<IActionResult> UploadOwnerSignature([FromForm] IFormFile file)
+        {
+            var userId = User.FindFirst("uid")?.Value;
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out var parsedUserId)) return Unauthorized();
+
+            var user = await _db.Users.FindAsync(parsedUserId);
+            if (user == null) return NotFound(new { message = "User not found" });
+
+            if (file == null || file.Length == 0) return BadRequest(new { message = "No file uploaded" });
+
+            using var stream = file.OpenReadStream();
+            var url = await _cloudinary.UploadSignatureAsync(stream, file.FileName, $"company_{user.CompanyId}");
+
+            if (url == null) return BadRequest(new { message = "Failed to upload signature" });
+
+            var company = await _db.Companies.FindAsync(user.CompanyId);
+            if (company != null)
+            {
+                company.OwnerSignatureUrl = url;
+                company.UpdatedAt = DateTime.UtcNow;
+                
+                // Keep the underlying User signature connected to the company owner signature
+                user.SignatureUrl = url;
+                user.UpdatedAt = DateTime.UtcNow;
+                
+                await _db.SaveChangesAsync();
+            }
+
+            return Ok(new ProfileImageResponseDto
+            {
+                Success = true,
+                Message = "Signature uploaded successfully",
                 ImageUrl = url
             });
         }

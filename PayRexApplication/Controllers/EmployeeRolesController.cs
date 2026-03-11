@@ -76,6 +76,10 @@ namespace PayRexApplication.Controllers
  var role = await _db.EmployeeRoles.FindAsync(id);
  if (role == null || role.CompanyId != userCompanyId) return NotFound();
 
+ // Prevent deletion of built-in roles (HR, Accountant)
+ if (role.IsBuiltIn)
+     return BadRequest(new { message = "Cannot delete built-in roles. You can edit their description and rate instead." });
+
  // mark inactive
  role.IsActive = false;
  role.UpdatedAt = DateTime.UtcNow;

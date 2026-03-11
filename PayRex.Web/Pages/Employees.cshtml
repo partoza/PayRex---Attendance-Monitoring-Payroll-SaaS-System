@@ -4,357 +4,987 @@
     ViewData["Title"] = "Employee Management";
 }
 
-<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-    <!-- Welcome Header (Dashboard Style) -->
-    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
+<style>
+    /* Range input styling */
+    input[type=range] {
+        height: 6px;
+        -webkit-appearance: none;
+        background: #e5e7eb;
+        border-radius: 9999px;
+    }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    /* Pagination active state */
+    .pagination-active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+</style>
+
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
+
+<!-- Confirm Deactivate Modal (Flowbite-style, responsive; backdrop matches `viewModal`) -->
+<div id="popup-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <!-- Backdrop (same as view modal) -->
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="hideConfirmModal()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[50%] max-w-md mx-auto">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-6 md:py-4">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+                    Confirm Inactivate
+                </h3>
+                <button type="button" onclick="hideConfirmModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-6 md:py-6">
+                <div class="text-center">
+                    <p class="mb-4 text-sm text-gray-700">
+                        Are you sure you want to inactivate
+                        <span class="font-semibold confirm-emp-name">Employee Name</span>?
+                    </p>
+
+                    <div class="flex justify-center gap-3">
+                        <button type="button" onclick="hideConfirmModal()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300">
+                            No, Cancel
+                        </button>
+
+                        <button id="confirmDeactivateBtn" type="button" onclick="confirmDeactivate()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-300">
+                            Yes, I'm sure
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-xl sm:rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
         <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
-        <div class="px-6 py-8 sm:px-10 relative z-10">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="px-4 py-5 sm:px-8 sm:py-8 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Employee Management</h1>
-                    <p class="mt-2 text-gray-600">Manage employee details, compensation rates, and employment status</p>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">Employee Management</h1>
+                    <p class="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Manage employee details, compensation rates, and employment status</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-blue-100 text-blue-700">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <span class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-blue-100 text-blue-700">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                         </svg>
-                        @Model.Employees.Count Total Employees
+                        <span class="hidden sm:inline">Total: </span>
+                        <span id="totalEmployeesCount">@Model.Employees.Count</span>
+                        <span class="ml-1">Employees</span>
                     </span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters Card -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 class="text-base font-semibold text-gray-900 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+    <!-- Filters Card - Mobile: col-12, Desktop: row -->
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-sm sm:text-base font-semibold text-gray-900 flex items-center">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
                 </svg>
                 Filters & Search
             </h2>
         </div>
-        <div class="p-4 sm:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Search -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Search</label>
+        <div class="p-4 sm:p-5 lg:p-6">
+            @{
+                var minRate = Model.Roles != null && Model.Roles.Any() ? Model.Roles.Min(r => r.BasicRate) : (Model.Employees.Any() ? Model.Employees.Min(e => e.BasicRate) : 0m);
+                var maxRate = Model.Roles != null && Model.Roles.Any() ? Model.Roles.Max(r => r.BasicRate) : (Model.Employees.Any() ? Model.Employees.Max(e => e.BasicRate) : 10000m);
+            }
+
+            <!-- Mobile: Stacked (col-12), Tablet/Desktop: Row -->
+            <div class="flex flex-col space-y-3 sm:space-y-4 md:space-y-0 md:flex-row md:items-end md:gap-3">
+                <!-- Search - Full width on mobile -->
+                <div class="w-full lg:flex-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Search</label>
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
                         </div>
                         <input type="text" id="searchInput" onkeyup="filterTable()"
-                               class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                               class="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                placeholder="Search employees...">
                     </div>
                 </div>
-                <!-- Position Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Position</label>
-                    <select id="positionFilter" onchange="filterTable()" 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+
+                <!-- Position Filter - Full width on mobile -->
+                <div class="w-full md:w-48 xl:w-60">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Position</label>
+                    <select id="positionFilter" onchange="filterTable()"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
                         <option value="">All Positions</option>
-                        @foreach(var pos in Model.Employees.Select(e => e.Position).Where(p => !string.IsNullOrWhiteSpace(p)).Distinct().OrderBy(p => p))
+                        @foreach (var r in Model.Roles ?? Enumerable.Empty<dynamic>())
                         {
-                            <option value="@pos">@pos</option>
+                            <option value="@r.RoleName">@r.RoleName</option>
                         }
                     </select>
                 </div>
-                <!-- Status Filter -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                    <select id="statusFilter" onchange="filterTable()" 
-                            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
-                        <option value="">All Statuses</option>
-                        @foreach(var st in Model.Employees.Select(e => e.EmploymentStatus).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().OrderBy(s => s))
-                        {
-                            <option value="@st">@st</option>
-                        }
-                    </select>
+
+                <!-- Salary Range - Full width on mobile -->
+                <div class="w-full lg:flex-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Salary Range (₱)</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 sm:gap-3">
+                            <input id="salaryMinRange" type="range" min="@minRate" max="@maxRate" step="0.01" value="@minRate" oninput="syncSalaryRange(); filterTable();" class="w-full" />
+                            <input id="salaryMaxRange" type="range" min="@minRate" max="@maxRate" step="0.01" value="@maxRate" oninput="syncSalaryRange(); filterTable();" class="w-full" />
+                        </div>
+                        <div class="flex justify-between text-xs sm:text-sm text-gray-700 font-medium">
+                            <span>Min: ₱<span id="salaryMinDisplay">@minRate.ToString("N0")</span></span>
+                            <span>Max: ₱<span id="salaryMaxDisplay">@maxRate.ToString("N0")</span></span>
+                        </div>
+                    </div>
                 </div>
-                <!-- Add Employee Button (moved here) -->
-                <div class="flex items-end">
-                    <a href="/AddEmployee" class="w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm border border-transparent">
-                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+
+                <!-- Clear Button - Full width on mobile -->
+                <div class="w-full md:w-auto">
+                    <label class="block text-xs sm:text-sm font-medium text-transparent mb-1 hidden md:block">.</label>
+                    <button onclick="clearFilters()" class="w-full lg:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-colors border border-gray-200">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
-                        Add Employee
-                    </a>
+                        Clear Filters
+                    </button>
                 </div>
-            </div>
-            <div class="flex items-center gap-3 mt-4">
-                <button onclick="clearFilters()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors border border-gray-200">
-                    <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Clear Filters
-                </button>
             </div>
         </div>
     </div>
 
     <!-- Employee List Card -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <div class="flex items-center justify-between">
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h2 class="text-base font-semibold text-gray-900">All Employees</h2>
-                    <p class="text-sm text-gray-500 mt-0.5">Showing @Model.Employees.Count employees</p>
+                    <h2 class="text-sm sm:text-base font-semibold text-gray-900">All Employees</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-0.5">List of all active employees</p>
+                </div>
+
+                <!-- Mobile: Stacked (col-12), Tablet/Desktop: single-row -->
+                <div class="flex flex-col md:flex-row md:items-center md:gap-3 gap-2">
+                    <!-- Left group: Export and Add buttons - full width on mobile, inline on md+ -->
+                    <div class="flex flex-row items-center gap-2 w-full md:w-auto">
+                        <form method="post" asp-page-handler="ExportPdf" id="exportForm" class="flex-1 md:flex-none">
+                            <input type="hidden" name="search" id="exportSearch" />
+                            <input type="hidden" name="position" id="exportPosition" />
+                            <input type="hidden" name="salaryMin" id="exportSalaryMin" />
+                            <input type="hidden" name="salaryMax" id="exportSalaryMax" />
+                            <input type="hidden" name="includeSalary" id="exportIncludeSalary" value="false" />
+                            <input type="hidden" name="includeGovIds" id="exportIncludeGovIds" value="false" />
+                            <button type="button" class="w-full md:w-auto inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-colors border border-gray-200" onclick="showExportModal()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5">
+  <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+  <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+</svg>
+                            <span>
+    <span class="hidden sm:inline">Export </span>PDF
+</span>
+                            </button>
+                        </form>
+
+                        <a href="#" onclick="clearFilters(); window.location.href='/AddEmployee'; return false;" class="flex-1 md:flex-none inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-700 transition-colors border border-transparent md:ml-0">
+                            
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5">
+  <path d="M5.25 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM2.25 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM18.75 7.5a.75.75 0 0 0-1.5 0v2.25H15a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H21a.75.75 0 0 0 0-1.5h-2.25V7.5Z" />
+</svg>
+
+<span>
+    <span class="hidden sm:inline">Add </span>Employee
+</span>                        </a>
+                    </div>
+
+                    <!-- Page size dropdown - placed inline on md+ -->
+                    <div class="w-full md:w-auto md:ml-auto">
+                        <select id="pageSizeSelect" class="w-full md:w-auto px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                            <option value="5">5 per page</option>
+                            <option value="10" selected>10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <!-- Desktop/Tablet Table View (hidden on mobile) -->
+        <div class="hidden sm:block overflow-x-auto">
             <table class="w-full" id="employeeTable">
                 <thead class="bg-gray-50/80">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Position & Dept</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Salary Rate</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pay Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role/Position</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Salary Rate</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pay Type</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    @foreach (var emp in Model.Employees)
+                <tbody class="divide-y divide-gray-100" id="employeesBody">
+                    @if (!Model.Employees.Any())
                     {
-                        <tr class="hover:bg-gray-50/50 transition-colors">
-                            <!-- Employee -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-3 shadow-sm">
-                                        <span class="text-xs font-bold text-white">@emp.Name.Substring(0, 1)</span>
+                        <tr>
+                            <td colspan="6" class="px-4 sm:px-6 py-8 sm:py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
                                     </div>
-                                    <div>
-                                        <div class="text-sm font-semibold text-gray-900 search-name">@emp.Name</div>
-                                        <div class="text-xs text-gray-500">ID: @emp.Id</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <!-- Position & Dept -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 search-position">@emp.Position</div>
-                                <div class="text-xs text-gray-500">@emp.Department</div>
-                            </td>
-                            <!-- Salary Rate -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-semibold text-gray-900">₱@emp.BasicRate.ToString("N2")</span>
-                            </td>
-                            <!-- Pay Type -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-semibold text-gray-900">@emp.PayType</span>
-                            </td>
-                            <!-- Status -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @{
-                                    var statusClass = emp.EmploymentStatus == "Active" ? "text-green-700" : (emp.EmploymentStatus == "Resigned" || emp.EmploymentStatus == "Terminated" ? "text-red-700" : "text-yellow-700");
-                                }
-                                <span class="text-sm font-semibold @statusClass search-status">@emp.EmploymentStatus</span>
-                            </td>
-                            <!-- Actions -->
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button onclick="openModal(@emp.EmployeeNumber)" 
-                                            class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                            title="View Details">
-                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                    <div class="flex items-center gap-2">
-                                        <button onclick="openModal(@emp.EmployeeNumber)" class="text-blue-600 hover:text-blue-800 text-sm">View</button>
-                                        <a href="/EditEmployee?employeeNumber=@emp.EmployeeNumber" class="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
-                                        @{
-                                            var isActive = (emp.EmploymentStatus == "Active");
-                                        }
-                                        @if (isActive)
-                                        {
-                                            <button onclick="deactivateEmployee(@emp.EmployeeNumber)" class="text-red-700 bg-red-50/60 px-2 py-1 rounded text-sm">Inactive</button>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-red-700 bg-red-50/40 px-2 py-1 rounded text-sm opacity-70 cursor-not-allowed">Inactive</span>
-                                        }
-                                    </div>
+                                    <p class="text-sm sm:text-base text-gray-500 font-medium">No employees found</p>
+                                    <p class="text-xs sm:text-sm text-gray-400 mt-1">Try adjusting your filters</p>
                                 </div>
                             </td>
                         </tr>
                     }
+                    else
+                    {
+                        @foreach (var emp in Model.Employees.OrderByDescending(e => e.EmployeeNumber))
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors data-row"
+                                data-name="@((emp.Name ?? string.Empty).Replace('"', ' '))"
+                                data-position="@((emp.Position ?? string.Empty).Replace('"', ' '))"
+                                data-rate="@emp.BasicRate"
+                                data-status="@emp.EmploymentStatus"
+                                data-profile-image="@(emp.ProfileImageUrl ?? "")"
+                                data-signature-url="@(emp.SignatureUrl ?? "")">
+                                <!-- Employee -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex items-center justify-center mr-2 sm:mr-3 shadow-sm flex-shrink-0">
+                                            @if (!string.IsNullOrEmpty(emp.ProfileImageUrl))
+                                            {
+                                                <img src="@emp.ProfileImageUrl" alt="Profile" class="w-8 h-8 sm:w-9 sm:h-9 object-cover rounded-full" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                                    <span class="text-xs font-bold text-white">@emp.Name.Substring(0, 1)</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="text-xs sm:text-sm font-semibold text-gray-900 search-name">@emp.Name</div>
+                                            <div class="text-xs text-gray-500">ID: @emp.Id</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Role/Position -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <div class="text-xs sm:text-sm font-medium text-gray-900 search-position">@emp.Position</div>
+                                </td>
+                                <!-- Salary Rate -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <span class="text-xs sm:text-sm font-medium text-gray-900 text-right block"
+                                            data-rate="@emp.BasicRate">
+                                        ₱@emp.BasicRate.ToString("N2")
+                                        </span>
+                                </td>
+                                <!-- Pay Type -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <span class="text-xs sm:text-sm font-medium text-gray-900">@emp.PayType</span>
+                                </td>
+                                <!-- Status -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    @{
+                                        var statusClass = emp.EmploymentStatus == "Active" ? "text-green-700" : (emp.EmploymentStatus == "Inactive" || emp.EmploymentStatus == "Resigned" || emp.EmploymentStatus == "Terminated" ? "text-red-700" : "text-yellow-700");
+                                    }
+                                    <span class="text-xs sm:text-sm font-semibold @statusClass search-status">@emp.EmploymentStatus</span>
+                                </td>
+                                <!-- Actions -->
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button onclick="openModal(@emp.EmployeeNumber)" 
+                                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            View
+                                        </button>
+
+                                        <a href="/EditEmployee?employeeNumber=@emp.EmployeeNumber" 
+                                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            Edit
+                                        </a>
+
+                                        @{
+                                            var isActive = (emp.EmploymentStatus == "Active");
+                                        }
+
+                                        @if (isActive)
+                                        {
+                                            <button data-name="@emp.Name" 
+                                                    onclick="deactivateEmployee(this, @emp.EmployeeNumber)" 
+                                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                Inactive
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                                Inactive
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
+        </div>
+
+        <!-- Mobile Card View (visible only on mobile) -->
+        <div class="block sm:hidden" id="employeesMobileContainer">
+            <!-- Cards will be populated here via JavaScript -->
+        </div>
+
+        <!-- Pagination (same for all views) -->
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/50" id="employeesPaginationContainer">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-gray-600" id="employeesPaginationInfo">Showing 0 to 0 of 0 employees</div>
+                <nav class="flex items-center gap-1 flex-wrap justify-center" id="employeesPaginationNav"></nav>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Employee Details Modal (Updated styling) -->
+<!-- Employee Details Modal - Fully Responsive -->
 <div id="viewModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div class="bg-gradient-to-r from-blue-50 to-white px-6 py-4 border-b border-gray-100">
-                <h3 class="text-lg font-bold text-gray-900" id="modal-title">Employee Details</h3>
-            </div>
-            <div class="bg-white px-6 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="space-y-5">
-                    <!-- Employee header with avatar -->
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-                            <span class="text-lg font-bold text-white" id="modalInitials">EM</span>
+    <!-- Backdrop with blur -->
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+
+    <!-- Modal container -->
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+            <!-- Modal content - fully responsive -->
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] 2xl:w-[50%] max-w-7xl mx-auto">
+
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-gray-900" id="modal-title">
+                        Employee Details
+                    </h3>
+                    <button onclick="closeModal()" class="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6 max-h-[70vh] overflow-y-auto">
+                    <div class="space-y-5 sm:space-y-6">
+
+                        <!-- Employee header -->
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 border-b border-gray-100 pb-4 sm:pb-6">
+                                <div class="relative flex-shrink-0">
+                                    <div class="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 overflow-hidden rounded-full shadow-lg ring-4 ring-white">
+                                        <img id="modalProfileImage" class="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 object-cover" alt="Profile" />
+                                    </div>
+                                </div>
+                            <div class="text-center sm:text-left flex-1">
+                                <h4 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900" id="modalName">Employee Name</h4>
+                                <div class="mt-2 flex flex-wrap justify-center sm:justify-start items-center gap-2">
+                                    <span class="rounded-full bg-blue-100 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-blue-800" id="modalPosition">Position</span>
+                                    <span class="rounded-full bg-gray-100 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-green-600" id="modalStatus">Regular</span>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Personal Information -->
                         <div>
-                            <h4 class="text-lg font-bold text-gray-900" id="modalName">Name</h4>
-                            <p class="text-sm text-gray-500" id="modalPosition">Position</p>
-                        </div>
-                    </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Email</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalEmail">name@company.com</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Contact</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalContact">+63 9XX XXX XXXX</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Civil Status</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalCivil">Single</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Age</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalAge">30</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Start Date</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalStart">2024-01-01</p>
-                            </div>
-                            <div class="bg-gray-50 rounded-xl p-3">
-                                <p class="text-xs text-gray-500 mb-1">Salary Rate Status</p>
-                                <p class="text-sm font-semibold text-gray-900" id="modalSalaryStatus">₱0.00 / Monthly</p>
-                            </div>
-                        </div>
+                            <h5 class="mb-3 text-xs sm:text-sm font-medium uppercase tracking-wider text-gray-500">Personal Information</h5>
+                            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Email</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-900 break-words" id="modalEmail">name@company.com</p>
+                                </div>
 
-                    <!-- Details grid -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-gray-50 rounded-xl p-3">
-                            <p class="text-xs text-gray-500 mb-1">Employment</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modalStatus">Regular</p>
-                        </div>
-                        <div class="bg-gray-50 rounded-xl p-3">
-                            <p class="text-xs text-gray-500 mb-1">Department</p>
-                            <p class="text-sm font-semibold text-gray-900" id="modalDept">Engineering</p>
-                        </div>
-                    </div>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Contact</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-900" id="modalContact">+63 9XX XXX XXXX</p>
+                                </div>
 
-                    <!-- Compensation card -->
-                    <div class="bg-blue-50 rounded-xl p-4">
-                        <p class="text-xs text-blue-600 font-medium mb-1">Basic Rate</p>
-                        <div class="flex items-center justify-between">
-                            <p class="text-2xl font-bold text-blue-900" id="modalRate">₱0.00</p>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-white text-blue-700 border border-blue-100" id="modalPayType">
-                                Monthly
-                            </span>
-                                <div class="mt-3 grid grid-cols-2 gap-2">
-                                    <div class="bg-white rounded-xl p-2">
-                                        <p class="text-xs text-gray-500">TIN</p>
-                                        <p class="text-sm font-medium" id="modalTIN">-</p>
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Civil Status</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-900" id="modalCivil">Single</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Age</p>
+                                    <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+                                        <p class="text-xs sm:text-sm font-medium text-gray-900" id="modalAge">30</p>
+                                        <span id="modalRetirementBadgeAge" class="hidden rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Retirement</span>
                                     </div>
-                                    <div class="bg-white rounded-xl p-2">
-                                        <p class="text-xs text-gray-500">SSS</p>
-                                        <p class="text-sm font-medium" id="modalSSS">-</p>
-                                    </div>
-                                    <div class="bg-white rounded-xl p-2">
-                                        <p class="text-xs text-gray-500">PhilHealth</p>
-                                        <p class="text-sm font-medium" id="modalPhil">-</p>
-                                    </div>
-                                    <div class="bg-white rounded-xl p-2">
-                                        <p class="text-xs text-gray-500">Pag-IBIG</p>
-                                        <p class="text-sm font-medium" id="modalPag">-</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Start Date</p>
+                                    <p class="text-xs sm:text-sm font-medium text-gray-900" id="modalStart">2024-01-01</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                                    <p class="text-xs text-gray-500 mb-1">Salary</p>
+                                    <div class="flex flex-col gap-1">
+                                        <p class="text-xs sm:text-sm font-medium text-gray-900" id="modalSalaryStatus">₱0.00</p>
+                                        <span id="modalRetirementBadgeSalary" class="hidden rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 w-fit">SSS stop</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Government IDs -->
+                        <div>
+                            <h5 class="mb-3 text-xs sm:text-sm font-medium uppercase tracking-wider text-gray-500">Government IDs</h5>
+                            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                                <!-- TIN -->
+                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 sm:p-3 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                                            <img 
+                                                src="https://formsphilippines.com/agencylogo/2.png" 
+                                                alt="TIN Logo" 
+                                                class="w-full h-full object-contain"/>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs font-semibold text-gray-700">TIN</p>
+                                            <p class="text-xs sm:text-sm font-bold text-gray-900 truncate" id="modalTIN">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- SSS -->
+                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 sm:p-3 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                                            <img 
+                                                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAoPJxb0I15kEEIf1ZMGEUHImH9E_5rckS40BUxEwyB5SlzI-d9zJXm4w0Fey4rggOlhQiijSXwjLWkIGfoXkuMvWbUNTuo0REBoMA2IzcOGZcxJgYBvqZtG3Cd7o-mtbFbLAYFQhq80Ugp72rIBEQFFDwd28HsmO5a_kILIYmbl4l8LFFBdK4U8PE/s1280/Social_Security_System_(SSS).svg.png" 
+                                                alt="TIN Logo" 
+                                                class="w-full h-full object-contain"/>
+                                            </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs font-semibold text-gray-700">SSS</p>
+                                            <p class="text-xs sm:text-sm font-bold text-gray-900 truncate" id="modalSSS">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PhilHealth -->
+                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 sm:p-3 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                                             <img 
+                                                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbJiXsPX6y6fLA9TFLh6aREMYVZK1yDmazDQ&s" 
+                                                alt="PhilHealth Logo" 
+                                                class="w-full h-full object-contain"/>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs font-semibold text-gray-700">PhilHealth</p>
+                                            <p class="text-xs sm:text-sm font-bold text-gray-900 truncate" id="modalPhil">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Pag-IBIG -->
+                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-2 sm:p-3 hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center gap-2 sm:gap-3">
+                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-lg flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm flex-shrink-0">
+                                            <img 
+                                                src="https://www.bworldonline.com/wp-content/uploads/2022/04/Pag-IBIG-logo-hi-res.png" 
+                                                alt="TIN Logo" 
+                                                class="w-full h-full object-contain"/>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-xs font-semibold text-gray-700">Pag-IBIG</p>
+                                            <p class="text-xs sm:text-sm font-bold text-gray-900 truncate" id="modalPag">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+                    <div class="flex justify-end">
+                        <button type="button" class="inline-flex justify-center rounded-lg bg-blue-600 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-colors w-full sm:w-auto" onclick="closeModal()">
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse">
-                <button type="button" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeModal()">
-                    Close
-                </button>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options Modal -->
+<div id="exportModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="hideExportModal()"></div>
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[40%] max-w-lg mx-auto">
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900">Export Options</h3>
+                    <button type="button" onclick="hideExportModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                <div class="px-4 py-4 sm:px-6 sm:py-5">
+                    <p class="text-sm text-gray-600 mb-4">Select the details you want to include in the Employee Records PDF.</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="chkIncludeSalary" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900">Include Salary Information</span>
+                                <span class="block text-xs text-gray-500">Adds Salary Rate and Pay Type to the report</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                            <input type="checkbox" id="chkIncludeGovIds" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900">Include Government IDs</span>
+                                <span class="block text-xs text-gray-500">Adds TIN, SSS, PhilHealth, and Pag-IBIG columns</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                    <button type="button" onclick="hideExportModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">Cancel</button>
+                    <button type="button" onclick="executeExport()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Download PDF
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Keep your exact existing filter function
+    // Global variables for pagination
+    let currentPage = 1;
+    let pageSize = 10;
+    let filteredData = [];
+    let allEmployees = [];
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set page size from selector
+        const ps = document.getElementById('pageSizeSelect');
+        if (ps) {
+            pageSize = parseInt(ps.value) || 10;
+            ps.addEventListener('change', function() {
+                pageSize = parseInt(this.value) || 10;
+                currentPage = 1;
+                filterTable();
+            });
+        }
+
+        // Collect all employee data for mobile view
+        collectEmployeeData();
+
+        // Initialize filters
+        syncSalaryRange();
+        filterTable();
+    });
+
+    // Collect employee data from the table for mobile view
+    function collectEmployeeData() {
+        const tableRows = document.querySelectorAll('#employeeTable tbody tr.data-row');
+        allEmployees = [];
+
+        tableRows.forEach(row => {
+            if (row.querySelector('td[colspan]')) return; // Skip empty state row
+
+            const nameEl = row.querySelector('.search-name');
+            const positionEl = row.querySelector('.search-position');
+            const statusEl = row.querySelector('.search-status');
+            const rateEl = row.querySelector('[data-rate]');
+            // Use data attribute — NOT querySelector('img').src which picked up gov agency logos
+            const profileImg = row.dataset.profileImage || null;
+            const signatureUrl = row.dataset.signatureUrl || null;
+            const employeeId = row.querySelector('.text-gray-500') ? row.querySelector('.text-gray-500').textContent.replace('ID: ', '') : '';
+
+            allEmployees.push({
+                name: nameEl ? nameEl.textContent : '',
+                position: positionEl ? positionEl.textContent : '',
+                status: statusEl ? statusEl.textContent : '',
+                rate: rateEl ? parseFloat(rateEl.getAttribute('data-rate')) || 0 : 0,
+                profileImage: profileImg,
+                signatureUrl: signatureUrl,
+                employeeNumber: row.querySelector('[onclick^="openModal"]') ?
+                    parseInt(row.querySelector('[onclick^="openModal"]').getAttribute('onclick').match(/\d+/)[0]) : 0,
+                id: employeeId,
+                payType: row.cells[3] ? row.cells[3].textContent.trim() : '',
+                viewAction: row.querySelector('[onclick^="openModal"]') ?
+                    row.querySelector('[onclick^="openModal"]').getAttribute('onclick') : '',
+                editLink: row.querySelector('a[href^="/EditEmployee"]') ?
+                    row.querySelector('a[href^="/EditEmployee"]').getAttribute('href') : '',
+                deactivateAction: row.querySelector('[onclick^="deactivateEmployee"]') ?
+                    row.querySelector('[onclick^="deactivateEmployee"]').getAttribute('onclick') : '',
+                deactivateName: row.querySelector('[data-name]') ?
+                    row.querySelector('[data-name]').getAttribute('data-name') : ''
+            });
+        });
+    }
+
+    // Filter table function
     function filterTable() {
         var input = document.getElementById("searchInput");
-        var filter = input.value.toUpperCase();
-        var positionFilter = document.getElementById("positionFilter").value.toUpperCase();
-        var statusFilter = document.getElementById("statusFilter").value.toUpperCase();
+        var filter = input ? input.value.toUpperCase() : '';
+        var positionFilter = document.getElementById("positionFilter") ? document.getElementById("positionFilter").value.toUpperCase() : '';
+        var salaryMinEl = document.getElementById('salaryMinRange');
+        var salaryMaxEl = document.getElementById('salaryMaxRange');
+        var salaryMinVal = salaryMinEl ? parseFloat(salaryMinEl.value) : NaN;
+        var salaryMaxVal = salaryMaxEl ? parseFloat(salaryMaxEl.value) : NaN;
+
+        // Handle desktop table rows
         var table = document.getElementById("employeeTable");
-        var tr = table.getElementsByTagName("tr");
+        if (table) {
+            var tr = table.getElementsByTagName("tr");
+            for (var i = 1; i < tr.length; i++) {
+                // Skip empty state row
+                if (tr[i].querySelector('td[colspan]')) continue;
 
-        for (var i = 1; i < tr.length; i++) {
-            var nameTd = tr[i].querySelector(".search-name");
-            var posTd = tr[i].querySelector(".search-position");
-            var statusTd = tr[i].querySelector(".search-status");
+                var nameTd = tr[i].querySelector(".search-name");
+                var posTd = tr[i].querySelector(".search-position");
 
-            if (nameTd && posTd && statusTd) {
-                var nameText = nameTd.textContent || nameTd.innerText;
-                var posText = posTd.textContent || posTd.innerText;
-                var statusText = statusTd.textContent || statusTd.innerText;
+                var nameText = nameTd ? (nameTd.textContent || nameTd.innerText) : '';
+                var posText = posTd ? (posTd.textContent || posTd.innerText) : '';
 
-                var matchesSearch = nameText.toUpperCase().indexOf(filter) > -1;
-                var matchesPos = positionFilter === "" || posText.toUpperCase().indexOf(positionFilter) > -1;
-                var matchesStatus = statusFilter === "" || statusText.toUpperCase().indexOf(statusFilter) > -1;
+                var matchesSearch = filter === '' || nameText.toUpperCase().indexOf(filter) > -1;
+                var matchesPos = positionFilter === '' || posText.toUpperCase().indexOf(positionFilter) > -1;
 
-                if (matchesSearch && matchesPos && matchesStatus) {
-                    tr[i].style.display = "";
+                var rateEl = tr[i].querySelector('[data-rate]');
+                var rate = rateEl ? parseFloat(rateEl.getAttribute('data-rate')) || 0 : 0;
+                var matchesSalary = (isNaN(salaryMinVal) || rate >= salaryMinVal) && (isNaN(salaryMaxVal) || rate <= salaryMaxVal);
+
+                if (matchesSearch && matchesPos && matchesSalary) {
+                    tr[i].style.display = '';
+                    tr[i].dataset.match = '1';
                 } else {
-                    tr[i].style.display = "none";
+                    tr[i].style.display = 'none';
+                    tr[i].dataset.match = '0';
                 }
             }
         }
+
+        // Filter mobile data
+        filteredData = allEmployees.filter(emp => {
+            var matchesSearch = filter === '' || emp.name.toUpperCase().indexOf(filter) > -1;
+            var matchesPos = positionFilter === '' || emp.position.toUpperCase().indexOf(positionFilter) > -1;
+            var matchesSalary = (isNaN(salaryMinVal) || emp.rate >= salaryMinVal) && (isNaN(salaryMaxVal) || emp.rate <= salaryMaxVal);
+            return matchesSearch && matchesPos && matchesSalary;
+        });
+
+        // Update mobile view and ensure correct pagination is applied for current viewport
+        renderMobileView();
+        // call updateView so desktop pagination (applyDesktopPagination) runs when needed
+        updateView();
+    }
+
+    // Render mobile card view
+    function renderMobileView() {
+        const container = document.getElementById('employeesMobileContainer');
+        if (!container) return;
+
+        if (filteredData.length === 0) {
+            container.innerHTML = `
+                <div class="p-6 text-center">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>
+                        </div>
+                        <p class="text-sm text-gray-500 font-medium">No employees found</p>
+                        <p class="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const start = (currentPage - 1) * pageSize;
+        const end = Math.min(start + pageSize, filteredData.length);
+        const pageData = filteredData.slice(start, end);
+
+        let html = '<div class="divide-y divide-gray-100">';
+
+        pageData.forEach(emp => {
+            const statusClass = emp.status === 'Active' ? 'text-green-700' : (emp.status === 'Inactive' ? 'text-red-700' : 'text-yellow-700');
+            const initials = emp.name.substring(0, 1).toUpperCase();
+
+            html += `
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <!-- Employee header with image and name (status moved below) -->
+                    <div class="flex items-center mb-3">
+                        <div class="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center mr-3 shadow-sm flex-shrink-0">
+                            ${emp.profileImage ?
+                                `<img src="${emp.profileImage}" alt="Profile" class="w-10 h-10 object-cover rounded-full" />` :
+                                `<div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                    <span class="text-sm font-bold text-white">${initials}</span>
+                                </div>`
+                            }
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-gray-900 search-name">${emp.name}</div>
+                            <div class="text-xs text-gray-500">ID: ${emp.id}</div>
+                        </div>
+                    </div>
+
+                    <!-- Employee details grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+                        <div>
+                            <span class="text-gray-500">Position:</span>
+                            <span class="font-medium text-gray-900 block search-position">${emp.position}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Pay Type:</span>
+                            <span class="font-medium text-gray-900 block">${emp.payType}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Salary:</span>
+                            <span class="font-medium text-gray-900 block" data-rate="${emp.rate}">₱${emp.rate.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Status:</span>
+                            <span class="font-semibold ${statusClass} block mt-1 search-status">${emp.status}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex items-center gap-2 border-t border-gray-100 pt-3">
+                        <button onclick="openModal(${emp.employeeNumber})" class="flex-1 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">View</button>
+                        <a href="${emp.editLink}" class="flex-1 py-2 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center">Edit</a>
+                        ${emp.status === 'Active' ?
+                            `<button data-name="${emp.deactivateName}" onclick="deactivateEmployee(this, ${emp.employeeNumber})" class="flex-1 py-2 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">Inactive</button>` :
+                            `<span class="flex-1 py-2 text-xs font-medium text-gray-400 bg-gray-50 rounded-lg text-center cursor-not-allowed">Inactive</span>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // Update pagination for both views
+    function updatePagination() {
+        // Use filteredData length as the authoritative total count for pagination
+        // This ensures desktop/tablet pagination matches mobile behavior
+        const totalCount = filteredData.length;
+
+        const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const start = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+        const end = Math.min(currentPage * pageSize, totalCount);
+
+        // Update pagination info
+        const infoEl = document.getElementById('employeesPaginationInfo');
+        if (infoEl) {
+            infoEl.textContent = `Showing ${start} to ${end} of ${totalCount} employees`;
+        }
+
+        // Update total count in header
+        const totalEl = document.getElementById('totalEmployeesCount');
+        if (totalEl) {
+            totalEl.textContent = totalCount;
+        }
+
+        // Render pagination buttons
+        renderPaginationButtons(totalPages);
+    }
+
+    // Render pagination buttons
+    function renderPaginationButtons(totalPages) {
+        const nav = document.getElementById('employeesPaginationNav');
+        if (!nav) return;
+
+        nav.innerHTML = '';
+
+        if (totalPages <= 1) return;
+
+        const btn = (label, page, active = false, disabled = false) => {
+            const b = document.createElement('button');
+            b.innerHTML = label;
+            b.className = `px-3 py-1.5 text-sm font-medium border rounded-lg transition-all ${
+                active    ? 'bg-blue-600 text-white border-blue-600' :
+                disabled  ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200' :
+                            'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`;
+            if (!disabled && !active) b.onclick = () => { 
+                currentPage = page; 
+                updateView(); 
+            };
+            return b;
+        };
+
+        // Previous button
+        nav.appendChild(btn('‹', currentPage - 1, false, currentPage === 1));
+
+        // Page numbers
+        function getPageNumbers(c, t) {
+            if (t <= 5) return Array.from({length: t}, (_,i) => i+1);
+            if (c <= 3) return [1,2,3,4,'...',t];
+            if (c >= t - 2) return [1,'...',t-3,t-2,t-1,t];
+            return [1,'...',c-1,c,c+1,'...',t];
+        }
+
+        getPageNumbers(currentPage, totalPages).forEach(p => {
+            if (p === '...') {
+                const dots = document.createElement('span');
+                dots.className = 'px-2 py-1.5 text-gray-400 text-sm';
+                dots.textContent = '…';
+                nav.appendChild(dots);
+            } else {
+                nav.appendChild(btn(p, p, p === currentPage));
+            }
+        });
+
+        // Next button
+        nav.appendChild(btn('›', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    // Update view based on current page
+    function updateView() {
+        if (window.innerWidth < 640) {
+            renderMobileView();
+        } else {
+            // For desktop, just ensure correct rows are visible
+            applyDesktopPagination();
+        }
+        updatePagination();
+    }
+
+    // Apply pagination to desktop view
+    function applyDesktopPagination() {
+        const table = document.getElementById('employeeTable');
+        if (!table) return;
+
+        // Select rows that are part of the dataset and currently match filters
+        const rows = Array.from(table.querySelectorAll('tbody tr')).filter(tr =>
+            !tr.querySelector('td[colspan]') && tr.dataset && tr.dataset.match === '1'
+        );
+
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        // Hide all rows first
+        rows.forEach(row => row.style.display = 'none');
+
+        // Show only current page
+        for (let i = start; i < end && i < rows.length; i++) {
+            rows[i].style.display = '';
+        }
+    }
+
+    // Helper function to get page numbers for pagination
+    function getPageNumbers(current, total) {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+        const pages = [];
+        if (current <= 4) {
+            for (let i = 1; i <= 5; i++) pages.push(i);
+            pages.push('...', total);
+        } else if (current >= total - 3) {
+            pages.push(1, '...');
+            for (let i = total - 4; i <= total; i++) pages.push(i);
+        } else {
+            pages.push(1, '...', current - 1, current, current + 1, '...', total);
+        }
+        return pages;
     }
 
     // Clear filters function
     function clearFilters() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('positionFilter').value = '';
-        document.getElementById('statusFilter').value = '';
+        var searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.value = '';
+
+        var positionFilter = document.getElementById('positionFilter');
+        if (positionFilter) positionFilter.value = '';
+
+        var minR = document.getElementById('salaryMinRange');
+        var maxR = document.getElementById('salaryMaxRange');
+        if (minR && maxR) {
+            minR.value = minR.min;
+            maxR.value = maxR.max;
+        }
+
+        syncSalaryRange();
+        currentPage = 1;
         filterTable();
+        updateView();
     }
 
-    // Keep your exact existing modal function
-    function openModal(name, position, dept, status, rate, payType) {
-        // Set initials
-        document.getElementById('modalInitials').textContent = (name || '').substring(0, 2).toUpperCase();
-        
-        // Set basic info
-        document.getElementById('modalName').textContent = name;
-        document.getElementById('modalPosition').textContent = position;
-        document.getElementById('modalDept').textContent = dept;
-        document.getElementById('modalStatus').textContent = status;
-        document.getElementById('modalRate').textContent = "₱" + parseFloat(rate).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        document.getElementById('modalPayType').textContent = payType;
-        
-        document.getElementById('viewModal').classList.remove('hidden');
+    function syncSalaryRange() {
+        var minEl = document.getElementById('salaryMinRange');
+        var maxEl = document.getElementById('salaryMaxRange');
+        var minDisp = document.getElementById('salaryMinDisplay');
+        var maxDisp = document.getElementById('salaryMaxDisplay');
+
+        if (!minEl || !maxEl || !minDisp || !maxDisp) return;
+
+        var minVal = parseFloat(minEl.value) || 0;
+        var maxVal = parseFloat(maxEl.value) || 0;
+
+        // enforce min <= max
+        if (minVal > maxVal) {
+            maxVal = minVal;
+            maxEl.value = minEl.value;
+        }
+        if (maxVal < minVal) {
+            minVal = maxVal;
+            minEl.value = maxEl.value;
+        }
+
+        minDisp.textContent = minVal.toFixed(2);
+        maxDisp.textContent = maxVal.toFixed(2);
     }
 
+    // Prepare export form values before submitting
+    function prepareExport() {
+        const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+        const position = document.getElementById('positionFilter') ? document.getElementById('positionFilter').value : '';
+        const min = document.getElementById('salaryMinRange') ? document.getElementById('salaryMinRange').value : '';
+        const max = document.getElementById('salaryMaxRange') ? document.getElementById('salaryMaxRange').value : '';
+
+        const eSearch = document.getElementById('exportSearch'); if (eSearch) eSearch.value = search;
+        const ePos = document.getElementById('exportPosition'); if (ePos) ePos.value = position;
+        const eMin = document.getElementById('exportSalaryMin'); if (eMin) eMin.value = min;
+        const eMax = document.getElementById('exportSalaryMax'); if (eMax) eMax.value = max;
+    }
+
+    // Modal functions
     function closeModal() {
         document.getElementById('viewModal').classList.add('hidden');
     }
 
-    // Fetch details for a single employee from internal endpoint and populate modal
     async function openModal(employeeNumber) {
         try {
             const res = await fetch(`/_internal/employees/${employeeNumber}`, { credentials: 'include' });
@@ -363,49 +993,194 @@
             populateModal(data);
         } catch (err) {
             console.error('Failed to open modal:', err);
-            alert('Failed to load employee details');
+            if (typeof showToast === 'function') {
+                showToast('Failed to load employee details', 'error');
+            }
         }
     }
 
     function populateModal(data) {
-        document.getElementById('modalInitials').textContent = (data.name || '').substring(0, 2).toUpperCase();
-        document.getElementById('modalName').textContent = data.name || '';
-        document.getElementById('modalPosition').textContent = data.position || '';
-        document.getElementById('modalDept').textContent = data.department || '';
-        document.getElementById('modalStatus').textContent = data.employmentStatus || '';
-        document.getElementById('modalRate').textContent = '₱' + (data.basicRate || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
-        document.getElementById('modalPayType').textContent = data.payType || '';
-        document.getElementById('modalEmail').textContent = data.email || '';
-        document.getElementById('modalContact').textContent = data.contactNumber || '';
-        document.getElementById('modalCivil').textContent = data.civilStatus || '';
-        document.getElementById('modalStart').textContent = data.dateHired ? new Date(data.dateHired).toLocaleDateString() : '';
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || '-';
+        }
+
+        // Mask all but the last 4 characters of a government ID
+        function maskId(value) {
+            if (!value) return '-';
+            const digits = value.replace(/\D/g, '');
+            if (digits.length <= 4) return value;
+            const last4 = digits.slice(-4);
+            return '●●●●-' + last4;
+        }
+
+        const initials = (data.name || '').substring(0, 2).toUpperCase() || 'EM';
+        setText('modalName', data.name || '');
+        setText('modalPosition', data.position || '');
+        setText('modalStatus', data.employmentStatus || '');
+
+        const rate = (typeof data.basicRate === 'number' ? data.basicRate : parseFloat(data.basicRate) || 0);
+        const payType = data.payType || '';
+        setText('modalSalaryStatus', '₱' + rate.toLocaleString('en-US', { minimumFractionDigits: 2 }) + (payType ? (' / ' + payType) : ''));
+
+        setText('modalEmail', data.email || '');
+        setText('modalContact', data.contactNumber || '');
+        setText('modalCivil', data.civilStatus || '');
+        setText('modalStart', data.dateHired ? new Date(data.dateHired).toLocaleDateString() : '');
+
         const birth = data.birthdate ? new Date(data.birthdate) : null;
-        if (birth) {
-            const age = Math.floor((new Date() - birth) / (365.25 * 24 * 3600 * 1000));
-            document.getElementById('modalAge').textContent = age;
-        }
-        document.getElementById('modalTIN').textContent = data.tin || '-';
-        document.getElementById('modalSSS').textContent = data.sss || '-';
-        document.getElementById('modalPhil').textContent = data.philHealth || '-';
-        document.getElementById('modalPag').textContent = data.pagIbig || '-';
-
-        // Profile image
-        const imgContainer = document.getElementById('modalInitials').parentElement.parentElement.querySelector('div.w-14');
-        if (data.profileImageUrl) {
-            imgContainer.innerHTML = `<img src="${data.profileImageUrl}" class="w-14 h-14 rounded-full object-cover" alt="Profile">`;
+        let age = null;
+        if (birth && !isNaN(birth.getTime())) {
+            age = Math.floor((new Date() - birth) / (365.25 * 24 * 3600 * 1000));
+            setText('modalAge', age);
         } else {
-            imgContainer.innerHTML = `<div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md"><span class="text-lg font-bold text-white">${(data.name||'').substring(0,2).toUpperCase()}</span></div>`;
+            setText('modalAge', '-');
         }
 
-        document.getElementById('viewModal').classList.remove('hidden');
+        setText('modalTIN', maskId(data.tin));
+        setText('modalSSS', maskId(data.sss));
+        setText('modalPhil', maskId(data.philHealth));
+        setText('modalPag', maskId(data.pagIbig));
+
+        // Profile photo — show real image or generated initials avatar
+        const profileImg = document.getElementById('modalProfileImage');
+        if (profileImg) {
+            if (data.profileImageUrl) {
+                profileImg.src = data.profileImageUrl;
+                profileImg.style.display = '';
+            } else {
+                // Generate initials avatar as data-uri using canvas
+                const canvas = document.createElement('canvas');
+                canvas.width = 96; canvas.height = 96;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#2563EB';
+                ctx.beginPath();
+                ctx.arc(48, 48, 48, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, 48, 48);
+                profileImg.src = canvas.toDataURL();
+                profileImg.style.display = '';
+            }
+        }
+
+
+
+        const ageBadge = document.getElementById('modalRetirementBadgeAge');
+        const status = (data.employmentStatus || '').toString().toLowerCase();
+        if (ageBadge) {
+            if (age !== null && age >= 60 && status === 'active') {
+                ageBadge.classList.remove('hidden');
+            } else {
+                ageBadge.classList.add('hidden');
+            }
+        }
+
+        const viewModalEl = document.getElementById('viewModal');
+        if (viewModalEl) viewModalEl.classList.remove('hidden');
     }
 
-    async function deactivateEmployee(employeeNumber) {
-        if (!confirm('Mark this employee as inactive?')) return;
-        try {
-            const res = await fetch(`/_internal/employees/${employeeNumber}/deactivate`, { method: 'POST', credentials: 'include' });
-            if (!res.ok) throw new Error('Failed');
-            location.reload();
-        } catch (e) { alert('Failed to deactivate employee'); }
+    // Open modal to confirm deactivation
+    async function deactivateEmployee(el, employeeNumber) {
+        const name = el && el.dataset && el.dataset.name ? el.dataset.name : 'Employee';
+        window.__deactivateEmployeeNumber = employeeNumber;
+        window.__deactivateEmployeeName = name;
+        showConfirmModal(name);
     }
+
+    function showConfirmModal(name) {
+        const modal = document.getElementById('popup-modal');
+        if (!modal) return;
+        const nameEl = modal.querySelector('.confirm-emp-name');
+        if (nameEl) nameEl.textContent = name;
+        modal.classList.remove('hidden');
+    }
+
+    function hideConfirmModal() {
+        const modal = document.getElementById('popup-modal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+    }
+
+    async function confirmDeactivate() {
+        const employeeNumber = window.__deactivateEmployeeNumber;
+        const name = window.__deactivateEmployeeName || 'Employee';
+        // show spinner on confirm button
+        const confirmBtn = document.getElementById('confirmDeactivateBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
+        }
+        hideConfirmModal();
+
+        try {
+            const res = await fetch(`/_internal/employees/${employeeNumber}/deactivate`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (!res.ok) throw new Error('Failed');
+
+            if (typeof showToast === 'function') {
+                showToast('Successfully Inactive, View Archive', 'success');
+            }
+
+            setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+            console.error(e);
+            if (typeof showToast === 'function') {
+                showToast(`Failed to mark ${name} inactive`, 'error');
+            }
+            // restore confirm button state on failure
+            const confirmBtnFail = document.getElementById('confirmDeactivateBtn');
+            if (confirmBtnFail) {
+                confirmBtnFail.disabled = false;
+                confirmBtnFail.innerHTML = "Yes, I'm sure";
+            }
+        }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth < 640) {
+            renderMobileView();
+        } else {
+            // On desktop, just ensure table shows correctly
+            const mobileContainer = document.getElementById('employeesMobileContainer');
+            if (mobileContainer) mobileContainer.innerHTML = '';
+            applyDesktopPagination();
+        }
+        updatePagination();
+    });
+
+    // Make functions globally available
+    function showExportModal() {
+        document.getElementById('exportModal').classList.remove('hidden');
+    }
+
+    function hideExportModal() {
+        document.getElementById('exportModal').classList.add('hidden');
+    }
+
+    function executeExport() {
+        document.getElementById('exportIncludeSalary').value = document.getElementById('chkIncludeSalary').checked ? "true" : "false";
+        document.getElementById('exportIncludeGovIds').value = document.getElementById('chkIncludeGovIds').checked ? "true" : "false";
+        prepareExport();
+        
+        if (typeof showToast === 'function') {
+            showToast('Generating PDF, please wait...', 'info');
+        }
+        
+        document.getElementById('exportForm').submit();
+        hideExportModal();
+    }
+
+    window.prepareExport = prepareExport;
+    window.showExportModal = showExportModal;
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.deactivateEmployee = deactivateEmployee;
 </script>

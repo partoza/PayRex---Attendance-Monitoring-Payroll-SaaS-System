@@ -4,257 +4,874 @@
     ViewData["Title"] = "Attendance Monitoring";
 }
 
-<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
+    <input type="hidden" id="authToken" value="@Request.Cookies["PayRex.AuthToken"]" />
+    <input type="hidden" id="isAttendanceConfigured" value="@Model.IsAttendanceConfigured.ToString().ToLower()" />
+
+    <!-- ── HEADER ── -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-xl sm:rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
-        <div class="px-8 py-10 relative z-10">
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Attendance Monitoring</h1>
-            <p class="mt-2 text-gray-600 text-lg">Track employee time logs, attendance status, and work hours.</p>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-4 py-5 sm:px-8 sm:py-8 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">Attendance Monitoring</h1>
+                    <p class="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Track employee time logs, attendance status, and work hours.</p>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    @if (Model.Stats.IsHoliday)
+                    {
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold bg-red-100 text-red-700">
+                            @Model.Stats.HolidayName
+                        </span>
+                    }
+                    <span class="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold bg-blue-100 text-blue-700">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                        </svg>
+                        @Model.CurrentDateRange
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
+    <!-- ── QUICK STATS ── -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm flex items-center justify-between overflow-hidden relative">
+            @if (Model.Stats.IsHoliday)
+            {
+                <div class="absolute top-0 right-0">
+                    <div class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-tighter">Holiday</div>
+                </div>
+            }
             <div>
-                <p class="text-sm font-medium text-gray-500">Present</p>
-                <p class="text-2xl font-bold text-gray-900">@Model.Stats.Present</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Present</p>
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">@Model.Stats.Present</p>
             </div>
-            <div class="p-3 bg-green-50 rounded-xl text-green-600">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="p-2 sm:p-3 bg-green-50 rounded-xl text-green-600">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500">Late</p>
-                <p class="text-2xl font-bold text-gray-900">@Model.Stats.Late</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Late</p>
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">@Model.Stats.Late</p>
             </div>
-             <div class="p-3 bg-yellow-50 rounded-xl text-yellow-600">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="p-2 sm:p-3 bg-yellow-50 rounded-xl text-yellow-600">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500">Absent</p>
-                <p class="text-2xl font-bold text-gray-900">@Model.Stats.Absent</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">Absent</p>
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">@Model.Stats.Absent</p>
             </div>
-             <div class="p-3 bg-red-50 rounded-xl text-red-600">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="p-2 sm:p-3 bg-red-50 rounded-xl text-red-600">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500">On Leave</p>
-                <p class="text-2xl font-bold text-gray-900">@Model.Stats.OnLeave</p>
+                <p class="text-xs sm:text-sm font-medium text-gray-500">On Leave</p>
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">@Model.Stats.OnLeave</p>
             </div>
-             <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="p-2 sm:p-3 bg-blue-50 rounded-xl text-blue-600">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
             </div>
         </div>
     </div>
 
-    <!-- Toolbar -->
-    <div class="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <div class="relative">
-                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                 <input type="text" id="searchInput" 
-                       class="pl-10 block w-full sm:w-64 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                       placeholder="Search employee or ID..." onkeyup="filterTable()">
-            </div>
-            
-            <input type="date" id="dateFilter" onchange="filterTable()" 
-                   class="block w-full sm:w-48 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-
-             <select id="statusFilter" onchange="filterTable()" 
-                    class="block w-full sm:w-48 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <option value="">All Statuses</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Absent">Absent</option>
-                <option value="On Leave">On Leave</option>
-            </select>
+    <!-- ── FILTERS CARD ── -->
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-sm sm:text-base font-semibold text-gray-900 flex items-center">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                </svg>
+                Filters & Search
+            </h2>
         </div>
-        
-         <button type="button" onclick="openQrModal()" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
-            Time In / Time Out
-        </button>
+        <div class="p-4 sm:p-5 lg:p-6">
+            <div class="flex flex-col space-y-3 sm:space-y-4 md:space-y-0 md:flex-row md:items-end md:gap-3">
+                <!-- Search -->
+                <div class="w-full lg:flex-1">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <input type="text" id="searchInput" onkeyup="applyFilters()"
+                               class="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                               placeholder="Search by employee name or ID...">
+                    </div>
+                </div>
+
+                <!-- From Date -->
+                <div class="w-full md:w-36">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">From Date</label>
+                    <input type="date" id="fromDateFilter" onchange="applyFilters()"
+                           class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                </div>
+                
+                <!-- To Date -->
+                <div class="w-full md:w-36">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">To Date</label>
+                    <input type="date" id="toDateFilter" onchange="applyFilters()"
+                           class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                </div>
+
+                <!-- Status filter -->
+                <div class="w-full md:w-44">
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="statusFilter" onchange="applyFilters()"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                        <option value="">All Statuses</option>
+                        <option value="Present">Present</option>
+                        <option value="Late">Late</option>
+                        <option value="Absent">Absent</option>
+                        <option value="On Leave">On Leave</option>
+                    </select>
+                </div>
+
+                <!-- Clear -->
+                <div class="w-full md:w-auto">
+                    <label class="block text-xs sm:text-sm font-medium text-transparent mb-1 hidden md:block">.</label>
+                    <button onclick="clearFilters()" class="w-full lg:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-colors border border-gray-200">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        Clear Filters
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Attendance Log -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <!-- ── ATTENDANCE TABLE CARD ── -->
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <!-- Card header -->
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-semibold text-gray-900">Attendance Records</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Current Payroll Period — @Model.CurrentDateRange</p>
+                </div>
+                <div class="flex flex-row items-center gap-2">
+                    <!-- Page size -->
+                    <select id="pageSizeSelect" class="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="10" selected>10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                    </select>
+                    <!-- Export PDF button -->
+                    <button type="button" onclick="executeExport()" class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-gray-100 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-colors border border-gray-200 flex items-center shadow-sm">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+                            <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                        </svg>
+                        Export <span class="hidden sm:inline ml-1">PDF</span>
+                    </button>
+                    <!-- Time In/Out button -->
+                    <button type="button" onclick="openQrModal()"
+                            class="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg sm:rounded-xl hover:bg-blue-700 transition-colors border border-transparent shadow-sm">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
+                        <span class="hidden sm:inline">Time In / </span>Time Out
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200" id="attendanceTable">
-                <thead class="bg-gray-50">
+            <table class="w-full" id="attendanceTable">
+                <thead class="bg-gray-50/80">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
-                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time In</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time Out</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Hours</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Remarks</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach (var record in Model.Records)
+                <tbody class="divide-y divide-gray-100" id="attendanceBody">
+                    @if (Model.Records == null || !Model.Records.Any())
                     {
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 search-date">
-                                @record.Date.ToShortDateString()
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                                        @record.EmployeeName.Substring(0, 1)
+                        <tr>
+                            <td colspan="7" class="px-4 sm:px-6 py-8 sm:py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
                                     </div>
-                                    <div class="ml-3">
-                                        <div class="text-sm font-medium text-gray-900 search-name">@record.EmployeeName</div>
-                                    </div>
+                                    <p class="text-sm sm:text-base text-gray-500 font-medium">No attendance records found</p>
+                                    <p class="text-xs sm:text-sm text-gray-400 mt-1">Records will appear here after employees check in</p>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @(record.TimeIn?.ToString("hh:mm tt") ?? "--:--")
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @(record.TimeOut?.ToString("hh:mm tt") ?? "--:--")
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                @(record.WorkHours > 0 ? record.WorkHours.ToString("F1") + " hrs" : "-")
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                    @(record.Status == "Present" ? "bg-green-100 text-green-800" : 
-                                      record.Status == "Late" ? "bg-yellow-100 text-yellow-800" : 
-                                      record.Status == "Absent" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800") search-status">
-                                    @record.Status
-                                </span>
-                            </td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @record.Remarks
-                            </td>
                         </tr>
+                    }
+                    else
+                    {
+                        @foreach (var record in Model.Records.OrderByDescending(r => r.Date))
+                        {
+                            var initial = (record.EmployeeName ?? "?").Length > 0 ? record.EmployeeName[0].ToString() : "?";
+                            var statusClass = record.Status == "Present" ? "bg-green-100 text-green-700" :
+                                              record.Status == "Late"    ? "bg-yellow-100 text-yellow-700" :
+                                              record.Status == "Absent"  ? "bg-red-100 text-red-700" :
+                                                                           "bg-blue-100 text-blue-700";
+                            <tr class="hover:bg-gray-50/50 transition-colors data-row"
+                                data-name="@((record.EmployeeName ?? "").ToUpper())"
+                                data-date="@record.Date"
+                                data-status="@record.Status">
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 search-date">
+                                    @{
+                                        DateTime parsedDate;
+                                        var dateDisplay = DateTime.TryParse(record.Date, out parsedDate)
+                                            ? parsedDate.ToString("MMMM dd, yyyy")
+                                            : record.Date;
+                                    }
+                                    @dateDisplay
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-2 sm:mr-3 shadow-sm flex-shrink-0">
+                                            <span class="text-xs font-bold text-white">@initial</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs sm:text-sm font-semibold text-gray-900 search-name">@record.EmployeeName</div>
+                                            <div class="text-xs text-gray-500">ID: @record.EmployeeId</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-700">
+                                    @(record.TimeIn ?? "—")
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-700">
+                                    @(record.TimeOut ?? "—")
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                    <div class="text-xs sm:text-sm font-semibold text-gray-900">
+                                        @(record.TotalHoursWorked > 0 ? record.TotalHoursWorked.ToString("F2") + "h" : "—")
+                                    </div>
+                                    @if (record.OvertimeHours > 0)
+                                    {
+                                        <div class="text-[10px] text-orange-600 font-bold">+@record.OvertimeHours.ToString("F2") OT</div>
+                                    }
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap search-status">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold @statusClass">
+                                        @record.Status
+                                    </span>
+                                </td>
+                                <td class="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500">
+                                    <div class="flex flex-col gap-0.5">
+                                        <span>@(string.IsNullOrWhiteSpace(record.Remarks) ? "None" : record.Remarks)</span>
+                                        @if (record.IsHoliday)
+                                        {
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 uppercase tracking-tight w-fit">
+                                                @record.HolidayName
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-gray-600" id="paginationInfo">Showing 0 to 0 of 0 records</div>
+                <nav class="flex items-center gap-1 flex-wrap justify-center" id="paginationNav"></nav>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- QR Code Scanner Modal -->
-<div id="qrModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeQrModal()"></div>
-    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-    <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full">
-      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-        <div class="sm:flex sm:items-start">
-           <div class="w-full text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Scan Employee QR</h3>
-                <p class="text-sm text-gray-500 mb-6">Place the QR code within the frame to log time in/out.</p>
-                
-                <!-- Camera Placeholder -->
-                <div class="relative bg-black rounded-xl h-64 w-full flex items-center justify-center overflow-hidden mb-4 border-2 border-dashed border-gray-300">
-                    <div class="absolute inset-0 opacity-50 bg-[url('/images/qr-scan-placeholder.png')] bg-cover bg-center"></div>
-                    <div class="relative z-10 text-white flex flex-col items-center">
-                        <svg class="h-10 w-10 mb-2 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+<!-- ═══════════════════════════════════════════════════
+     QR SCANNER MODAL  (Flowbite-style backdrop)
+═══════════════════════════════════════════════════ -->
+<div id="qrModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="qrModalTitle" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeQrModal()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all w-full max-w-sm mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                         </svg>
-                        <span class="text-xs font-mono uppercase tracking-widest text-gray-300">Camera Active</span>
                     </div>
-                     <!-- Scanner Frame Overlay -->
-                    <div class="absolute inset-0 border-[30px] border-black/50"></div>
-                    <div class="absolute w-48 h-48 border-2 border-blue-500 rounded-lg"></div>
-                    <div class="absolute w-48 h-1 bg-blue-500/50 top-1/2 -mt-0.5 animate-scan"></div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900" id="qrModalTitle">Scan Employee QR</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Point camera at employee QR code</p>
+                    </div>
+                </div>
+                <button onclick="closeQrModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 space-y-4">
+                <!-- Camera view -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Camera</label>
+                    <div id="qrReader" class="w-full rounded-xl border-2 border-dashed border-blue-200 bg-gray-50 overflow-hidden" style="min-height:220px;"></div>
+                    <div id="qrScannerStatus" class="mt-1.5 text-xs text-gray-400 text-center">Starting camera...</div>
                 </div>
 
-                <div class="flex justify-center space-x-3">
-                    <button class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Simulate Scan
-                    </button>
-                     <button onclick="closeQrModal()" class="px-4 py-2 bg-white text-gray-700 border border-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none">
-                        Cancel
+                <!-- Manual entry -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Or enter QR value manually</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="qrInputValue"
+                               class="block w-full rounded-xl border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm h-10 px-3 bg-white"
+                               placeholder="e.g. 1001-0002">
+                        <button type="button" onclick="previewFromInput()"
+                                class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all whitespace-nowrap">
+                            Look Up
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Close -->
+                <button onclick="closeQrModal()" class="w-full py-2.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     EMPLOYEE CONFIRM MODAL
+═══════════════════════════════════════════════════ -->
+<div id="employeeConfirmModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <!-- Backdrop (slightly darker so QR modal still visible behind it) -->
+    <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="cancelConfirm()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[40%] max-w-md mx-auto">
+            <!-- Accent bar (color changes based on action) -->
+            <div id="confirmAccentBar" class="h-1.5 w-full bg-blue-500"></div>
+
+            <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900" id="empConfirmTitle">Confirm Attendance</h3>
+                <button type="button" onclick="cancelConfirm()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="px-4 py-4 sm:px-6 sm:py-5">
+                <!-- Employee avatar + name -->
+                <div class="flex items-center gap-4 mb-5">
+                    <div class="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden flex-shrink-0 bg-blue-100 flex items-center justify-center shadow-sm border border-gray-100 ring-2 ring-white">
+                        <img id="empPhoto" src="" alt="" class="hidden h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-full" />
+                        <span id="empInitial" class="text-2xl sm:text-3xl font-bold text-blue-600"></span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-lg sm:text-xl font-bold text-gray-900 truncate" id="empName">—</div>
+                        <div class="text-sm font-medium text-gray-500" id="empId">ID: —</div>
+                    </div>
+                </div>
+
+                <!-- Action + Time row -->
+                <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100 mb-4 space-y-3">
+                    <div class="flex justify-between items-center bg-white p-2 sm:p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Action</p>
+                        <p class="text-sm sm:text-base font-bold" id="empAction">—</p>
+                    </div>
+                    <div class="flex justify-between items-center bg-white p-2 sm:p-3 rounded-lg border border-gray-100 shadow-sm">
+                        <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Current Time</p>
+                        <p class="text-sm sm:text-base font-bold text-gray-800" id="empCurrentTime">—</p>
+                    </div>
+                </div>
+
+                <!-- Time In reference (shown during Time Out) -->
+                <div id="empTimeInRow" class="hidden mb-4 bg-green-50 rounded-xl p-3 sm:p-4 border border-green-200 shadow-sm flex justify-between items-center">
+                    <p class="text-xs sm:text-sm font-semibold text-green-700 uppercase tracking-wider">Timed In At</p>
+                    <p class="text-sm sm:text-base font-bold text-green-800" id="empTimeIn">—</p>
+                </div>
+
+                <!-- Already completed -->
+                <div id="empAlreadyDone" class="hidden mb-4 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-800 font-medium">
+                    ⚠️ Attendance already completed for today.
+                </div>
+
+                <div class="text-xs text-center text-gray-400 font-medium" id="empDate">—</div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3 rounded-b-lg">
+                <button type="button" onclick="cancelConfirm()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" id="btnConfirmLog" onclick="confirmLog()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Log Attendance
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     ATTENDANCE NOT CONFIGURED MODAL
+═══════════════════════════════════════════════════ -->
+<div id="configRequiredModal" class="fixed inset-0 z-[70] hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeConfigModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white shadow-2xl w-full max-w-md mx-auto">
+            <div class="h-1.5 w-full bg-red-500"></div>
+            <div class="px-6 py-6">
+                <div class="flex items-center justify-center w-14 h-14 mx-auto mb-4 rounded-full bg-red-50">
+                    <svg class="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Attendance Not Configured</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    You need to configure <strong>Time In</strong> and <strong>Time Out</strong> schedule in
+                    <strong>Company Settings</strong> before you can take attendance.
+                </p>
+                <div class="flex gap-3">
+                    <a href="/Settings?edit=true"
+                       class="flex-1 inline-flex justify-center items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Go to Settings
+                    </a>
+                    <button onclick="closeConfigModal()"
+                            class="flex-1 inline-flex justify-center items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
+                        Close
                     </button>
                 </div>
-           </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <style>
 @@keyframes scan {
-    0% { transform: translateY(-90px); opacity: 0; }
-    50% { opacity: 1; }
+    0%   { transform: translateY(-90px); opacity: 0; }
+    50%  { opacity: 1; }
     100% { transform: translateY(90px); opacity: 0; }
 }
-.animate-scan {
-    animation: scan 2s infinite linear;
-}
+.animate-scan { animation: scan 2s infinite linear; }
 </style>
 
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 <script>
-    function filterTable() {
-        var input = document.getElementById("searchInput");
-        var filter = input.value.toUpperCase();
-        var dateFilter = document.getElementById("dateFilter").value;
-        var statusFilter = document.getElementById("statusFilter").value.toUpperCase();
-        var table = document.getElementById("attendanceTable");
-        var tr = table.getElementsByTagName("tr");
+    // ─── STATE ────────────────────────────────────────────────────────────────
+    let qrScannerInstance = null;
+    let qrScannerRunning  = false;
+    let scanLocked     = false;
+    let pendingQrValue = null;
+    let currentPage    = 1;
+    let pageSize       = 10;
+    let filteredRows   = [];
 
-        for (var i = 1; i < tr.length; i++) {
-            var nameTd = tr[i].querySelector(".search-name");
-            var dateTd = tr[i].querySelector(".search-date");
-            var statusTd = tr[i].querySelector(".search-status");
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        const ps = document.getElementById('pageSizeSelect');
+        if (ps) {
+            pageSize = parseInt(ps.value) || 10;
+            ps.addEventListener('change', () => {
+                pageSize = parseInt(ps.value) || 10;
+                currentPage = 1;
+                applyFilters();
+            });
+        }
+        applyFilters();
+    });
 
-            if (nameTd && dateTd && statusTd) {
-                var nameText = nameTd.textContent || nameTd.innerText;
-                var dateText = dateTd.textContent || dateTd.innerText;
-                var statusText = statusTd.textContent || statusTd.innerText;
+    // ─── FILTERS + PAGINATION ─────────────────────────────────────────────────
+    function applyFilters() {
+        const search = (document.getElementById('searchInput')?.value || '').toUpperCase();
+        const fromDate = document.getElementById('fromDateFilter')?.value || '';
+        const toDate   = document.getElementById('toDateFilter')?.value || '';
+        const status = (document.getElementById('statusFilter')?.value || '').toUpperCase();
 
-                // Simple string date matching for demo
-                var matchesSearch = nameText.toUpperCase().indexOf(filter) > -1;
-                // Note: Real implementation would parse dates properly
-                var matchesDate = dateFilter === "" || dateText.indexOf(dateFilter) > -1; 
-                var matchesStatus = statusFilter === "" || statusText.toUpperCase().indexOf(statusFilter) > -1;
+        const table = document.getElementById('attendanceTable');
+        if (!table) return;
 
-                if (matchesSearch && matchesDate && matchesStatus) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
+        const rows = Array.from(table.querySelectorAll('tbody tr.data-row'));
+        filteredRows = [];
+
+        rows.forEach(row => {
+            const name   = (row.dataset.name   || '');
+            const rd     = (row.dataset.date   || '');
+            const rs     = (row.dataset.status || '').toUpperCase();
+
+            const matchSearch = search === '' || name.indexOf(search) > -1;
+            
+            let matchDate = true;
+            if (fromDate || toDate) {
+                const rowDate = new Date(rd);
+                rowDate.setHours(0,0,0,0);
+                
+                if (fromDate) {
+                    const fD = new Date(fromDate); fD.setHours(0,0,0,0);
+                    if (rowDate < fD) matchDate = false;
+                }
+                if (toDate) {
+                    const tD = new Date(toDate); tD.setHours(0,0,0,0);
+                    if (rowDate > tD) matchDate = false;
                 }
             }
-        }
+            
+            const matchStatus = status === '' || rs.indexOf(status) > -1;
+
+            if (matchSearch && matchDate && matchStatus) {
+                filteredRows.push(row);
+            }
+        });
+
+        // Reset to page 1 if filters changed
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        renderPage();
+        renderPagination();
     }
 
+    function renderPage() {
+        const table = document.getElementById('attendanceTable');
+        if (!table) return;
+
+        // Hide all data rows first
+        table.querySelectorAll('tbody tr.data-row').forEach(r => r.style.display = 'none');
+
+        const start = (currentPage - 1) * pageSize;
+        const end   = Math.min(start + pageSize, filteredRows.length);
+        for (let i = start; i < end; i++) {
+            filteredRows[i].style.display = '';
+        }
+
+        // Update info
+        const info = document.getElementById('paginationInfo');
+        const total = filteredRows.length;
+        const from  = total === 0 ? 0 : start + 1;
+        const to    = Math.min(start + pageSize, total);
+        if (info) info.textContent = `Showing ${from} to ${to} of ${total} records`;
+    }
+
+    function renderPagination() {
+        const nav = document.getElementById('paginationNav');
+        if (!nav) return;
+        nav.innerHTML = '';
+
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+        if (totalPages <= 1) return;
+
+        const btn = (label, page, active = false, disabled = false) => {
+            const b = document.createElement('button');
+            b.innerHTML = label;
+            b.className = `px-3 py-1.5 text-sm font-medium border rounded-lg transition-all ${
+                active    ? 'bg-blue-600 text-white border-blue-600' :
+                disabled  ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200' :
+                            'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+            }`;
+            if (!disabled && !active) b.onclick = () => { currentPage = page; renderPage(); renderPagination(); };
+            return b;
+        };
+
+        nav.appendChild(btn('‹', currentPage - 1, false, currentPage === 1));
+
+        const pages = getPageNumbers(currentPage, totalPages);
+        pages.forEach(p => {
+            if (p === '...') {
+                const dots = document.createElement('span');
+                dots.className = 'px-2 py-1.5 text-gray-400 text-sm';
+                dots.textContent = '…';
+                nav.appendChild(dots);
+            } else {
+                nav.appendChild(btn(p, p, p === currentPage));
+            }
+        });
+
+        nav.appendChild(btn('›', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    function getPageNumbers(current, total) {
+        if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+        if (current <= 4) return [1,2,3,4,5,'...',total];
+        if (current >= total - 3) return [1,'...',total-4,total-3,total-2,total-1,total];
+        return [1,'...',current-1,current,current+1,'...',total];
+    }
+
+    function clearFilters() {
+        const s = document.getElementById('searchInput');  if (s) s.value = '';
+        const f = document.getElementById('fromDateFilter'); if (f) f.value = '';
+        const t = document.getElementById('toDateFilter'); if (t) t.value = '';
+        const st = document.getElementById('statusFilter'); if (st) st.value = '';
+        currentPage = 1;
+        applyFilters();
+    }
+
+    // ─── CONFIG MODAL ───────────────────────────────────────────────────────
+    function openConfigModal() {
+        document.getElementById('configRequiredModal').classList.remove('hidden');
+    }
+    function closeConfigModal() {
+        document.getElementById('configRequiredModal').classList.add('hidden');
+    }
+
+    // ─── QR MODAL ─────────────────────────────────────────────────────────────
     function openQrModal() {
+        // Block scanning if attendance schedule is not configured
+        var configured = document.getElementById('isAttendanceConfigured')?.value === 'true';
+        if (!configured) {
+            openConfigModal();
+            return;
+        }
         document.getElementById('qrModal').classList.remove('hidden');
+        document.getElementById('qrInputValue').value = '';
+        scanLocked = false;
+        startCameraScan();
     }
 
     function closeQrModal() {
         document.getElementById('qrModal').classList.add('hidden');
+        stopCameraScan();
+        scanLocked = false;
     }
+
+    async function startCameraScan() {
+        if (qrScannerRunning) return;
+        const container = document.getElementById('qrReader');
+        const statusEl  = document.getElementById('qrScannerStatus');
+        if (!container || !window.Html5Qrcode) {
+            if (statusEl) statusEl.textContent = 'Camera library failed. Use manual entry below.';
+            return;
+        }
+        try {
+            qrScannerInstance = new Html5Qrcode('qrReader');
+            qrScannerRunning  = true;
+            if (statusEl) statusEl.textContent = 'Camera active – point at employee QR code.';
+            await qrScannerInstance.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 230, height: 230 } },
+                async (decodedText) => {
+                    if (scanLocked) return;
+                    scanLocked = true;
+                    const input = document.getElementById('qrInputValue');
+                    if (input) input.value = decodedText;
+                    await previewEmployee(decodedText);
+                },
+                () => {}
+            );
+        } catch (err) {
+            console.error('Camera start error:', err);
+            if (statusEl) statusEl.textContent = `Camera unavailable: ${err?.message || err}. Use manual entry.`;
+            await stopCameraScan();
+        }
+    }
+
+    async function stopCameraScan() {
+        if (!qrScannerInstance) return;
+        try {
+            if (qrScannerRunning) await qrScannerInstance.stop();
+            await qrScannerInstance.clear();
+        } catch { /* ignore */ } finally {
+            qrScannerInstance = null;
+            qrScannerRunning  = false;
+            const statusEl = document.getElementById('qrScannerStatus');
+            if (statusEl) statusEl.textContent = 'Camera stopped.';
+        }
+    }
+
+    // ─── PREVIEW ──────────────────────────────────────────────────────────────
+    async function previewFromInput() {
+        const val = document.getElementById('qrInputValue')?.value.trim();
+        if (!val) { showToast('Please enter a QR code value.', 'error'); return; }
+        await previewEmployee(val);
+    }
+
+    async function previewEmployee(qrValue) {
+        try {
+            const res = await fetch(`/Attendance?handler=Preview&qrValue=${encodeURIComponent(qrValue)}`);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                if (err.message === 'ATTENDANCE_NOT_CONFIGURED') {
+                    closeQrModal();
+                    openConfigModal();
+                    return;
+                }
+                showToast(err.message || 'Employee not found for this QR code.', 'error');
+                scanLocked = false;
+                return;
+            }
+            const data = await res.json();
+            pendingQrValue = qrValue;
+            showConfirmModal(data);
+        } catch (e) {
+            console.error('Preview error:', e);
+            showToast('Could not connect to server. Please try again.', 'error');
+            scanLocked = false;
+        }
+    }
+
+    // ─── CONFIRM MODAL ────────────────────────────────────────────────────────
+    function showConfirmModal(data) {
+        document.getElementById('empName').textContent = data.employeeName || '—';
+        document.getElementById('empId').textContent   = 'ID: ' + (data.employeeId || '—');
+        document.getElementById('empCurrentTime').textContent = data.currentTime || '—';
+        document.getElementById('empDate').textContent = data.date || '—';
+
+        const photo   = document.getElementById('empPhoto');
+        const initial = document.getElementById('empInitial');
+        if (data.profilePictureUrl) {
+            photo.src = data.profilePictureUrl;
+            photo.classList.remove('hidden');
+            initial.classList.add('hidden');
+        } else {
+            photo.classList.add('hidden');
+            initial.classList.remove('hidden');
+            initial.textContent = (data.employeeName || '?').charAt(0).toUpperCase();
+        }
+
+        const actionEl  = document.getElementById('empAction');
+        const barEl     = document.getElementById('confirmAccentBar');
+        const btnLog    = document.getElementById('btnConfirmLog');
+        const doneEl    = document.getElementById('empAlreadyDone');
+        const timeInRow = document.getElementById('empTimeInRow');
+
+        doneEl.classList.add('hidden');
+        timeInRow.classList.add('hidden');
+        btnLog.disabled = false;
+
+        if (data.pendingAction === 'Time In') {
+            actionEl.textContent = '☀️ Time In';
+            actionEl.className = 'text-sm font-bold text-green-600';
+            barEl.className = 'h-1.5 w-full bg-green-500';
+        } else if (data.pendingAction === 'Time Out') {
+            actionEl.textContent = '🌙 Time Out';
+            actionEl.className = 'text-sm font-bold text-blue-600';
+            barEl.className = 'h-1.5 w-full bg-blue-500';
+            if (data.existingTimeIn) {
+                document.getElementById('empTimeIn').textContent = data.existingTimeIn;
+                timeInRow.classList.remove('hidden');
+            }
+        } else {
+            actionEl.textContent = '✅ Already Completed';
+            actionEl.className = 'text-sm font-bold text-yellow-600';
+            barEl.className = 'h-1.5 w-full bg-yellow-400';
+            doneEl.classList.remove('hidden');
+            btnLog.disabled = true;
+        }
+
+        document.getElementById('employeeConfirmModal').classList.remove('hidden');
+    }
+
+    function cancelConfirm() {
+        document.getElementById('employeeConfirmModal').classList.add('hidden');
+        pendingQrValue = null;
+        scanLocked = false;
+        document.getElementById('qrInputValue').value = '';
+    }
+
+    // ─── LOG ATTENDANCE ───────────────────────────────────────────────────────
+    async function confirmLog() {
+        if (!pendingQrValue) return;
+        const btn = document.getElementById('btnConfirmLog');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Logging...';
+
+        try {
+            const res = await fetch('/Attendance?handler=Scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qrValue: pendingQrValue })
+            });
+            const data = await res.json();
+            document.getElementById('employeeConfirmModal').classList.add('hidden');
+            if (res.ok) {
+                showToast(`✅ ${data.message}`, 'success');
+                setTimeout(() => window.location.reload(), 1800);
+            } else {
+                if (data.message === 'ATTENDANCE_NOT_CONFIGURED') {
+                    closeQrModal();
+                    openConfigModal();
+                } else {
+                    showToast(data.message || 'Failed to log attendance.', 'error');
+                }
+            }
+        } catch (err) {
+            console.error('Log error:', err);
+            showToast('Connection error. Please try again.', 'error');
+        } finally {
+            pendingQrValue = null;
+            scanLocked = false;
+            document.getElementById('qrInputValue').value = '';
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Log Attendance';
+        }
+    }
+
+    // ─── EXPORT PDF ───────────────────────────────────────────────────────────
+    function executeExport() {
+        const search = document.getElementById('searchInput')?.value || '';
+        const fromDate = document.getElementById('fromDateFilter')?.value || '';
+        const toDate = document.getElementById('toDateFilter')?.value || '';
+        const status = document.getElementById('statusFilter')?.value || '';
+        
+        document.getElementById('exportSearch').value = search;
+        document.getElementById('exportFromDate').value = fromDate;
+        document.getElementById('exportToDate').value = toDate;
+        document.getElementById('exportStatus').value = status;
+        
+        if (typeof showToast === 'function') {
+            showToast('Generating PDF, please wait...', 'info');
+        }
+        
+        document.getElementById('exportForm').submit();
+    }
+    
+    window.executeExport = executeExport;
+
+    // ─── ENTER KEY shortcut ───────────────────────────────────────────────────
+    document.getElementById('qrInputValue')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') previewFromInput();
+    });
 </script>
+
+<form id="exportForm" method="post" asp-page-handler="ExportPdf" class="hidden">
+    <input type="hidden" name="search" id="exportSearch" />
+    <input type="hidden" name="fromDate" id="exportFromDate" />
+    <input type="hidden" name="toDate" id="exportToDate" />
+    <input type="hidden" name="status" id="exportStatus" />
+</form>

@@ -29,6 +29,7 @@ namespace PayRex.Web.Pages.Auth
 
         public string? ErrorMessage { get; set; }
         public string? TotpErrorMessage { get; set; }
+        [TempData(Key = "Auth_SuccessMessage")] public string? AuthSuccessMessage { get; set; }
         public string? ReturnUrl { get; set; }
         public bool RequireTotp { get; set; } = false;
         public string? TotpEmail { get; set; }
@@ -57,8 +58,8 @@ namespace PayRex.Web.Pages.Auth
         {
             ReturnUrl = returnUrl ?? Url.Content("~/Dashboard");
 
-            // If already authenticated, redirect to dashboard
-            if (Request.Cookies.ContainsKey("PayRex.AuthToken"))
+            // If already authenticated with a valid token, redirect to dashboard
+            if (User?.Identity?.IsAuthenticated == true)
             {
                 Response.Redirect(ReturnUrl);
             }
@@ -259,12 +260,27 @@ namespace PayRex.Web.Pages.Auth
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                // Allow insecure cookies on localhost during development when TLS may not be used.
-                // Use secure cookies when request is HTTPS or host is not localhost.
+                // For cross-subdomain API calls we need SameSite=None and Secure=true so the
+                // browser will send the cookie to other subdomains (e.g. payrexapi.runasp.net).
+                // In development on localhost we preserve the previous relaxed behavior.
                 Secure = Request.IsHttps || (Request.Host.Host?.Contains("localhost") ?? false),
-                SameSite = SameSiteMode.Lax, // allow top-level navigations in development
+                SameSite = SameSiteMode.None,
                 Path = "/" // Ensure cookie is sent for all paths
             };
+
+            // When running on a real domain (not localhost) set cookie domain to parent so
+            // it will be sent to subdomains (e.g. .runasp.net -> payrex.runasp.net & payrexapi.runasp.net).
+            try
+            {
+                var host = Request.Host.Host ?? string.Empty;
+                if (!host.Contains("localhost") && host.Contains("runasp.net"))
+                {
+                    cookieOptions.Domain = ".runasp.net";
+                    // Ensure cookie is marked secure in production
+                    cookieOptions.Secure = true;
+                }
+            }
+            catch { }
 
             // Safely set cookie expiration
             if (response.ExpiresAt != default && response.ExpiresAt > DateTime.MinValue)
@@ -289,6 +305,13 @@ namespace PayRex.Web.Pages.Auth
             }
 
             Response.Cookies.Append("PayRex.AuthToken", response.Token, cookieOptions);
+
+            // If the API indicates the user must change their password, redirect them
+            // to the ChangePassword page and mark the flow as forced.
+            if (response.MustChangePassword)
+            {
+                return RedirectToPage("/Auth/ChangePassword", new { forced = true });
+            }
 
             // Decide destination based on role - each role has its own dashboard
             try

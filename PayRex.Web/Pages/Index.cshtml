@@ -58,11 +58,30 @@
     {
         "SuperAdmin" => "Super Admin",
         "Admin" => "Administrator",
-        "HR" => "HR Manager",
-        "Hr" => "HR Manager", 
+        "HR" => "Human Resource Manager",
+        "Hr" => "Human Resource Manager",
+        "Accountant" => "Accountant",
         "Employee" => "Employee",
         _ => userRole ?? "User"
     };
+
+    // Subscription status from JWT claim
+    string? subscriptionStatus = null;
+    if (isAuthenticated && Request.Cookies.TryGetValue("PayRex.AuthToken", out var tokenForSub))
+    {
+        try
+        {
+            var h = new JwtSecurityTokenHandler();
+            var jwt = h.ReadJwtToken(tokenForSub);
+            subscriptionStatus = jwt.Claims.FirstOrDefault(c => c.Type == "subscriptionStatus")?.Value;
+        }
+        catch { }
+    }
+
+    // Determine if the user is blocked due to expired/no subscription
+    var isSuperAdmin = string.Equals(userRole, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+    var isSubscriptionExpired = isAuthenticated && !isSuperAdmin &&
+        (string.IsNullOrEmpty(subscriptionStatus) || string.Equals(subscriptionStatus, "Expired", StringComparison.OrdinalIgnoreCase));
 
     // Dashboard Link Logic
     var dashboardLink = (userRole == "SuperAdmin") ? "/Admin/Dashboard" : "/Dashboard";
@@ -123,7 +142,7 @@
 
             <!-- Logo -->
             <a asp-page="/Index" class="flex items-center space-x-3">
-                <img src="@(isAuthenticated && !string.IsNullOrEmpty(companyLogoUrl) ? companyLogoUrl : Url.Content("~/images/logo.png"))" class="h-12 w-auto" alt="Payrex Logo" />
+                <img src="/images/logo.png" class="h-12 w-auto" alt="Payrex Logo" />
             </a>
 
             <!-- Right buttons + mobile toggle -->
@@ -174,6 +193,8 @@
                                 </div>
                             </div>
                             <ul class="py-1" role="none">
+                                @if (!isSubscriptionExpired)
+                                {
                                 <li>
                                     <a href="@dashboardLink" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" role="menuitem">
                                         <svg class="w-4 h-4 mr-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -191,15 +212,14 @@
                                         Profile Settings
                                     </a>
                                 </li>
+                                }
                                 <li class="border-t border-gray-100">
-                                    <form method="post" asp-page="/Auth/Logout" class="block logout-form">
-                                        <button type="submit" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" role="menuitem">
-                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                            </svg>
-                                            Sign out
-                                        </button>
-                                    </form>
+                                    <a href="/Auth/Logout" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" role="menuitem">
+                                        <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        Sign out
+                                    </a>
                                 </li>
                             </ul>
                         </div>
@@ -259,6 +279,38 @@
         </div>
     </nav>
 
+    @if (isSubscriptionExpired)
+    {
+    <!-- Subscription Expired Banner -->
+    <section class="pt-28 px-4 md:px-8 pb-0">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-red-50 border border-red-200 rounded-2xl p-6 md:p-8 shadow-sm">
+                <div class="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+                    <div class="flex-shrink-0">
+                        <div class="w-14 h-14 bg-red-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <h3 class="text-lg font-bold text-red-800">Your Subscription Has Expired</h3>
+                        <p class="text-red-600 mt-1 text-sm">Your access to PayRex has been restricted. Renew your subscription to regain full access to all features including payroll, attendance, and employee management.</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="/Billing" class="inline-flex items-center gap-2 bg-red-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-red-700 transition-colors shadow-md text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                            Renew Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    }
+
     <!-- Home/Hero Section -->
     <section id="home" class="pt-32 px-4 md:px-8 pb-24">
         <div class="max-w-6xl mx-auto">
@@ -293,9 +345,18 @@
 
                 <!-- CTA Buttons -->
                 <div class="mt-12 flex flex-col sm:flex-row gap-4 justify-center max-w-2xl mx-auto">
-                    <a href="@(isAuthenticated ? dashboardLink : "/Auth/Login")" class="bg-primary text-white font-semibold py-4 px-12 rounded-xl hover:brightness-95 transition-colors shadow-lg text-lg text-center">
-                        "Start Your Payroll System
+                    @if (isSubscriptionExpired)
+                    {
+                    <a href="/Billing" class="bg-red-600 text-white font-semibold py-4 px-12 rounded-xl hover:bg-red-700 transition-colors shadow-lg text-lg text-center">
+                        Renew Your Subscription
                     </a>
+                    }
+                    else
+                    {
+                    <a href="#pricing" class="bg-primary text-white font-semibold py-4 px-12 rounded-xl hover:brightness-95 transition-colors shadow-lg text-lg text-center">
+                        Start Your Payroll System
+                    </a>
+                    }
                 </div>
 
                 <p class="text-gray-500 text-sm mt-4">
@@ -538,9 +599,35 @@
       <p class="text-gray-600 text-xl max-w-3xl mx-auto">Choose the plan that fits your organization's needs</p>
         </div>
 
-   <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+   <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         @{ var basicPlan = Model.Plans.FirstOrDefault(p => p.Name == "Basic"); }
            @{ var proPlan = Model.Plans.FirstOrDefault(p => p.Name == "Pro"); }
+
+        @if (!isAuthenticated)
+        {
+        <!-- Free Trial -->
+        <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl flex flex-col">
+            <div class="text-center mb-8">
+                <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">No Credit Card Required</span>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Free Trial</h3>
+                <p class="text-gray-600 mb-6">Explore PayRex risk-free before committing</p>
+                <div class="flex justify-center items-baseline">
+                    <span class="text-5xl font-bold text-gray-900">14</span>
+                    <span class="text-gray-500 ml-2">days free</span>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Then choose a paid plan to continue</p>
+            </div>
+            <ul class="space-y-4 mb-8 flex-1">
+                <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Up to <strong>5 Employees</strong></span></li>
+                <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>1 Admin user</span></li>
+                <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>QR Code Attendance</span></li>
+                <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Basic Payroll Processing</span></li>
+                <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>BIR Tax Calculation</span></li>
+                <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>Priority Support</span></li>
+            </ul>
+            <a class="w-full inline-block text-center py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-md" href="/Auth/Login">Start Free Trial</a>
+        </div>
+        }
 
     @if (basicPlan != null)
       {
@@ -563,7 +650,7 @@
         <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>Advanced HR Management</span></li>
         <li class="flex items-center text-gray-400"><i class="bi bi-x-lg mr-3"></i><span>Priority Support</span></li>
          </ul>
-       <a class="w-full inline-block text-center py-3 rounded-xl border-2 border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-colors" href="#contact">Get Started</a>
+       <a class="w-full inline-block text-center py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-md" href="@(isAuthenticated ? $"/Checkout?planId={basicPlan.PlanId}" : "/Auth/Login")">Get Started</a>
     </div>
                 }
 
@@ -592,7 +679,7 @@
                             <li class="flex items-center"><i class="bi bi-check-lg text-green-500 mr-3"></i><span>Priority Email Support</span></li>
 
        </ul>
- <a asp-page="/Dashboard" class="w-full inline-block text-center py-3 rounded-xl bg-primary text-white font-semibold hover:brightness-95 transition-colors">Get Started</a>
+ <a href="@(isAuthenticated ? $"/Checkout?planId={proPlan.PlanId}" : "/Auth/Login")" class="w-full inline-block text-center py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors shadow-md">Get Started</a>
      </div>
        }
    </div>

@@ -189,11 +189,16 @@ Body = GeneratePasswordResetEmailBody(resetUrl),
                     Timeout = 100000
                 };
 
+                var frontendUrls = _config.GetSection("AppSettings:FrontendUrls").Get<string[]>() ?? new string[0];
+                var frontendBase = frontendUrls.Length > 0 ? frontendUrls[0] : "";
+                var loginUrl = string.IsNullOrWhiteSpace(frontendBase) ? "/" : frontendBase.TrimEnd('/') + "/login";
+                var headerBgUrl = "https://res.cloudinary.com/dxyhmtaqw/image/upload/v1771694059/loginbg_ffsmqq.png";
+
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(smtpFromEmail, smtpFromName ?? "PayRex"),
                     Subject = $"Welcome to {companyName} - Your Account Details",
-                    Body = GenerateWelcomeEmailBody(employeeName, companyName, password, toEmail, companyLogoUrl),
+                    Body = GenerateWelcomeEmailBody(employeeName, companyName, password, toEmail, companyLogoUrl, loginUrl, headerBgUrl),
                     IsBodyHtml = true
                 };
 
@@ -215,11 +220,17 @@ Body = GeneratePasswordResetEmailBody(resetUrl),
             }
         }
 
-        private string GenerateWelcomeEmailBody(string employeeName, string companyName, string password, string email, string? logoUrl)
+        private string GenerateWelcomeEmailBody(string employeeName, string companyName, string password, string email, string? logoUrl, string loginUrl, string headerBgUrl)
         {
             var logoHtml = !string.IsNullOrEmpty(logoUrl)
                 ? $"<img src='{logoUrl}' alt='{companyName}' style='max-height:60px;margin-bottom:10px;' /><br/>"
                 : "";
+
+            var loginButton = !string.IsNullOrWhiteSpace(loginUrl) ? $"<div style='text-align:center;margin:18px 0;'><a href='{loginUrl}' style='display:inline-block;padding:12px 28px;background:#1E88E5;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;'>Go to Login</a></div>" : "";
+
+            var headerStyle = !string.IsNullOrWhiteSpace(headerBgUrl)
+                ? $"background-image:url('{headerBgUrl}');background-size:cover;background-position:center;"
+                : "background: linear-gradient(135deg, #1E88E5, #1565C0);";
 
             return $@"
 <!DOCTYPE html>
@@ -241,9 +252,9 @@ Body = GeneratePasswordResetEmailBody(resetUrl),
 </head>
 <body>
     <div class='container'>
-        <div class='header'>
+        <div class='header' style='{headerStyle}'>
             {logoHtml}
-            <h1 style='margin:0;font-size:24px;'>Welcome to {companyName}!</h1>
+            <h1 style='margin:0;font-size:24px;color:#000;'>Welcome to {companyName}!</h1>
         </div>
         <div class='content'>
             <p>Hello <strong>{employeeName}</strong>,</p>
@@ -261,6 +272,7 @@ Body = GeneratePasswordResetEmailBody(resetUrl),
             </div>
 
             <p>If you have any questions, please contact your HR administrator.</p>
+            {loginButton}
         </div>
         <div class='footer'>
             <p>This is an automated message from PayRex. Please do not reply to this email.</p>

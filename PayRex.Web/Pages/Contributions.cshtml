@@ -8,9 +8,24 @@
     <!-- Header -->
     <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
-        <div class="px-8 py-10 relative z-10">
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Tax & Contributions</h1>
-            <p class="mt-2 text-gray-600 text-lg">Manage detailed remittances for SSS, PhilHealth, Pag-IBIG, and Tax.</p>
+        <div class="px-8 py-8 relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Tax & Contributions</h1>
+                <p class="mt-2 text-gray-600">Period: <span class="font-semibold text-gray-900">@Model.CurrentPeriod</span></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <select id="periodSelect" onchange="if(this.value) window.location.href='/Contributions?periodId=' + this.value"
+                        class="pl-4 pr-10 py-2.5 bg-white border border-gray-300 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 shadow-sm">
+                    <option value="">— Select Payroll Period —</option>
+                    @foreach (var p in Model.Periods)
+                    {
+                        var isSel = p.PayrollPeriodId == Model.SelectedPeriodId ? "selected" : null;
+                        <option value="@p.PayrollPeriodId" selected="@isSel">
+                            @p.PeriodName — @p.Status
+                        </option>
+                    }
+                </select>
+            </div>
         </div>
     </div>
 
@@ -94,7 +109,7 @@
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold mr-3 @(item.Type == "SSS" ? "bg-blue-100 text-blue-700" : item.Type == "PhilHealth" ? "bg-green-100 text-green-700" : item.Type == "Pag-IBIG" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700")">
+                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold mr-3 @(item.Type == "SSS" ? "bg-blue-100 text-blue-700" : item.Type == "PhilHealth" ? "bg-green-100 text-green-700" : (item.Type == "Pag-IBIG" || item.Type == "PagIBIG" || item.Type == "PagIig" || item.Type == "PagIbig") ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700")">
                                         @item.Type.Substring(0, Math.Min(3, item.Type.Length))
                                     </div>
                                     <span class="text-sm font-medium text-gray-900 search-type">@item.Type</span>

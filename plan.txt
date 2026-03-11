@@ -1,0 +1,548 @@
+================================================================================
+                    PAYREX — COMPREHENSIVE IMPLEMENTATION PLAN
+================================================================================
+Generated: 2026-03-07
+Covers: SuperAdmin pages, Audit Logs, PayMongo billing, Admin billing
+        management, Dashboard subscription banner, DB schema changes, UI consistency
+================================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1 — DATABASE & MODEL CHANGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1.1  Subscription Model Enhancement (Models/Subscription.cs)
+     - Add: AutoRenew (bool, default true)
+     - Add: GracePeriodDays (int, default 7)
+     - Add: CancelledAt (DateTime?)
+     - Add: LastPaymentId (int?, FK to Payment)
+     Reason: Track auto-renewal, grace periods for expired subscriptions,
+             and link to the last successful payment.
+
+1.2  Payment Model Enhancement (Models/Payment.cs)
+     - Add: CompanyId (int, FK to Company) — direct reference for easy querying
+     - Add: PayMongoPaymentIntentId (string?, MaxLength 100) — stores PayMongo PI ID
+     - Add: PayMongoCheckoutSessionId (string?, MaxLength 100) — stores checkout session
+     - Add: PaymentMethod (string?, MaxLength 50) — e.g., "card", "gcash", "grab_pay"
+     - Add: Currency (string, default "PHP", MaxLength 10)
+     - Add: Description (string?, MaxLength 500)
+     Reason: PayMongo integration requires storing external IDs. CompanyId allows
+             quick lookup without joining through BillingInvoice.
+
+1.3  BillingInvoice Model Enhancement (Models/BillingInvoice.cs)
+     - Add: SubscriptionId (int?, FK to Subscription) — links invoice to subscription
+     - Add: PeriodStart (DateTime) — billing period start
+     - Add: PeriodEnd (DateTime) — billing period end
+     - Add: PaidAt (DateTime?) — when the invoice was fully paid
+     - Add: Description (string?, MaxLength 500)
+     Reason: Each invoice should track what subscription period it covers.
+
+1.4  AuditLog Model — No changes needed (already comprehensive)
+     Current fields cover: userId, companyId, role, action, entityAffected,
+     target, targetId, oldValues, newValues, ipAddress, userAgent, createdAt.
+
+1.5  New Enum: PaymentMethod (Enums/PaymentMethod.cs)
+     - Card = 0
+     - GCash = 1
+     - GrabPay = 2
+     - Maya = 3
+     - BankTransfer = 4
+
+1.6  SubscriptionStatus Enum Update (Enums/SubscriptionStatus.cs)
+     - Add: GracePeriod = 4
+     - Add: PastDue = 5
+     Reason: Distinguish between active, trial, grace period, and past due states.
+
+1.7  AppDbContext Update (Data/AppDbContext.cs)
+     - Add FK configurations for new relationships
+     - Add indexes on Payment.CompanyId, Payment.PayMongoPaymentIntentId
+     - Add index on BillingInvoice.SubscriptionId
+
+1.8  EF Migration
+     - Run: dotnet ef migrations add BillingAndPayMongoSupport
+     - Run: dotnet ef database update
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 2 — AUDIT LOG SYSTEM (Full Implementation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Current State: AuditLogs.cshtml uses STATIC demo data hard-coded in Razor.
+               ActivityLoggerService already writes real AuditLog records.
+               UserLoginAttempt model tracks login attempts separately.
+
+2.1  New API Endpoints — SuperAdminController
+     a) GET /api/superadmin/audit-logs?page=1&pageSize=15&search=&action=&from=&to=
+        - Returns paginated audit logs from AuditLogs table + UserLoginAttempts
+        - Combine into unified response list
+        - SuperAdmin sees ALL logs; Admin sees only their companyId logs
+        - Response DTO: AuditLogListDto { Items, TotalCount, Stats }
+
+     b) GET /api/superadmin/audit-logs/stats
+        - Returns quick counts: failedLogins, registrations, passwordResets,
+          emailRequests (last 30 days)
+
+2.2  New API Endpoints — CompaniesController (for Admin access)
+     a) GET /api/companies/{companyId}/audit-logs?page=1&pageSize=15&...
+        - Same as SuperAdmin but filtered by companyId from JWT
+        - Accessible by Admin role
+
+2.3  SuperAdminService New Methods
+     - GetAuditLogsAsync(page, pageSize, search, action, fromDate, toDate, companyId?)
+       → Queries AuditLogs + UserLoginAttempts
+       → Merges login attempts as "Login" / "Failed Login" actions
+       → Orders by CreatedAt DESC
+       → Returns paginated results + total count
+
+     - GetAuditLogStatsAsync(companyId?)
+       → Counts by action type from both tables
+       → Returns stats object
+
+2.4  AuditLogs.cshtml.cs — Full Rewrite
+     - Replace empty OnGet() with real API calls
+     - Properties: AuditItems, Stats, Page, PageSize, Search, Action, FromDate, ToDate
+     - Calls /api/superadmin/audit-logs (SuperAdmin) or
+             /api/companies/{companyId}/audit-logs (Admin)
+
+2.5  AuditLogs.cshtml — Replace Static Data with Dynamic
+     - Remove hard-coded C# log array (lines ~130-165)
+     - Replace with @foreach over Model.AuditItems
+     - Stats cards bind to Model.Stats.FailedLogins, etc.
+     - Pagination becomes server-side (not client-side JS filtering)
+     - Keep existing UI design (filters, table, badges) but wire to real data
+
+2.6  Events Already Logged (confirmation that these create AuditLog records):
+     ✓ Login (via AuthController → ActivityLoggerService)
+     ✓ Failed Login (via AuthController → UserLoginAttempt + AuditLog)
+     ✓ Registration (via AuthController)
+     ✓ Password Reset (via AuthController + SuperAdminService)
+     ✓ Forgot Password (via AuthController)
+     ✓ 2FA Changes (via AuthController)
+     ✓ User Status Change (via SuperAdminService)
+     ✓ Company Status Change (via SuperAdminService)
+     ✓ System Settings Update (via SuperAdminService)
+     ✓ Role Change (via SuperAdminService)
+     ✓ Plan Limit Change (via SuperAdminService)
+
+     Additional events to add logging for:
+     - Employee CRUD operations (EmployeesController)
+     - Attendance record creation
+     - Payroll period state changes
+     - Subscription/billing changes (new Phase 3)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 3 — PAYMONGO BILLING INTEGRATION (Test Mode)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NOTE: PayMongo API keys will be added by the user later.
+      All code uses appsettings configuration keys.
+      System will use PayMongo Checkout Session API.
+
+3.1  Configuration (appsettings.json)
+     Add section:
+     {
+       "PayMongo": {
+         "SecretKey": "<TO_BE_ADDED>",
+         "PublicKey": "<TO_BE_ADDED>",
+         "WebhookSecret": "<TO_BE_ADDED>",
+         "SuccessUrl": "https://localhost:7002/Billing?handler=PaymentSuccess",
+         "CancelUrl": "https://localhost:7002/Billing?handler=PaymentCancel",
+         "BaseUrl": "https://api.paymongo.com/v1"
+       }
+     }
+
+3.2  New Service — IPayMongoService / PayMongoService (API Project)
+     File: PayRexApplication/Services/PayMongoService.cs
+
+     Methods:
+     a) CreateCheckoutSessionAsync(decimal amount, string description,
+        string successUrl, string cancelUrl, int invoiceId)
+        → Calls POST /v1/checkout_sessions
+        → Returns CheckoutSessionDto { CheckoutSessionId, CheckoutUrl }
+        → Stores PayMongoCheckoutSessionId on Payment record
+
+     b) RetrieveCheckoutSessionAsync(string sessionId)
+        → Calls GET /v1/checkout_sessions/{id}
+        → Returns session status, payment intent details
+
+     c) HandleWebhookAsync(string payload, string signature)
+        → Validates webhook signature
+        → Processes "checkout_session.payment.paid" event
+        → Updates Payment status to Success
+        → Updates BillingInvoice status to Paid
+        → Updates Subscription dates if renewal
+        → Creates audit log entry
+
+     d) CreatePaymentRecordAsync(int invoiceId, int companyId, string provider,
+        decimal amount)
+        → Creates Payment record with Pending status
+        → Returns paymentId
+
+3.3  New Controller — BillingController (API Project)
+     File: PayRexApplication/Controllers/BillingController.cs
+     Route: api/billing
+
+     Endpoints:
+     a) GET /api/billing/subscription
+        - Returns current company subscription details
+        - Includes plan info, status, days remaining, next billing date
+
+     b) GET /api/billing/invoices
+        - Returns company's billing invoices with payment status
+
+     c) POST /api/billing/checkout
+        - Body: { invoiceId: int } or { planId: int, cycle: "Monthly"|"Yearly" }
+        - Creates invoice if needed
+        - Creates pending Payment record
+        - Calls PayMongo to create Checkout Session
+        - Returns { checkoutUrl: string }
+
+     d) POST /api/billing/renew
+        - Creates renewal invoice for current subscription plan
+        - Calls billing/checkout with that invoice
+        - Returns { checkoutUrl: string }
+
+     e) POST /api/billing/webhook (AllowAnonymous)
+        - PayMongo webhook receiver
+        - Validates signature header
+        - Processes payment events
+        - Updates invoice + payment + subscription status
+
+     f) GET /api/billing/payment-status/{paymentId}
+        - Returns current status of a payment
+
+3.4  Seed Data — Subscription Plans
+     Ensure registration flow creates:
+     - Subscription record with Trial status, 14-day trial period
+     - After trial, system checks on login if subscription is expired
+     - Grace period of 7 days after expiry
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 4 — SUPER ADMIN PAGES (Make Fully Functional)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Current State: Most SuperAdmin pages already call real APIs.
+               Some have static/hard-coded elements.
+
+4.1  Admin/Dashboard.cshtml — Enhancements
+     Current: Fetches real KPIs, but "Recent Activity" section is hard-coded.
+     Changes:
+     a) Replace hard-coded "Recent Activity" with real data from
+        GET /api/superadmin/audit-logs?pageSize=5
+     b) Replace hard-coded "System Notifications" with real data from
+        GET /api/superadmin/notifications
+     c) Add "Expiring Subscriptions" alert card showing companies whose
+        subscription expires within 7 days
+     d) Add real "Growth Analysis" chart data from API (currently using
+        dummy proportional data)
+
+4.2  Admin/Companies.cshtml — Enhancements
+     Current: Lists companies, can toggle active status. ✓ Functional.
+     Add:
+     a) View company details modal (employees count, subscription status,
+        last payment date)
+     b) Filter by status (Active/Suspended/Cancelled)
+     c) Search by company name
+     d) Link to company's subscription/billing details
+
+4.3  Admin/Users.cshtml — Enhancements
+     Current: Lists users, toggle status, change role, reset password. ✓ Functional.
+     Add:
+     a) Search/filter by name, email, role, company
+     b) Bulk actions (suspend multiple)
+     c) View user's last login info (from UserLoginAttempts)
+
+4.4  Admin/Billing.cshtml — SuperAdmin Billing Overview (Enhancements)
+     Current: Shows invoices list and plans. ✓ Partially functional.
+     Add:
+     a) Revenue chart (monthly trend)
+     b) Invoice status breakdown (pie chart)
+     c) Create/edit subscription plans
+     d) Mark invoices as paid (manual override for SuperAdmin)
+     e) Generate invoices for companies
+
+4.5  Admin/Settings.cshtml — ✓ Already functional
+     - Loads/saves government contribution percentages
+     - Password-protected changes
+     - No changes needed
+
+4.6  AuditLogs Page — Covered in Phase 2
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 5 — ADMIN BILLING MANAGEMENT (Company Admin View)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5.1  New Razor Page: Pages/Billing.cshtml (rewrite existing stub)
+     Current: Shows "Coming Soon" placeholder.
+     Full Implementation:
+
+     a) Subscription Status Card
+        - Current plan name, price, billing cycle
+        - Status badge (Active, Trial, Expired, GracePeriod)
+        - Days remaining / "Expired X days ago"
+        - Start date, end date, auto-renew toggle
+        - "Renew Now" button (if expired/expiring)
+        - "Upgrade Plan" button
+
+     b) Billing History Table
+        - List of invoices: number, amount, status, due date, paid date
+        - "Pay Now" button for unpaid invoices → triggers PayMongo checkout
+        - "View Receipt" for paid invoices
+
+     c) Payment Methods Section
+        - Placeholder for saved cards (PayMongo handles via checkout)
+        - Note: "Payment is processed securely via PayMongo"
+
+     d) Plan Comparison
+        - Show available plans from GET /api/superadmin/plans
+        - Current plan highlighted
+        - "Select Plan" triggers plan change + checkout
+
+5.2  Billing.cshtml.cs — Full Implementation
+     - OnGetAsync: Fetch subscription, invoices, plans
+     - OnPostRenewAsync: Create renewal invoice → redirect to PayMongo checkout
+     - OnPostUpgradeAsync(planId): Create upgrade invoice → redirect to checkout
+     - OnGetPaymentSuccessAsync: Handle return from PayMongo success URL
+     - OnGetPaymentCancelAsync: Handle return from PayMongo cancel URL
+
+5.3  Menu Configuration Update
+     Add "Billing" to Admin management menu:
+     new MenuItem { Title = "Billing", Url = "/Billing",
+       SectionHeader = "Administration", Icon = IconBilling,
+       AllowedRoles = new[] { "Admin" } }
+
+5.4  Subscription API Service (Web Project)
+     New service: IBillingApiService / BillingApiService
+     - GetSubscriptionAsync(token) → SubscriptionDto
+     - GetInvoicesAsync(token) → List<InvoiceDto>
+     - CreateCheckoutAsync(token, invoiceId) → CheckoutResultDto
+     - RenewSubscriptionAsync(token) → CheckoutResultDto
+     - UpgradePlanAsync(token, planId) → CheckoutResultDto
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 6 — DASHBOARD SUBSCRIPTION EXPIRATION BANNER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6.1  Dashboard.cshtml.cs — Add Subscription State
+     New properties:
+     - SubscriptionStatus (string: "Active", "Trial", "Expired", "GracePeriod")
+     - SubscriptionEndDate (DateTime?)
+     - DaysRemaining (int)
+     - PlanName (string)
+     - IsSubscriptionExpired (bool)
+
+     In OnGetAsync (for Admin role):
+     - Fetch /api/billing/subscription
+     - Set subscription properties
+
+6.2  Dashboard.cshtml — Add Expiration Banner
+     Top of page, conditional rendering:
+
+     a) If expired:
+        Red banner: "⚠️ Your subscription has expired. Renew now to
+        continue using PayRex. [Renew Now →]"
+
+     b) If in grace period (≤7 days past expiry):
+        Orange/Yellow banner: "⚠️ Your subscription expired X days ago.
+        You have Y days of grace period remaining. [Renew Now →]"
+
+     c) If expiring soon (≤14 days remaining):
+        Yellow banner: "Your subscription expires in X days.
+        [Renew Now →]"
+
+     d) If trial:
+        Blue banner: "You're on a free trial. X days remaining.
+        [Upgrade Now →]"
+
+6.3  Middleware — Subscription Check (Optional Enhancement)
+     Consider adding middleware that checks subscription status on each
+     request for Admin/HR/Accountant roles and blocks access to certain
+     pages (except Billing) if subscription is fully expired + past grace.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 7 — ADMIN FUNCTIONAL PAGES (Make All Logical)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7.1  Registration Flow — Subscription Creation
+     When a new company registers (AuthController.Register):
+     a) Create Company record (already done)
+     b) Create Subscription record:
+        - PlanId = selected plan (or default Starter)
+        - Status = Trial
+        - StartDate = now
+        - EndDate = now + 14 days (trial period)
+     c) No invoice created during trial
+
+7.2  Subscription Lifecycle — Background Job (or Login Check)
+     On user login (AuthController.Login):
+     a) Check company's active subscription
+     b) If EndDate < now AND Status != Expired:
+        - If within GracePeriodDays: set Status = GracePeriod
+        - If past grace period: set Status = Expired
+     c) Add subscription status to JWT claims
+     d) This allows the Dashboard banner to show correctly
+
+7.3  Invoice Generation
+     a) When subscription is near expiry (via login check or scheduled):
+        - Auto-create BillingInvoice for next billing period
+        - Amount = Plan.Price
+        - DueDate = Subscription.EndDate
+        - Status = Unpaid
+     b) Admin can also manually trigger renewal from Billing page
+
+7.4  Payment Flow
+     a) Admin clicks "Renew" or "Pay Invoice" on Billing page
+     b) Web creates checkout via POST /api/billing/checkout
+     c) API creates Payment record (Pending), calls PayMongo
+     d) User redirected to PayMongo hosted checkout page
+     e) On success, PayMongo calls webhook
+     f) Webhook handler:
+        - Marks Payment as Success
+        - Marks Invoice as Paid
+        - Extends Subscription.EndDate by billing cycle duration
+        - Sets Subscription.Status = Active
+        - Creates AuditLog entry
+
+7.5  Plan Upgrade Flow
+     a) Admin selects new plan on Billing page
+     b) System creates prorated invoice (or full price for simplicity)
+     c) Same checkout flow as renewal
+     d) On success, update Company.PlanId and Subscription.PlanId
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 8 — UI CONSISTENCY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Ensure all pages follow the same visual system established in the
+Admin/Dashboard and AuditLogs pages:
+
+8.1  Common Design Pattern for All Pages
+     a) Welcome Header: Gradient bg-blue-50 banner with title + description
+     b) Stats Cards: 4-column grid with icon, label, value
+     c) Filter Bar: White card with rounded inputs, clear button
+     d) Data Tables: White card, gray header, hover states, badges for status
+     e) Pagination: Consistent bottom bar with page info and nav buttons
+     f) Empty States: Centered icon + message + action link
+
+8.2  Color Palette (already defined in tailwind.config.cjs)
+     - Primary actions: blue-600
+     - Success/Active: green-100/green-700
+     - Warning/Pending: yellow-100/yellow-700
+     - Error/Failed: red-100/red-700
+     - Neutral: gray-100/gray-700
+
+8.3  Status Badges — Consistent across all pages
+     - Active/Success/Paid: bg-green-100 text-green-700
+     - Pending/Trial: bg-blue-100 text-blue-700
+     - Expired/Failed: bg-red-100 text-red-700
+     - Suspended/GracePeriod: bg-yellow-100 text-yellow-700
+     - Cancelled/Voided: bg-gray-100 text-gray-700
+
+8.4  Billing Page UI — Match existing design language
+     - Same rounded-2xl cards, border-gray-200, shadow-sm
+     - Same gradient headers on sections
+     - Same button styles (blue-600, rounded-xl)
+     - PayMongo checkout button styled as primary CTA
+
+8.5  Responsive Design
+     - All new pages must work on mobile (sm:) breakpoints
+     - Tables convert to card view on mobile
+     - Sidebar already handles mobile via existing layout
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILE CHANGE SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NEW FILES:
+  API Project (PayRexApplication/):
+  ├── Enums/PaymentMethodType.cs
+  ├── Services/PayMongoService.cs           (IPayMongoService + impl)
+  ├── Services/SubscriptionService.cs       (ISubscriptionService + impl)
+  ├── Controllers/BillingController.cs
+  └── DTOs/BillingDtos.cs                   (all billing-related DTOs)
+
+  Web Project (PayRex.Web/):
+  ├── Services/BillingApiService.cs         (IBillingApiService + impl)
+  └── (No new pages — rewriting existing Billing.cshtml)
+
+MODIFIED FILES:
+  API Project (PayRexApplication/):
+  ├── Models/Subscription.cs                (add new fields)
+  ├── Models/Payment.cs                     (add PayMongo fields)
+  ├── Models/BillingInvoice.cs              (add subscription link)
+  ├── Enums/SubscriptionStatus.cs           (add GracePeriod, PastDue)
+  ├── Data/AppDbContext.cs                  (new FK configs, indexes)
+  ├── Controllers/SuperAdminController.cs   (add audit-log endpoints)
+  ├── Controllers/AuthController.cs         (add subscription check on login)
+  ├── Services/SuperAdminService.cs         (add audit log query methods)
+  ├── Program.cs                            (register new services)
+  └── appsettings.json                      (add PayMongo config section)
+
+  Web Project (PayRex.Web/):
+  ├── Pages/AuditLogs.cshtml.cs             (rewrite with real API calls)
+  ├── Pages/AuditLogs.cshtml                (replace static data with model binding)
+  ├── Pages/Billing.cshtml.cs               (full rewrite with billing logic)
+  ├── Pages/Billing.cshtml                  (full rewrite with subscription UI)
+  ├── Pages/Dashboard.cshtml.cs             (add subscription status)
+  ├── Pages/Dashboard.cshtml                (add expiration banner)
+  ├── Pages/Admin/Dashboard.cshtml.cs       (replace static activity)
+  ├── Pages/Admin/Dashboard.cshtml          (use real notification data)
+  ├── Pages/Admin/Billing.cshtml            (add plan management, charts)
+  ├── Pages/Admin/Companies.cshtml          (add filters, search, details)
+  ├── Pages/Admin/Users.cshtml              (add search, filters)
+  ├── Configuration/MenuConfiguration.cs    (add Billing to Admin menu)
+  ├── Program.cs                            (register BillingApiService)
+  └── appsettings.json                      (add PayMongo public key)
+
+MIGRATION:
+  └── dotnet ef migrations add BillingAndPayMongoSupport
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPLEMENTATION ORDER (RECOMMENDED)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1:  Phase 1 — DB & Model changes + migration
+Step 2:  Phase 2 — Audit Log system (API + UI)
+Step 3:  Phase 3 — PayMongo service (API layer only, placeholder keys)
+Step 4:  Phase 7 — Business logic (subscription lifecycle, registration flow)
+Step 5:  Phase 5 — Admin Billing page (Web UI)
+Step 6:  Phase 6 — Dashboard subscription banner
+Step 7:  Phase 4 — SuperAdmin page enhancements
+Step 8:  Phase 8 — UI consistency pass across all pages
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PAYMONGO API REFERENCE (for implementation)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Base URL: https://api.paymongo.com/v1
+Auth: Basic auth with Secret Key (base64 encoded "sk_test_xxx:")
+
+Key Endpoints Used:
+1. POST /v1/checkout_sessions
+   - Creates hosted checkout page
+   - Supports: card, gcash, grab_pay, maya, bank_transfer
+   - Returns checkout_url for redirect
+
+2. GET /v1/checkout_sessions/{id}
+   - Retrieve session status after payment
+
+3. Webhook Events:
+   - checkout_session.payment.paid → payment successful
+   - payment.failed → payment failed
+
+Test Card Numbers (for development):
+- Success: 4343 4343 4343 4345 (any future exp, any CVC)
+- Failure: 4444 4444 4444 4441
+
+================================================================================
+END OF PLAN
+================================================================================

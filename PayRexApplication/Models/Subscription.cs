@@ -39,11 +39,26 @@ namespace PayRexApplication.Models
         [Column("updatedAt")]
         public DateTime? UpdatedAt { get; set; }
 
+        [Column("autoRenew")]
+        public bool AutoRenew { get; set; } = true;
+
+        [Column("gracePeriodDays")]
+        public int GracePeriodDays { get; set; } = 7;
+
+        [Column("cancelledAt")]
+        public DateTime? CancelledAt { get; set; }
+
+        [Column("lastPaymentId")]
+        public int? LastPaymentId { get; set; }
+
         // Navigation properties
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; } = null!;
 
         [ForeignKey("PlanId")]
         public virtual SubscriptionPlan SubscriptionPlan { get; set; } = null!;
+
+        [ForeignKey("LastPaymentId")]
+        public virtual Payment? LastPayment { get; set; }
     }
 }

@@ -31,9 +31,29 @@ namespace PayRexApplication.Models
         [Column("holidayRate", TypeName = "decimal(4,2)")]
         public decimal HolidayRate { get; set; } = 2.00m;
 
-        // Absent rate (multiplier or deduction percent) added to align with UI
-        [Column("absentRate", TypeName = "decimal(4,2)")]
-        public decimal AbsentRate { get; set; } = 0.00m;
+        /// <summary>
+        /// Number of hours after ScheduledTimeIn during which Time In is still accepted.
+        /// After this window the Time In is locked. 0 = no cutoff.
+        /// </summary>
+        [Column("timeInCutoffHours")]
+        public int TimeInCutoffHours { get; set; } = 0;
+
+        // Work Schedule
+        [Column("scheduledTimeIn")]
+        public TimeSpan? ScheduledTimeIn { get; set; }
+
+        [Column("scheduledTimeOut")]
+        public TimeSpan? ScheduledTimeOut { get; set; }
+
+        // Vacation Leave
+        [Column("vacationLeaveDays")]
+        public int VacationLeaveDays { get; set; } = 5;
+
+        /// <summary>
+        /// 0 = Monthly, 1 = Yearly
+        /// </summary>
+        [Column("vacationLeaveResetType")]
+        public int VacationLeaveResetType { get; set; } = 0;
 
         [Column("rolesJson")]
         [MaxLength(4000)]

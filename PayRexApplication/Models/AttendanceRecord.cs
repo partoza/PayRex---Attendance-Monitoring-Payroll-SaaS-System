@@ -6,62 +6,77 @@ using PayRexApplication.Enums;
 namespace PayRexApplication.Models
 {
     [Table("attendanceRecords")]
-   public class AttendanceRecord
+    public class AttendanceRecord
     {
-   [Key]
+        [Key]
         [Column("attendanceId")]
-  public int AttendanceId { get; set; }
+        public int AttendanceId { get; set; }
 
-     [Required]
-       [Column("employeeId")]
+        [Required]
+        [Column("employeeId")]
         public int EmployeeId { get; set; }
 
-     [Required]
-      [Column("companyId")]
-       public int CompanyId { get; set; }
+        [Required]
+        [Column("companyId")]
+        public int CompanyId { get; set; }
 
-   [Required]
+        [Required]
         [Column("date")]
         public DateOnly Date { get; set; }
 
         [Column("timeIn")]
-    public TimeOnly? TimeIn { get; set; }
+        public TimeOnly? TimeIn { get; set; }
 
-    [Column("timeOut")]
- public TimeOnly? TimeOut { get; set; }
+        [Column("timeOut")]
+        public TimeOnly? TimeOut { get; set; }
 
         [Required]
-   [Column("source")]
+        [Column("source")]
         public AttendanceSource Source { get; set; }
 
-   [Required]
-  [Column("locked")]
-  public bool Locked { get; set; } = false;
+        [Required]
+        [Column("locked")]
+        public bool Locked { get; set; } = false;
 
-    [Column("totalHoursWorked", TypeName = "decimal(5,2)")]
+        [Column("totalHoursWorked", TypeName = "decimal(5,2)")]
         public decimal? TotalHoursWorked { get; set; }
 
-    [Column("overtimeHours", TypeName = "decimal(5,2)")]
-   public decimal? OvertimeHours { get; set; }
+        [Column("overtimeHours", TypeName = "decimal(5,2)")]
+        public decimal? OvertimeHours { get; set; }
 
- [Column("lateMinutes")]
- public int? LateMinutes { get; set; }
+        [Column("lateMinutes")]
+        public int? LateMinutes { get; set; }
 
-       [Column("undertimeMinutes")]
+        [Column("undertimeMinutes")]
         public int? UndertimeMinutes { get; set; }
 
-      [Required]
-  [Column("createdAt")]
-      public DateTime CreatedAt { get; set; }
+        [Column("status")]
+        [MaxLength(50)]
+        public string Status { get; set; } = "Present";
 
-    [Column("updatedAt")]
-      public DateTime? UpdatedAt { get; set; }
+        [Column("remarks")]
+        [MaxLength(500)]
+        public string? Remarks { get; set; }
+
+        [Column("isHoliday")]
+        public bool IsHoliday { get; set; } = false;
+
+        [Column("holidayName")]
+        [MaxLength(200)]
+        public string? HolidayName { get; set; }
+
+        [Required]
+        [Column("createdAt")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updatedAt")]
+        public DateTime? UpdatedAt { get; set; }
 
         // Navigation properties
-    [ForeignKey("EmployeeId")]
-     public virtual Employee Employee { get; set; } = null!;
+        [ForeignKey("EmployeeId")]
+        public virtual Employee Employee { get; set; } = null!;
 
-     [ForeignKey("CompanyId")]
-     public virtual Company Company { get; set; } = null!;
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; } = null!;
     }
 }

@@ -22,6 +22,12 @@
                             Welcome to your employee portal. View your payslips, check your attendance, and manage your benefits.
                         </p>
                     }
+                    else if (Model.UserRole == "SuperAdmin")
+                    {
+                        <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                            System overview. Manage all companies, users, subscriptions, and platform finances.
+                        </p>
+                    }
                     else
                     {
                         <p class="text-lg text-gray-600 mt-4 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
@@ -35,8 +41,17 @@
                             <a href="/Payslips" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
                                 View My Payslip
                             </a>
-                            <a href="/Attendance" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                            <a href="/MyAttendance" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
                                 Check Attendance
+                            </a>
+                        }
+                        else if (Model.UserRole == "SuperAdmin")
+                        {
+                            <a href="/Admin/Companies" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md">
+                                Manage Companies
+                            </a>
+                            <a href="/Admin/Finance" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                View Finance
                             </a>
                         }
                         else
@@ -60,79 +75,450 @@
         </div>
     </div>
 
+    <!-- Subscription Warning Banner -->
+    @if (Model.Subscription != null && (Model.Subscription.IsExpired || Model.Subscription.IsInGracePeriod || Model.Subscription.DaysRemaining <= 7))
+    {
+        var bannerBg = Model.Subscription.IsExpired ? "bg-red-50 border-red-200" : "bg-yellow-50 border-yellow-200";
+        var bannerText = Model.Subscription.IsExpired ? "text-red-700" : "text-yellow-700";
+        var bannerIcon = Model.Subscription.IsExpired ? "text-red-500" : "text-yellow-500";
+
+        <div class="@bannerBg rounded-2xl border shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 @bannerIcon flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                <div>
+                    @if (Model.Subscription.IsExpired)
+                    {
+                        <p class="@bannerText font-semibold">Subscription Expired</p>
+                        <p class="@bannerText text-sm">Your subscription has expired. Some features may be restricted. Please renew now.</p>
+                    }
+                    else if (Model.Subscription.IsInGracePeriod)
+                    {
+                        <p class="@bannerText font-semibold">Subscription Past Due</p>
+                        <p class="@bannerText text-sm">Your subscription is in a grace period. Please renew within @Model.Subscription.GracePeriodDays days to avoid service interruption.</p>
+                    }
+                    else
+                    {
+                        <p class="@bannerText font-semibold">Subscription Expiring Soon</p>
+                        <p class="@bannerText text-sm">Your subscription expires in @Model.Subscription.DaysRemaining days (@Model.Subscription.EndDate.ToString("MMM dd, yyyy")).</p>
+                    }
+                </div>
+            </div>
+            <button type="button" onclick="openRenewalModal()" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm flex-shrink-0">
+                <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                Renew Now
+            </button>
+        </div>
+    }
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        @if (Model.UserRole == "Employee")
+        @if (Model.UserRole == "SuperAdmin")
+        {
+            <!-- Total Companies -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H4a1 1 0 010-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" /></svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Total Companies</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.SuperAdminKpis.TotalCompanies</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">@Model.SuperAdminKpis.ActiveCompanies Active</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Admin/Companies" class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors group">
+                        Manage Companies
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
+                </div>
+            </div>
+            <!-- Total Users -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Total Users</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.SuperAdminKpis.TotalUsers</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-lg">@Model.SuperAdminKpis.ActiveUsers Active</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Admin/Users" class="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors group">
+                        Manage Users
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
+                </div>
+            </div>
+            <!-- Monthly Revenue -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="flex items-start justify-between">
+                    <div class="w-11 h-11 rounded-2xl bg-green-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <button type="button" onclick="toggleVisibility('statMonthlyRev', this)" class="text-gray-400 hover:text-gray-600 transition-colors mt-0.5" title="Toggle visibility">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Monthly Revenue</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900" id="statMonthlyRev" data-value="₱@Model.SuperAdminKpis.MonthlyRevenue.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-green-50 text-green-600 px-2.5 py-1 rounded-lg">This Month</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Admin/Finance" class="flex items-center gap-1.5 text-sm font-semibold text-green-600 hover:text-green-800 transition-colors group">
+                        View Finance
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
+                </div>
+            </div>
+            <!-- Pending Invoices -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-yellow-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H10a3 3 0 013 3v1a1 1 0 102 0v-1a5 5 0 00-5-5H8.414l1.293-1.293z" clip-rule="evenodd" /></svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Pending Invoices</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.SuperAdminKpis.PendingInvoices</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-lg">Awaiting Payment</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Admin/Billing" class="flex items-center gap-1.5 text-sm font-semibold text-yellow-600 hover:text-yellow-800 transition-colors group">
+                        View Billing
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
+                </div>
+            </div>
+        }
+        else if (Model.UserRole == "Employee")
         {
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
                 <p class="text-sm font-medium text-gray-500">Days Present</p>
                 <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PresentDays</p>
-                <div class="mt-2 text-xs text-green-600 font-semibold bg-green-50 inline-block px-2 py-1 rounded">
-                    On Track
-                </div>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">On Track</div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
                 <p class="text-sm font-medium text-gray-500">Late Arrivals</p>
                 <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.LateDays</p>
-                <div class="mt-2 text-xs text-yellow-600 font-semibold bg-yellow-50 inline-block px-2 py-1 rounded">
-                    Warning
-                </div>
+                <div class="mt-2 text-xs text-yellow-600 font-semibold bg-yellow-50 inline-block px-2 py-1 rounded">Warning</div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
                 <p class="text-sm font-medium text-gray-500">Leave Balance</p>
                 <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.LeaveBalance</p>
-                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
-                    Available
-                </div>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">Available</div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <p class="text-sm font-medium text-gray-500">Next Payout</p>
-                <p class="mt-2 text-3xl font-bold text-gray-900">₱@Model.Stats.EstimatedPay.ToString("N2")</p>
-                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
-                    Est. Net Pay
+            <!-- Next Payout — sensitive: eye toggle -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-500">Next Payout</p>
+                    <button type="button" onclick="toggleVisibility('statEstPay', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                    </button>
                 </div>
+                <p class="mt-2 text-3xl font-bold text-gray-900" id="statEstPay" data-value="₱@Model.Stats.EstimatedPay.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">Est. Net Pay</div>
             </div>
         }
         else
         {
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <p class="text-sm font-medium text-gray-500">Total Employees</p>
-                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.TotalEmployees</p>
-                <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
-                    @Model.Stats.NewHires New Hires
+            <!-- Total Employees -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Total Employees</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.Stats.TotalEmployees</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">@Model.Stats.NewHires New Hires</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Employees" class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors group">
+                        Employee Management
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
                 </div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <p class="text-sm font-medium text-gray-500">Present Today</p>
-                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PresentToday</p>
-                <div class="mt-2 text-xs text-green-600 font-semibold bg-green-50 inline-block px-2 py-1 rounded">
-                    @Model.Stats.OnTimePercentage% On Time
+            <!-- Present Today -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Present Today</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.Stats.PresentToday</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg">@Model.Stats.OnTimePercentage% On Time</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Attendance" class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors group">
+                        Attendance Monitoring
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
                 </div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <p class="text-sm font-medium text-gray-500">Pending Payroll</p>
-                <p class="mt-2 text-3xl font-bold text-gray-900">@Model.Stats.PendingPayroll</p>
-                <div class="mt-2 text-xs text-yellow-600 font-semibold bg-yellow-50 inline-block px-2 py-1 rounded">
-                    Action Required
+            <!-- Pending Payroll -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="w-11 h-11 rounded-2xl bg-yellow-50 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Pending Payroll</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900">@Model.Stats.PendingPayroll</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-yellow-50 text-yellow-600 px-2.5 py-1 rounded-lg">Action Required</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Salary" class="flex items-center gap-1.5 text-sm font-semibold text-yellow-600 hover:text-yellow-800 transition-colors group">
+                        Salary Computation
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
                 </div>
             </div>
-             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <p class="text-sm font-medium text-gray-500">Payroll Cost</p>
-                <p class="mt-2 text-3xl font-bold text-gray-900">₱@Model.Stats.PayrollCost.ToString("N2")</p>
-                 <div class="mt-2 text-xs text-blue-600 font-semibold bg-blue-50 inline-block px-2 py-1 rounded">
-                    Current Period
+            <!-- Payroll Cost — sensitive: eye toggle -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col">
+                <div class="flex items-start justify-between">
+                    <div class="w-11 h-11 rounded-2xl bg-purple-50 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <button type="button" onclick="toggleVisibility('statPayrollCost', this)" class="text-gray-400 hover:text-gray-600 transition-colors mt-0.5" title="Toggle visibility">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm font-medium text-gray-500">Payroll Cost</p>
+                    <p class="mt-1 text-3xl font-bold text-gray-900" id="statPayrollCost" data-value="₱@Model.Stats.PayrollCost.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    <span class="mt-2 inline-block text-xs font-semibold bg-purple-50 text-purple-600 px-2.5 py-1 rounded-lg">Current Period</span>
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-100">
+                    <a href="/Salary" class="flex items-center gap-1.5 text-sm font-semibold text-purple-600 hover:text-purple-800 transition-colors group">
+                        Salary Computation
+                        <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </a>
                 </div>
             </div>
         }
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Main Content (Chart/List) -->
-        <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+    <!-- SuperAdmin Finance Overview -->
+    @if (Model.UserRole == "SuperAdmin")
+    {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Platform Finance</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Overall income, deductions, and profit from finance entries</p>
+                </div>
+                <a href="/Admin/Finance" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                    Manage Finance
+                </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Income -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('saIncome', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Income</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="saIncome" data-value="₱@Model.SuperAdminFinance.TotalIncome.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                </div>
+                <!-- Deductions -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('saDeductions', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Deductions</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="saDeductions" data-value="₱@Model.SuperAdminFinance.TotalDeductions.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                </div>
+                <!-- VAT -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.94 5.5c.944-.945 2.56-.276 2.56 1.06V8h5a1 1 0 110 2h-5v1.44c0 1.336-1.616 2.005-2.56 1.06L3.22 9.78a1.5 1.5 0 010-2.12L5.94 5.5z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('saVat', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total VAT</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="saVat" data-value="₱@Model.SuperAdminFinance.TotalVat.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                </div>
+                <!-- Net Profit -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('saProfit', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Net Profit</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="saProfit" data-value="₱@Model.SuperAdminFinance.NetProfit.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Finance Overview (Admin/HR/Accountant only) -->
+    @if (Model.UserRole != "Employee" && Model.UserRole != "SuperAdmin")
+    {
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-900">Finance Overview</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Payroll financial summary for the month</p>
+                </div>
+                <form method="get" id="financeFilterForm" class="flex flex-wrap items-center gap-2">
+                    <input type="hidden" name="dateFrom" id="finDateFromValue" value="@Model.Finance.SelectedDateFrom" />
+                    <input type="hidden" name="dateTo" id="finDateToValue" value="@Model.Finance.SelectedDateTo" />
+                    <div class="relative">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input datepicker datepicker-autohide datepicker-max-date="@DateTime.Now.ToString("MM/dd/yyyy")"
+                               id="finDateFromDisplay" type="text"
+                               value="@(DateTime.TryParse(Model.Finance.SelectedDateFrom, out var finFd) ? finFd.ToString("MM/dd/yyyy") : "")"
+                               class="bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block ps-10 pe-4 py-2.5 w-36 cursor-pointer"
+                               placeholder="From date" readonly />
+                    </div>
+                    <span class="text-gray-400 text-sm">–</span>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input datepicker datepicker-autohide datepicker-max-date="@DateTime.Now.ToString("MM/dd/yyyy")"
+                               id="finDateToDisplay" type="text"
+                               value="@(DateTime.TryParse(Model.Finance.SelectedDateTo, out var finTd) ? finTd.ToString("MM/dd/yyyy") : "")"
+                               class="bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block ps-10 pe-4 py-2.5 w-36 cursor-pointer"
+                               placeholder="To date" readonly />
+                    </div>
+                    <button type="submit" class="px-3 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors">Apply</button>
+                </form>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Gross Income -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('finGross', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gross Income</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="finGross" data-value="₱@Model.Finance.GrossIncome.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-100">
+                        <a href="/Salary" class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors group">View Payroll <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                    </div>
+                </div>
+                <!-- Net Revenue -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('finNet', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Net Revenue</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="finNet" data-value="₱@Model.Finance.NetRevenue.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-100">
+                        <a href="/Salary" class="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors group">View Payroll <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                    </div>
+                </div>
+                <!-- Total Deductions -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H10a3 3 0 013 3v1a1 1 0 102 0v-1a5 5 0 00-5-5H8.414l1.293-1.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('finDeduct', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Deductions</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="finDeduct" data-value="₱@Model.Finance.TotalExpenses.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-100">
+                        <a href="/Compensation" class="flex items-center gap-1.5 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors group">View Deductions <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                    </div>
+                </div>
+                <!-- Gov't Contributions -->
+                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col">
+                    <div class="flex items-start justify-between">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.94 5.5c.944-.945 2.56-.276 2.56 1.06V8h5a1 1 0 110 2h-5v1.44c0 1.336-1.616 2.005-2.56 1.06L3.22 9.78a1.5 1.5 0 010-2.12L5.94 5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <button type="button" onclick="toggleVisibility('finGovt', this)" class="text-gray-400 hover:text-gray-600 transition-colors" title="Toggle visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                        </button>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Gov't Contributions</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1" id="finGovt" data-value="₱@Model.Finance.GovernmentTaxes.ToString("N2")" data-hidden="true">₱ ••••••</p>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-gray-100">
+                        <a href="/Contributions" class="flex items-center gap-1.5 text-sm font-semibold text-yellow-600 hover:text-yellow-800 transition-colors group">View Contributions <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <!-- Main Content: Payroll Status + Recent Activity stacked -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+        <!-- Payroll Status / Attendance History / Platform Overview -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col" style="height:320px">
             <div class="px-6 py-5 border-b border-gray-50 bg-white">
                 <div class="flex items-center justify-between">
                     <div>
-                         @if (Model.UserRole == "Employee")
+                        @if (Model.UserRole == "SuperAdmin")
+                        {
+                            <h2 class="text-lg font-bold text-gray-900">Platform Overview</h2>
+                            <p class="text-sm text-gray-500 mt-0.5">Key metrics at a glance</p>
+                        }
+                        else if (Model.UserRole == "Employee")
                         {
                             <h2 class="text-lg font-bold text-gray-900">Attendance History</h2>
                             <p class="text-sm text-gray-500 mt-0.5">Your recent time logs</p>
@@ -145,84 +531,499 @@
                     </div>
                 </div>
             </div>
-             <div class="p-6 flex-1">
-                 @if (Model.UserRole == "Employee")
+             <div class="p-6 overflow-y-auto flex-1">
+                @if (Model.UserRole == "SuperAdmin")
                 {
-                    <!-- Employee View: Simple List for now -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-xl p-4 text-center">
+                            <p class="text-2xl font-bold text-blue-700">@Model.SuperAdminKpis.TotalEmployees</p>
+                            <p class="text-xs text-blue-600 font-medium mt-1">Total Employees</p>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-4 text-center">
+                            <p class="text-2xl font-bold text-green-700">@Model.SuperAdminKpis.TotalPlans</p>
+                            <p class="text-xs text-green-600 font-medium mt-1">Active Plans</p>
+                        </div>
+                        <div class="bg-indigo-50 rounded-xl p-4 text-center">
+                            <p class="text-2xl font-bold text-indigo-700">@Model.SuperAdminKpis.ActiveCompanies</p>
+                            <p class="text-xs text-indigo-600 font-medium mt-1">Active Companies</p>
+                        </div>
+                        <div class="bg-yellow-50 rounded-xl p-4 text-center">
+                            <p class="text-2xl font-bold text-yellow-700">@Model.SuperAdminFinance.EntryCount</p>
+                            <p class="text-xs text-yellow-600 font-medium mt-1">Finance Entries</p>
+                        </div>
+                    </div>
+                }
+                else if (Model.UserRole == "Employee")
+                {
+                    <!-- Employee View: Recent Attendance -->
                     <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">Today</p>
-                                <p class="text-xs text-gray-500">Regular Shift</p>
+                        @if (!Model.RecentAttendance.Any())
+                        {
+                            <p class="text-sm text-gray-500">No recent attendance records found.</p>
+                        }
+                        @foreach (var record in Model.RecentAttendance)
+                        {
+                            var isPresent = record.Status == "Present" || record.Status == "Late";
+                            <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">@record.Date</p>
+                                    <p class="text-xs text-gray-500">@(record.TimeIn ?? "--:--") - @(record.TimeOut ?? "--:--")</p>
+                                </div>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                    @(isPresent ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800")">
+                                    @record.Status
+                                </span>
                             </div>
-                            <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Present</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">Yesterday</p>
-                                <p class="text-xs text-gray-500">Regular Shift</p>
-                            </div>
-                            <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Present</span>
-                        </div>
+                        }
                     </div>
                 }
                 else
                 {
                      <!-- Admin View: Payroll List -->
                     <div class="space-y-4">
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                    FEB
+                        @if (!Model.RecentPeriods.Any())
+                        {
+                            <p class="text-sm text-gray-500">No payroll periods found.</p>
+                        }
+                        @foreach (var period in Model.RecentPeriods)
+                        {
+                            var isDraft = period.Status == "Draft";
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold
+                                        @(isDraft ? "bg-yellow-100 text-yellow-600" : "bg-blue-100 text-blue-600")">
+                                        @System.DateTime.Parse(period.StartDate).ToString("MMM")
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-gray-900">@period.PeriodName</p>
+                                        <p class="text-xs text-gray-500">@period.EmployeeCount Employees</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-bold text-gray-900">Feb 01 - 15, 2026</p>
-                                    <p class="text-xs text-gray-500">Regular Payroll</p>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full 
+                                        @(isDraft ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800")">
+                                        @period.Status
+                                    </span>
+                                    <button type="button"
+                                            onclick="openPeriodModal('@period.PeriodName', '@period.StartDate', '@period.EndDate', '@period.Status', @period.EmployeeCount, @period.TotalNetPay)"
+                                            class="bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-800 px-3 py-1.5 rounded-lg text-xs font-medium">
+                                        View
+                                    </button>
                                 </div>
                             </div>
-                             <span class="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Processing</span>
-                        </div>
-                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold">
-                                    JAN
-                                </div>
-                                <div>
-                                    <p class="text-sm font-bold text-gray-900">Jan 16 - 31, 2026</p>
-                                    <p class="text-xs text-gray-500">Regular Payroll</p>
-                                </div>
-                            </div>
-                             <span class="px-3 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Completed</span>
-                        </div>
+                        }
                     </div>
                 }
             </div>
         </div>
 
         <!-- Recent Activity Feed -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col" style="height:300px">
             <div class="px-6 py-5 border-b border-gray-50">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-gray-900">Recent Activity</h2>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <h2 class="text-base font-bold text-gray-900">Recent Activity</h2>
                 </div>
             </div>
-            <div class="p-6 flex-1 overflow-y-auto">
-                <div class="space-y-6">
+            <div class="p-4 flex-1 overflow-y-auto">
+                <div class="space-y-2">
                     @foreach (var activity in Model.RecentActivities)
                     {
-                        var color = activity.Type == "Success" ? "green" : activity.Type == "Warning" ? "yellow" : "blue";
-                        
-                        <div class="relative pl-6 before:absolute before:left-0 before:top-2 before:bottom-0 before:w-px before:bg-gray-100 last:before:hidden">
-                            <div class="absolute left-0 top-1.5 w-2 h-2 rounded-full ring-4 ring-white bg-@color-500"></div>
-                            <div class="flex flex-col">
-                                <p class="text-sm font-semibold text-gray-900">@activity.Title</p>
-                                <p class="text-xs text-gray-500 font-medium mt-0.5">@activity.Description</p>
-                                <span class="text-xs text-gray-400 mt-1">@activity.Time</span>
+                        var actBg = activity.Type == "Success" ? "bg-green-100" : activity.Type == "Warning" ? "bg-amber-100" : activity.Type == "error" ? "bg-red-100" : "bg-blue-100";
+                        var actText = activity.Type == "Success" ? "text-green-700" : activity.Type == "Warning" ? "text-amber-700" : activity.Type == "error" ? "text-red-700" : "text-blue-700";
+                        var actRing = activity.Type == "Success" ? "ring-green-200" : activity.Type == "Warning" ? "ring-amber-200" : activity.Type == "error" ? "ring-red-200" : "ring-blue-200";
+                        var actIcon = activity.Type == "Success"
+                            ? "<path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd' />"
+                            : activity.Type == "Warning"
+                            ? "<path fill-rule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' clip-rule='evenodd' />"
+                            : activity.Type == "error"
+                            ? "<path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clip-rule='evenodd' />"
+                            : "<path fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z' clip-rule='evenodd' />";
+                        <div class="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                            <div class="flex-shrink-0 w-9 h-9 rounded-xl @actBg ring-4 @actRing flex items-center justify-center">
+                                <svg class="w-4 h-4 @actText" fill="currentColor" viewBox="0 0 20 20">@Html.Raw(actIcon)</svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-start justify-between gap-2">
+                                    <p class="text-sm font-semibold text-gray-900 leading-tight">@activity.Title</p>
+                                    <span class="text-[10px] text-gray-400 font-medium whitespace-nowrap mt-0.5">@activity.Time</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-0.5">@activity.Description</p>
                             </div>
                         </div>
                     }
                 </div>
             </div>
         </div>
+
+        </div><!-- end lg:col-span-2 -->
+
+        <!-- Right Side Stack -->
+        <div class="flex flex-col gap-6">
+            <!-- SuperAdmin Quick Links -->
+            @if (Model.UserRole == "SuperAdmin")
+            {
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style="min-height:320px">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <h2 class="text-base font-bold text-gray-900">Quick Links</h2>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <a href="/Admin/Companies" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-blue-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2H4a1 1 0 010-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-blue-700">Manage Companies</span>
+                        </a>
+                        <a href="/Admin/Users" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-indigo-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-indigo-700">Manage Users</span>
+                        </a>
+                        <a href="/Admin/Settings" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-gray-200 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-gray-900">System Settings</span>
+                        </a>
+                        <a href="/AuditLogs" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-amber-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-amber-700">Audit Logs</span>
+                        </a>
+                        <a href="/Admin/Archives" class="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-red-50 transition-colors group">
+                            <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" /><path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 group-hover:text-red-700">Archives</span>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Billing Status (Admin only) -->
+            @if (Model.UserRole == "Admin" && Model.Subscription != null)
+            {
+                var sub = Model.Subscription;
+                var subStatusBg = sub.IsExpired ? "bg-red-100 text-red-700" : sub.IsInGracePeriod ? "bg-amber-100 text-amber-700" : sub.IsTrialing ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700";
+                var subStatusText = sub.IsExpired ? "Expired" : sub.IsInGracePeriod ? "Grace Period" : sub.IsTrialing ? "Trial" : "Active";
+                var subProgressBar = sub.IsExpired ? "bg-red-400" : sub.IsInGracePeriod ? "bg-amber-400" : "bg-blue-500";
+                var subBillingDays = sub.BillingCycle != null && sub.BillingCycle.ToLower().Contains("year") ? 365 : 30;
+                var subDaysPercent = sub.IsExpired ? 0 : (int)Math.Min(100.0, Math.Round((double)sub.DaysRemaining / subBillingDays * 100));
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" style="min-height:320px">
+                    <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                    <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <h2 class="text-base font-bold text-gray-900">Billing Status</h2>
+                        </div>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full @subStatusBg">@subStatusText</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">Plan</span>
+                            <span class="text-sm font-semibold text-gray-900">@sub.PlanName</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">Billing</span>
+                            <span class="text-sm font-semibold text-gray-900">@sub.BillingCycle</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">Renews</span>
+                            <span class="text-sm font-semibold text-gray-900">@sub.EndDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+                        @if (!sub.IsExpired)
+                        {
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs text-gray-400">Days remaining</span>
+                                    <span class="text-xs font-bold text-gray-700">@sub.DaysRemaining days</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                    <div class="@subProgressBar h-1.5 rounded-full transition-all" style="width: @subDaysPercent%"></div>
+                                </div>
+                            </div>
+                        }
+                        <button type="button" onclick="openRenewalModal()" class="mt-1 flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                            Renew / Upgrade
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- Upcoming Holidays (not for SuperAdmin) -->
+            @if (Model.UserRole != "SuperAdmin")
+            {
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col" style="height:300px">
+                <div class="px-5 py-4 border-b border-gray-100">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h2 class="text-base font-bold text-gray-900">Upcoming Holidays</h2>
+                    </div>
+                </div>
+                <div class="p-4 flex-1 overflow-y-auto">
+                    @if (!Model.UpcomingHolidays.Any())
+                    {
+                        <div class="flex flex-col items-center justify-center py-6 text-center">
+                            <svg class="w-10 h-10 text-gray-200 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <p class="text-sm text-gray-400">No upcoming holidays</p>
+                        </div>
+                    }
+                    <div class="space-y-2">
+                        @foreach (var holiday in Model.UpcomingHolidays)
+                        {
+                            var parsedDate = holiday.Date;
+                            var isFixed = holiday.Fixed;
+                            var daysUntil = (parsedDate.Date - DateTime.Now.Date).Days;
+                            var daysLabel = daysUntil == 0 ? "Today" : daysUntil == 1 ? "Tomorrow" : $"In {daysUntil} days";
+                            <div class="flex items-center gap-3 p-2.5 rounded-xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/40 transition-colors">
+                                <div class="flex flex-col items-center justify-center bg-blue-600 text-white rounded-xl w-11 h-11 flex-shrink-0 shadow-sm">
+                                    <span class="text-[9px] font-bold uppercase tracking-widest leading-none">@parsedDate.ToString("MMM")</span>
+                                    <span class="text-lg font-black leading-tight">@parsedDate.ToString("dd")</span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-semibold text-gray-900 truncate">@holiday.Name</p>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full @(isFixed ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700")">@(isFixed ? "Regular" : "Special")</span>
+                                        <span class="text-[10px] text-gray-400">@daysLabel</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+
+        </div><!-- end right sidebar -->
     </div>
 </div>
+
+<!-- Payroll Period Detail Modal -->
+<div id="periodModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" onclick="closePeriodModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4">
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                <h3 class="text-lg font-bold text-gray-900" id="periodModalTitle">Payroll Period</h3>
+                <button type="button" onclick="closePeriodModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <div class="px-6 py-5 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Start Date</p>
+                        <p class="text-sm font-bold text-gray-900 mt-1" id="periodModalStart">—</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">End Date</p>
+                        <p class="text-sm font-bold text-gray-900 mt-1" id="periodModalEnd">—</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Status</p>
+                        <p class="text-sm font-bold text-gray-900 mt-1" id="periodModalStatus">—</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl p-3">
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Employees</p>
+                        <p class="text-sm font-bold text-gray-900 mt-1" id="periodModalEmpCount">—</p>
+                    </div>
+                </div>
+                <div class="bg-blue-50 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-blue-400 font-medium uppercase tracking-wider mb-1">Total Net Pay</p>
+                        <p class="text-xl font-bold text-blue-900" id="periodModalNetPay" data-value="" data-hidden="false">—</p>
+                    </div>
+                    <button id="periodModalEyeBtn" type="button" onclick="toggleVisibility('periodModalNetPay', this)" class="text-blue-400 hover:text-blue-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>
+                    </button>
+                </div>
+                <a href="/Salary" class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                    View Full Payroll
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════ RENEWAL PLAN MODAL ═══════════════════════════ -->
+@if (Model.UserRole == "Admin" && Model.AvailablePlans.Any())
+{
+<div id="renewalModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm @(Model.ShowRenewalModal ? "" : "hidden")" onclick="if(event.target===this)closeRenewalModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden animate-fade-in">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-gray-100" style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">
+                            @(Model.Subscription?.IsExpired == true ? "Your Subscription Has Expired" : "Renew or Upgrade Your Plan")
+                        </h2>
+                        <p class="text-sm text-gray-500">Choose a plan to continue using PayRex</p>
+                    </div>
+                </div>
+                @if (Model.Subscription?.IsExpired != true)
+                {
+                <button onclick="closeRenewalModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </button>
+                }
+            </div>
+        </div>
+
+        <!-- Plan Cards -->
+        <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+            @foreach (var plan in Model.AvailablePlans)
+            {
+            <div class="bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-gray-900">@plan.Name</h3>
+                            @if (Model.Subscription?.PlanName == plan.Name)
+                            {
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Current</span>
+                            }
+                        </div>
+                        <p class="text-sm text-gray-500 mb-2">@(plan.Description ?? "PayRex Subscription Plan")</p>
+                        <div class="flex flex-wrap gap-3 text-xs text-gray-500">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                @plan.MaxEmployees employees
+                            </span>
+                            @if (plan.PlanUserLimit.HasValue)
+                            {
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                @plan.PlanUserLimit users
+                            </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                        <div class="text-right">
+                            <span class="text-2xl font-extrabold text-gray-900">₱@plan.Price.ToString("N2")</span>
+                            <span class="text-xs text-gray-400">/mo</span>
+                        </div>
+                        <a href="/Checkout?planId=@plan.PlanId" class="inline-flex items-center px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                            @(Model.Subscription?.PlanName == plan.Name ? "Renew Plan" : "Select Plan")
+                            <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+            <p class="text-xs text-gray-400 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                Secure payment via PayMongo
+            </p>
+            @if (Model.Subscription?.IsExpired != true)
+            {
+            <button onclick="closeRenewalModal()" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">Maybe later</button>
+            }
+        </div>
+    </div>
+</div>
+}
+
+@section Scripts {
+<script>
+    // ── Eye Toggle for Sensitive Values ──────────────────────────────────────
+    const _eyeOpen = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z" clip-rule="evenodd"/></svg>`;
+    const _eyeSlash = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z"/><path d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.244 4.243Z"/><path d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z"/></svg>`;
+
+    function toggleVisibility(id, btn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isHidden = el.dataset.hidden === 'true';
+        if (isHidden) {
+            el.textContent = el.dataset.value;
+            el.dataset.hidden = 'false';
+            btn.innerHTML = _eyeOpen;
+        } else {
+            el.dataset.value = el.textContent;
+            el.textContent = '₱ ••••••';
+            el.dataset.hidden = 'true';
+            btn.innerHTML = _eyeSlash;
+        }
+    }
+
+    // ── Finance Date Range Filter (Flowbite Datepicker) ──────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        const fromDisplay = document.getElementById('finDateFromDisplay');
+        const toDisplay = document.getElementById('finDateToDisplay');
+        const fromValue = document.getElementById('finDateFromValue');
+        const toValue = document.getElementById('finDateToValue');
+        if (!fromDisplay || !toDisplay) return;
+
+        fromDisplay.addEventListener('changeDate', function (e) {
+            const d = e.detail.date;
+            if (!d) return;
+            fromValue.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        });
+
+        toDisplay.addEventListener('changeDate', function (e) {
+            const d = e.detail.date;
+            if (!d) return;
+            toValue.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        });
+    });
+
+    // ── Payroll Period Modal ──────────────────────────────────────────────────
+    function openPeriodModal(name, startDate, endDate, status, empCount, totalNetPay) {
+        document.getElementById('periodModalTitle').textContent = name || 'Payroll Period';
+        const fmtDate = (d) => {
+            try { return new Date(d).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }); }
+            catch (e) { return d || '—'; }
+        };
+        document.getElementById('periodModalStart').textContent = fmtDate(startDate);
+        document.getElementById('periodModalEnd').textContent = fmtDate(endDate);
+        document.getElementById('periodModalStatus').textContent = status || '—';
+        document.getElementById('periodModalEmpCount').textContent = empCount || '—';
+        const netPayEl = document.getElementById('periodModalNetPay');
+        const formatted = '₱' + Number(totalNetPay).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        netPayEl.textContent = formatted;
+        netPayEl.dataset.value = formatted;
+        netPayEl.dataset.hidden = 'false';
+        const eyeBtn = document.getElementById('periodModalEyeBtn');
+        if (eyeBtn) eyeBtn.innerHTML = _eyeSlash;
+        document.getElementById('periodModal').classList.remove('hidden');
+    }
+    function closePeriodModal() {
+        document.getElementById('periodModal').classList.add('hidden');
+    }
+
+    // ── Renewal Plan Modal ──────────────────────────────────────────────────
+    function openRenewalModal() {
+        var modal = document.getElementById('renewalModal');
+        if (modal) modal.classList.remove('hidden');
+    }
+    function closeRenewalModal() {
+        var modal = document.getElementById('renewalModal');
+        if (modal) modal.classList.add('hidden');
+    }
+</script>
+}

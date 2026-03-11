@@ -1,0 +1,342 @@
+@page
+@model PayRex.Web.Pages.CompanySetupModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Company Setup - PayRex";
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@@1.11.1/font/bootstrap-icons.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/icon/payrexiconofficial.ico" />
+    
+    <!-- Additional styles for improved layout -->
+    <style>
+        /* Minimal custom styles to enhance Tailwind-like classes */
+        .preview-container {
+            transition: all 0.2s ease;
+        }
+        .preview-container.has-image {
+            border-color: var(--primary-color, #0A66C2);
+        }
+        .file-label {
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        body { background: white; }
+        body::before {
+            content: ''; position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: url('/images/loginbg.png') center/cover no-repeat;
+            opacity:0.2; z-index: -1;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col justify-center items-center py-10 px-4" style="font-family:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif">
+
+    <!-- Main container with max-w-5xl -->
+    <div class="w-full max-w-5xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-8">
+            <img src="/images/logo.png" alt="PayRex Logo" class="h-14 w-auto mb-3" />
+            <h1 class="text-3xl md:text-4xl font-semibold text-gray-800 mb-2">Set up your company</h1>
+            <p class="text-gray-500 text-base max-w-md text-center">Tell us about your company so we can personalise your experience.</p>
+        </div>
+
+        <!-- Card - wider with max-w-2xl inside max-w-5xl -->
+        <div class="bg-white rounded-2xl shadow-md w-full max-w-2xl mx-auto p-6 md:p-8">
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="mb-6 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm flex items-center gap-2">
+                    <i class="bi bi-exclamation-circle-fill text-red-500"></i>
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                @Html.AntiForgeryToken()
+
+                <!-- Logo & Signature Grid - side by side on tablet/desktop -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pb-6 border-b border-gray-100">
+                    
+                    <!-- Logo Upload -->
+                    <div class="flex flex-col items-center md:items-start">
+                        <label class="text-sm font-medium text-gray-700 mb-3">Company Logo</label>
+                        <div class="flex flex-col items-center w-full">
+                            <div id="logoPreviewWrap"
+                                 class="w-full h-28 rounded-2xl border-2 border-gray-200 flex items-center justify-center bg-white preview-container p-2">
+                                <i class="bi bi-building text-4xl text-gray-400" id="logoPlaceholder"></i>
+                                <img id="logoPreview" src="#" alt="Logo preview" class="hidden max-w-full max-h-full object-contain" />
+                            </div>
+                            <label for="logoFile" class="file-label mt-3 inline-flex items-center gap-1.5 text-sm text-primary font-medium hover:underline">
+                                <i class="bi bi-cloud-upload"></i> Upload logo
+                            </label>
+                            <input type="file" id="logoFile" name="logoFile" accept="image/*" class="hidden"
+                                   onchange="previewLogo(this)" />
+                            <p class="text-xs text-gray-400 mt-2 text-center md:text-left">PNG, JPG, or SVG. 200×200 px.</p>
+                        </div>
+                    </div>
+
+                    <!-- Owner Signature (required) -->
+                    <div class="flex flex-col items-center md:items-start">
+                        <label class="text-sm font-medium text-gray-700 mb-3">
+                            Owner Signature <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex flex-col items-center w-full">
+                            <div id="signaturePreviewBox"
+                                 class="w-full h-28 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center bg-gray-50 overflow-hidden preview-container">
+                                <span class="text-gray-400 text-xs text-center px-2" id="sigPlaceholder">No signature</span>
+                                <img id="sigPreview" src="#" alt="Signature preview" class="hidden max-h-24 object-contain" />
+                            </div>
+                            <label for="signatureFile" class="file-label mt-3 inline-flex items-center gap-1.5 text-sm text-primary font-medium hover:underline">
+                                <i class="bi bi-pen"></i> Upload signature
+                            </label>
+                            <input type="file" id="signatureFile" name="signatureFile" accept="image/*" class="hidden"
+                                   onchange="previewSignature(this)" />
+                            <p id="signatureError" class="hidden mt-1 text-xs text-red-500 flex items-center gap-1">
+                                <i class="bi bi-exclamation-circle"></i> Owner signature is required.
+                            </p>
+                            <p class="text-xs text-gray-400 mt-2 text-center md:text-left">PNG or JPG. Transparent bg ideal.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Details Grid - 2 columns on larger screens -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <!-- Company Name (full width on mobile, left on desktop) -->
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label for="CompanyName" class="block text-sm font-medium text-gray-700 mb-1">
+                            Company Name <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="CompanyName" type="text" id="CompanyName" name="CompanyName" value="@Model.CompanyName"
+                               placeholder="e.g. Acme Corporation"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all hover:border-gray-400" />
+                        <p id="companyNameError" class="hidden mt-1 text-xs text-red-500 flex items-center gap-1">
+                            <i class="bi bi-exclamation-circle"></i> Company name is required.
+                        </p>
+                    </div>
+
+                    <!-- TIN -->
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label for="Tin" class="block text-sm font-medium text-gray-700 mb-1">Tax Identification Number (TIN)</label>
+                        <input asp-for="Tin" type="text" id="Tin" name="Tin" value="@Model.Tin"
+                               placeholder="e.g. 123-456-789-000"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all hover:border-gray-400" />
+                    </div>
+
+                    <!-- Address (full width) -->
+                    <div class="md:col-span-2">
+                        <label for="Address" class="block text-sm font-medium text-gray-700 mb-1">Company Address</label>
+                        <textarea asp-for="Address" id="Address" name="Address" rows="3" placeholder="Full business address"
+                                  class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all hover:border-gray-400 resize-vertical">@Model.Address</textarea>
+                    </div>
+
+                    <!-- Contact Phone -->
+                    <div class="md:col-span-2 lg:col-span-1">
+                        <label for="ContactPhone" class="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
+                        <input asp-for="ContactPhone" type="tel" id="ContactPhone" name="ContactPhone"
+                               value="@Model.ContactPhone" placeholder="+63 9XX XXX XXXX"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all hover:border-gray-400" />
+                    </div>
+
+                    <!-- Helper text -->
+                    <div class="md:col-span-2 lg:col-span-1 flex items-end">
+                        <p class="text-xs text-gray-400 pb-3">
+                            <i class="bi bi-info-circle mr-1"></i>
+                            For billing notifications
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="pt-4">
+                    <button type="button" onclick="submitSetupForm()"
+                            class="w-full bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg px-4 py-4 text-base transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0">
+                        Complete Setup
+                        <i class="bi bi-arrow-right-circle"></i>
+                    </button>
+                </div>
+            </form>
+
+            <p class="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-2">
+                <i class="bi bi-shield-check text-gray-300"></i>
+                You can update these later in <strong>Settings → Company Profile</strong>.
+            </p>
+        </div>
+        
+        <!-- Footer note -->
+        <p class="text-center text-gray-400 text-xs mt-6">
+            PayRex © 2025 · Secure company setup
+        </p>
+    </div>
+
+    <script>
+        function submitSetupForm() {
+            let valid = true;
+
+            const companyName = document.getElementById('CompanyName');
+            const companyNameError = document.getElementById('companyNameError');
+            if (!companyName.value.trim()) {
+                companyNameError.classList.remove('hidden');
+                companyName.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                companyName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                valid = false;
+            } else {
+                companyNameError.classList.add('hidden');
+                companyName.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+            }
+
+            const signatureFile = document.getElementById('signatureFile');
+            const signatureError = document.getElementById('signatureError');
+            if (!signatureFile.files || signatureFile.files.length === 0) {
+                signatureError.classList.remove('hidden');
+                if (valid) signatureFile.closest('.flex.flex-col').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                valid = false;
+            } else {
+                signatureError.classList.add('hidden');
+            }
+
+            if (valid) {
+                companyName.closest('form').submit();
+            }
+        }
+
+        // Clear error on input
+        document.getElementById('CompanyName')?.addEventListener('input', function() {
+            if (this.value.trim()) {
+                document.getElementById('companyNameError')?.classList.add('hidden');
+                this.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+            }
+        });
+        document.getElementById('signatureFile')?.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                document.getElementById('signatureError')?.classList.add('hidden');
+            }
+        });
+
+        // TIN formatting: auto-insert hyphens → XXX-XXX-XXX-XXXX
+        const tinInput = document.getElementById('Tin');
+        if (tinInput) {
+            tinInput.addEventListener('input', function() {
+                let val = this.value.replace(/\D/g, '').substring(0, 12);
+                let parts = [];
+                if (val.length > 0) parts.push(val.substring(0, 3));
+                if (val.length > 3) parts.push(val.substring(3, 6));
+                if (val.length > 6) parts.push(val.substring(6, 9));
+                if (val.length > 9) parts.push(val.substring(9, 12));
+                this.value = parts.join('-');
+            });
+        }
+
+        // Phone formatting: digits only, starts with 09, max 11 digits
+        const phoneInput = document.getElementById('ContactPhone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function() {
+                let val = this.value.replace(/\D/g, '').substring(0, 11);
+                if (val.length >= 2 && !val.startsWith('09')) {
+                    val = '09' + val.replace(/^0*9*/, '').substring(0, 9);
+                }
+                this.value = val;
+            });
+            phoneInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Tab' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') return;
+                if (!/[0-9]/.test(e.key)) e.preventDefault();
+            });
+        }
+
+        function previewLogo(input) {
+            const preview = document.getElementById('logoPreview');
+            const placeholder = document.getElementById('logoPlaceholder');
+            const wrap = document.getElementById('logoPreviewWrap');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    wrap.classList.add('has-image', 'border-primary');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                wrap.classList.remove('has-image', 'border-primary');
+            }
+        }
+
+        function previewSignature(input) {
+            const preview = document.getElementById('sigPreview');
+            const placeholder = document.getElementById('sigPlaceholder');
+            const wrap = document.getElementById('signaturePreviewBox');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                    wrap.classList.add('has-image', 'border-primary', 'border-solid');
+                    wrap.classList.remove('border-dashed', 'border-gray-300');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                wrap.classList.remove('has-image', 'border-primary', 'border-solid');
+                wrap.classList.add('border-dashed', 'border-gray-300');
+            }
+        }
+
+        // Optional: Add drag and drop
+        function setupDragAndDrop() {
+            const dropZones = document.querySelectorAll('#logoPreviewWrap, #signaturePreviewBox');
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                });
+                
+                zone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+                });
+                
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+                    
+                    const fileInput = zone.id === 'logoPreviewWrap' 
+                        ? document.getElementById('logoFile')
+                        : document.getElementById('signatureFile');
+                    
+                    if (e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        
+                        if (zone.id === 'logoPreviewWrap') {
+                            previewLogo(fileInput);
+                        } else {
+                            previewSignature(fileInput);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize drag and drop
+        document.addEventListener('DOMContentLoaded', setupDragAndDrop);
+    </script>
+</body>
+
+</html>

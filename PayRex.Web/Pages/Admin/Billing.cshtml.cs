@@ -52,6 +52,7 @@ await Task.WhenAll(billingTask, plansTask);
 public string InvoiceNumber { get; set; } = "";
     public string CompanyName { get; set; } = "";
     public decimal Amount { get; set; }
+   public decimal VatAmount { get; set; }
    public string Status { get; set; } = "";
   public DateTime DueDate { get; set; }
      public DateTime CreatedAt { get; set; }

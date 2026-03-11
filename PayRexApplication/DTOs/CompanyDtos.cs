@@ -11,6 +11,7 @@ namespace PayRexApplication.DTOs
  public string? ContactPhone { get; set; }
  public string? Tin { get; set; }
  public string? LogoUrl { get; set; }
+ public string? OwnerSignatureUrl { get; set; }
 
  // Payroll settings
  public int? PayrollCycle { get; set; }
@@ -18,7 +19,15 @@ namespace PayRexApplication.DTOs
  public decimal? OvertimeRate { get; set; }
  public int? LateGraceMinutes { get; set; }
  public decimal? HolidayRate { get; set; }
- public decimal? AbsentRate { get; set; }
+
+ // Work Schedule
+ public string? ScheduledTimeIn { get; set; }
+ public string? ScheduledTimeOut { get; set; }
+ public int? TimeInCutoffHours { get; set; }
+
+ // Vacation Leave
+ public int? VacationLeaveDays { get; set; }
+ public int? VacationLeaveResetType { get; set; }
 
  // Roles JSON for frontend
  public string? RolesJson { get; set; }
@@ -45,13 +54,24 @@ namespace PayRexApplication.DTOs
  [MaxLength(512)]
  public string? LogoUrl { get; set; }
 
+ [MaxLength(512)]
+ public string? OwnerSignatureUrl { get; set; }
+
  // Payroll settings
  public int? PayrollCycle { get; set; }
  public decimal? WorkHoursPerDay { get; set; }
  public decimal? OvertimeRate { get; set; }
  public int? LateGraceMinutes { get; set; }
  public decimal? HolidayRate { get; set; }
- public decimal? AbsentRate { get; set; }
+
+ // Work Schedule
+ public string? ScheduledTimeIn { get; set; }
+ public string? ScheduledTimeOut { get; set; }
+ public int? TimeInCutoffHours { get; set; }
+
+ // Vacation Leave
+ public int? VacationLeaveDays { get; set; }
+ public int? VacationLeaveResetType { get; set; }
 
  // Roles
  public string? RolesJson { get; set; }

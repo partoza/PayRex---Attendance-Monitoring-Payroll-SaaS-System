@@ -18,9 +18,9 @@ namespace PayRex.Web.Pages
         public SettingsModel(IAuthApiService authApi) { _authApi = authApi; }
 
         [BindProperty(SupportsGet = true)] public bool IsEditMode { get; set; }
-        [TempData] public string? StatusMessage { get; set; }
-        [TempData] public string? SuccessMessage { get; set; }
-        [TempData] public string? ErrorMessage { get; set; }
+        [TempData(Key = "Settings_StatusMessage")] public string? StatusMessage { get; set; }
+        [TempData(Key = "Settings_SuccessMessage")] public string? SuccessMessage { get; set; }
+        [TempData(Key = "Settings_ErrorMessage")] public string? ErrorMessage { get; set; }
 
         [BindProperty]
         public CompanyProfileDto Profile { get; set; } = new();
@@ -86,6 +86,9 @@ namespace PayRex.Web.Pages
         [BindProperty]
         public IFormFile? CompanyLogoFile { get; set; }
 
+        [BindProperty]
+        public IFormFile? OwnerSignatureFile { get; set; }
+
         public async Task<IActionResult> OnPostUploadCompanyLogoAsync()
         {
             IsEditMode = true;
@@ -135,17 +138,30 @@ namespace PayRex.Web.Pages
                         ContactPhone = cp.ContactPhone,
                         Tin = cp.Tin,
                         LogoUrl = resp.ImageUrl,
+                        OwnerSignatureUrl = cp.OwnerSignatureUrl,
                         PayrollCycle = cp.PayrollCycle,
                         WorkHoursPerDay = cp.WorkHoursPerDay,
                         OvertimeRate = cp.OvertimeRate,
                         LateGraceMinutes = cp.LateGraceMinutes,
                         HolidayRate = cp.HolidayRate,
-                        AbsentRate = cp.AbsentRate,
+                        ScheduledTimeIn = cp.ScheduledTimeIn,
+                        ScheduledTimeOut = cp.ScheduledTimeOut,
+                        TimeInCutoffHours = cp.TimeInCutoffHours,
+                        VacationLeaveDays = cp.VacationLeaveDays,
+                        VacationLeaveResetType = cp.VacationLeaveResetType,
                         RolesJson = cp.RolesJson
                     };
 
                     var (success, message) = await _authApi.UpdateCompanyProfileAsync(token, dto);
-                    if (success) SuccessMessage = message ?? "Upload Company Profile Successfully";
+                    if (success)
+                    {
+                        // Refresh JWT so nav logo updates immediately
+                        var newToken = await _authApi.RefreshTokenAsync(token);
+                        if (!string.IsNullOrEmpty(newToken))
+                            Response.Cookies.Append("PayRex.AuthToken", newToken, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.None, Path = "/", Expires = DateTimeOffset.UtcNow.AddHours(8) });
+
+                        SuccessMessage = message ?? "Company logo updated";
+                    }
                     else ErrorMessage = message ?? "Failed to update logo";
                 }
                 else
@@ -181,18 +197,148 @@ namespace PayRex.Web.Pages
                 ContactPhone = cp.ContactPhone,
                 Tin = cp.Tin,
                 LogoUrl = null,
+                OwnerSignatureUrl = cp.OwnerSignatureUrl,
                 PayrollCycle = cp.PayrollCycle,
                 WorkHoursPerDay = cp.WorkHoursPerDay,
                 OvertimeRate = cp.OvertimeRate,
                 LateGraceMinutes = cp.LateGraceMinutes,
                 HolidayRate = cp.HolidayRate,
-                AbsentRate = cp.AbsentRate,
+                ScheduledTimeIn = cp.ScheduledTimeIn,
+                ScheduledTimeOut = cp.ScheduledTimeOut,
+                TimeInCutoffHours = cp.TimeInCutoffHours,
+                VacationLeaveDays = cp.VacationLeaveDays,
+                VacationLeaveResetType = cp.VacationLeaveResetType,
                 RolesJson = cp.RolesJson
             };
 
             var (success, message) = await _authApi.UpdateCompanyProfileAsync(token, dto);
-            if (success) SuccessMessage = message ?? "Company Profile Logo Removed";
+            if (success)
+            {
+                // Refresh JWT so nav logo updates immediately
+                var newToken = await _authApi.RefreshTokenAsync(token);
+                if (!string.IsNullOrEmpty(newToken))
+                    Response.Cookies.Append("PayRex.AuthToken", newToken, new CookieOptions { HttpOnly = true, SameSite = SameSiteMode.None, Path = "/", Expires = DateTimeOffset.UtcNow.AddHours(8) });
+
+                SuccessMessage = message ?? "Company logo removed";
+            }
             else ErrorMessage = message ?? "Failed to remove logo";
+            return RedirectToPage(new { edit = true });
+        }
+
+        public async Task<IActionResult> OnPostUploadOwnerSignatureAsync()
+        {
+            IsEditMode = true;
+            var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
+            if (OwnerSignatureFile == null || OwnerSignatureFile.Length == 0)
+            {
+                StatusMessage = "No file selected.";
+                return RedirectToPage(new { edit = true });
+            }
+
+            const long MaxBytes = 2 * 1024 * 1024;
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var ext = Path.GetExtension(OwnerSignatureFile.FileName).ToLowerInvariant();
+            if (OwnerSignatureFile.Length > MaxBytes || !allowed.Contains(ext))
+            {
+                StatusMessage = "Invalid file. Max 2MB, JPG/PNG/WEBP allowed.";
+                return RedirectToPage(new { edit = true });
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                StatusMessage = "Not authenticated.";
+                return RedirectToPage(new { edit = true });
+            }
+
+            try
+            {
+                await using var ms = new MemoryStream();
+                await OwnerSignatureFile.CopyToAsync(ms);
+                ms.Position = 0;
+                var resp = await _authApi.UploadOwnerSignatureAsync(token, ms, OwnerSignatureFile.FileName, OwnerSignatureFile.ContentType);
+                if (resp != null && resp.Success && !string.IsNullOrEmpty(resp.ImageUrl))
+                {
+                    // The signature endpoint already saves to DB, but we call UpdateCompanyProfileAsync
+                    // to keep all other fields intact and get a consistent API response.
+                    var cp = await _authApi.GetCompanyProfileAsync(token);
+                    if (cp == null)
+                    {
+                        StatusMessage = "Failed to load company profile before saving signature.";
+                        return RedirectToPage(new { edit = true });
+                    }
+                    var dto = new UpdateCompanyRequestDto
+                    {
+                        CompanyName = cp.CompanyName ?? string.Empty,
+                        Address = cp.Address,
+                        ContactEmail = cp.ContactEmail,
+                        ContactPhone = cp.ContactPhone,
+                        Tin = cp.Tin,
+                        LogoUrl = cp.LogoUrl,
+                        OwnerSignatureUrl = resp.ImageUrl,
+                        PayrollCycle = cp.PayrollCycle,
+                        WorkHoursPerDay = cp.WorkHoursPerDay,
+                        OvertimeRate = cp.OvertimeRate,
+                        LateGraceMinutes = cp.LateGraceMinutes,
+                        HolidayRate = cp.HolidayRate,
+                        ScheduledTimeIn = cp.ScheduledTimeIn,
+                        ScheduledTimeOut = cp.ScheduledTimeOut,
+                        TimeInCutoffHours = cp.TimeInCutoffHours,
+                        VacationLeaveDays = cp.VacationLeaveDays,
+                        VacationLeaveResetType = cp.VacationLeaveResetType,
+                        RolesJson = cp.RolesJson
+                    };
+
+                    var (success, message) = await _authApi.UpdateCompanyProfileAsync(token, dto);
+                    if (success) SuccessMessage = message ?? "Owner signature updated";
+                    else ErrorMessage = message ?? "Failed to save signature";
+                }
+                else
+                {
+                    ErrorMessage = resp?.Message ?? "Failed to upload signature to cloud.";
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Error uploading signature: " + ex.Message;
+            }
+
+            return RedirectToPage(new { edit = true });
+        }
+
+        public async Task<IActionResult> OnPostRemoveOwnerSignatureAsync()
+        {
+            IsEditMode = true;
+            var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
+            if (string.IsNullOrEmpty(token)) { StatusMessage = "Not authenticated."; return RedirectToPage(new { edit = true }); }
+
+            var cp = await _authApi.GetCompanyProfileAsync(token);
+            if (cp == null) { ErrorMessage = "Failed to load company profile."; return RedirectToPage(new { edit = true }); }
+
+            var dto = new UpdateCompanyRequestDto
+            {
+                CompanyName = cp.CompanyName ?? string.Empty,
+                Address = cp.Address,
+                ContactEmail = cp.ContactEmail,
+                ContactPhone = cp.ContactPhone,
+                Tin = cp.Tin,
+                LogoUrl = cp.LogoUrl,
+                OwnerSignatureUrl = null,
+                PayrollCycle = cp.PayrollCycle,
+                WorkHoursPerDay = cp.WorkHoursPerDay,
+                OvertimeRate = cp.OvertimeRate,
+                LateGraceMinutes = cp.LateGraceMinutes,
+                HolidayRate = cp.HolidayRate,
+                ScheduledTimeIn = cp.ScheduledTimeIn,
+                ScheduledTimeOut = cp.ScheduledTimeOut,
+                TimeInCutoffHours = cp.TimeInCutoffHours,
+                VacationLeaveDays = cp.VacationLeaveDays,
+                VacationLeaveResetType = cp.VacationLeaveResetType,
+                RolesJson = cp.RolesJson
+            };
+
+            var (success, message) = await _authApi.UpdateCompanyProfileAsync(token, dto);
+            if (success) SuccessMessage = message ?? "Owner signature removed";
+            else ErrorMessage = message ?? "Failed to remove signature";
             return RedirectToPage(new { edit = true });
         }
 
@@ -203,7 +349,7 @@ namespace PayRex.Web.Pages
             var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
             if (string.IsNullOrEmpty(token)) return RedirectToPage("/Auth/Login");
 
-            // Fetch current profile to preserve LogoUrl (in case it was uploaded separately)
+            // Fetch current profile to preserve LogoUrl and OwnerSignatureUrl (uploaded separately)
             var currentProfile = await _authApi.GetCompanyProfileAsync(token);
             if (currentProfile == null)
             {
@@ -218,8 +364,9 @@ namespace PayRex.Web.Pages
                 ContactEmail = Request.Form["ContactEmail"],
                 ContactPhone = Request.Form["ContactPhone"],
                 Tin = Request.Form["Tin"],
-                // Preserve the current LogoUrl (which may have been uploaded via OnPostUploadCompanyLogoAsync)
-                LogoUrl = currentProfile.LogoUrl
+                // Preserve the current LogoUrl and OwnerSignatureUrl (may have been uploaded separately)
+                LogoUrl = currentProfile.LogoUrl,
+                OwnerSignatureUrl = currentProfile.OwnerSignatureUrl
             };
 
             // Also pick up payroll fields if present in the same form
@@ -228,7 +375,13 @@ namespace PayRex.Web.Pages
             if (Request.Form.ContainsKey("OvertimeRate") && decimal.TryParse(Request.Form["OvertimeRate"], out var orr)) dto.OvertimeRate = orr;
             if (Request.Form.ContainsKey("LateGraceMinutes") && int.TryParse(Request.Form["LateGraceMinutes"], out var lg)) dto.LateGraceMinutes = lg;
             if (Request.Form.ContainsKey("HolidayRate") && decimal.TryParse(Request.Form["HolidayRate"], out var hr)) dto.HolidayRate = hr;
-            if (Request.Form.ContainsKey("AbsentRate") && decimal.TryParse(Request.Form["AbsentRate"], out var ar)) dto.AbsentRate = ar;
+
+            // Work Schedule & Leave
+            if (Request.Form.ContainsKey("ScheduledTimeIn")) dto.ScheduledTimeIn = Request.Form["ScheduledTimeIn"];
+            if (Request.Form.ContainsKey("ScheduledTimeOut")) dto.ScheduledTimeOut = Request.Form["ScheduledTimeOut"];
+            if (Request.Form.ContainsKey("TimeInCutoffHours") && int.TryParse(Request.Form["TimeInCutoffHours"], out var tich)) dto.TimeInCutoffHours = tich;
+            if (Request.Form.ContainsKey("VacationLeaveDays") && int.TryParse(Request.Form["VacationLeaveDays"], out var vld)) dto.VacationLeaveDays = vld;
+            if (Request.Form.ContainsKey("VacationLeaveResetType") && int.TryParse(Request.Form["VacationLeaveResetType"], out var vlrt)) dto.VacationLeaveResetType = vlrt;
 
             // If roles were submitted as JSON (rare), include them on profile for backward compatibility
             if (Request.Form.ContainsKey("RolesJson")) dto.RolesJson = Request.Form["RolesJson"];
@@ -302,7 +455,10 @@ namespace PayRex.Web.Pages
                 OvertimeRate = Profile.OvertimeRate,
                 LateGraceMinutes = Profile.LateGraceMinutes,
                 HolidayRate = Profile.HolidayRate,
-                AbsentRate = Profile.AbsentRate
+                ScheduledTimeIn = Profile.ScheduledTimeIn,
+                ScheduledTimeOut = Profile.ScheduledTimeOut,
+                VacationLeaveDays = Profile.VacationLeaveDays,
+                VacationLeaveResetType = Profile.VacationLeaveResetType
             };
 
             var (success, message) = await _authApi.UpdateCompanyProfileAsync(token, dto);

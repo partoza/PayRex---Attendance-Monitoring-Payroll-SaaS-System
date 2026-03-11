@@ -5,760 +5,1019 @@
     ViewData["Title"] = "Company Settings";
 }
 
-<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
     @* Server messages show via global toasts *@
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
-        <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SuccessMessage)), 'success'); });</script>
+        <script>document.addEventListener('DOMContentLoaded', function () { showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SuccessMessage)), 'success'); });</script>
     }
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
-        <script>document.addEventListener('DOMContentLoaded', function(){ showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorMessage)), 'error'); });</script>
+        <script>document.addEventListener('DOMContentLoaded', function () { showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ErrorMessage)), 'error'); });</script>
     }
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+
+    <!-- Header with Edit / Save / Cancel buttons in top-right -->
+    <div
+        class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
-        <div class="px-8 py-10 relative z-10 text-gray-900">
-            <h1 class="text-3xl font-extrabold tracking-tight">Company Settings</h1>
-            <p class="mt-2 text-gray-600 text-lg">Manage detailed company profile, logo, and salary configurations.</p>
-        </div>
-    </div>
-
-    <!-- Logo Upload Form (Independent) -->
-    @if (Model.IsEditMode)
-    {
-        <form method="post" asp-page-handler="UploadCompanyLogo" enctype="multipart/form-data" id="logoForm" class="mb-6">
-            @Html.AntiForgeryToken()
-            
-            <!-- Hidden remove button -->
-            <button type="submit" 
-                    id="removeLogoBtn"
-                    formaction="?handler=RemoveCompanyLogo" 
-                    formmethod="post"
-                    class="hidden"></button>
-        </form>
-    }
-
-    <form method="post" asp-page-handler="SaveCompany" class="space-y-6">
-        @Html.AntiForgeryToken()
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Company Profile & Logo -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex items-center mb-4 gap-3">
-    <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-  <path fill-rule="evenodd" d="M3 2.25a.75.75 0 0 0 0 1.5v16.5h-.75a.75.75 0 0 0 0 1.5H15v-18a.75.75 0 0 0 0-1.5H3ZM6.75 19.5v-2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75ZM6 6.75A.75.75 0 0 1 6.75 6h.75a.75.75 0 0 1 0 1.5h-.75A.75.75 0 0 1 6 6.75ZM6.75 9a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM6 12.75a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 6a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75Zm-.75 3.75A.75.75 0 0 1 10.5 9h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 12a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM16.5 6.75v15h5.25a.75.75 0 0 0 0-1.5H21v-12a.75.75 0 0 0 0-1.5h-4.5Zm1.5 4.5a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Zm.75 2.25a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-.008a.75.75 0 0 0-.75-.75h-.008ZM18 17.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
-</svg>
-
-    </div>
-
-    <h2 class="text-lg font-bold text-gray-900">
-        Company Profile
-    </h2>
-</div>
-
-
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-5">
-        <div>
-            <h3 class="text-sm font-semibold text-gray-900">Company Logo</h3>
-            <p class="text-xs text-gray-500 mt-0.5">PNG, JPG up to 2MB</p>
-        </div>
-        
-        @if (Model.IsEditMode)
-        {
-            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                Edit Mode
-            </span>
-        }
-    </div>
-
-    <!-- Logo Display -->
-    @{ var logoSrc = Model.Profile.LogoUrl ?? "/images/logo.png"; var isFallback = string.IsNullOrEmpty(Model.Profile.LogoUrl); }
-    <div class="flex flex-col items-center py-4">
-        <div class="relative mb-3 group">
-            <div class="p-2 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm inline-block">
-                <img id="companyLogo" 
-                     src="@logoSrc" 
-                     alt="Company Logo" 
-                     class="max-h-32 w-auto object-contain rounded-lg @(isFallback ? "filter grayscale opacity-50" : "")"
-                     onerror="this.src='/images/logo.png'" />
+        <div class="px-6 py-6 sm:px-8 sm:py-8 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900">Company Settings</h1>
+                    <p class="mt-1 text-gray-600 text-sm sm:text-base">Manage company profile, logo, and salary
+                        configurations.</p>
+                    </div>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        @if (!Model.IsEditMode)
+                        {
+                            <a href="/Settings?edit=true"
+                                   class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                Edit Profile
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button" onclick="saveAllSettings()"
+                                    class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Save Changes
+                            </button>
+                            <a href="/Settings"
+                                   class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Cancel
+                            </a>
+                        }
+                    </div>
+                </div>
             </div>
-            
-            @if (Model.IsEditMode && !string.IsNullOrEmpty(Model.Profile.LogoUrl))
-            {
-                <button type="button" 
-                        onclick="document.getElementById('removeLogoBtn').click()"
-                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md flex items-center justify-center transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="002424">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M618L186M66l1212"></path>
-                    </svg>
-                </button>
-            }
         </div>
 
-        @if (!string.IsNullOrEmpty(Model.Profile.LogoUrl))
-        {
-            <div class="flex items-center gap-1.5 text-xs text-gray-500">
-                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="002424">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M513l44L197"></path>
+        <!-- Company Profile Card: Logo + Info side by side -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <span>Logo uploaded</span>
+                <h2 class="text-base font-semibold text-gray-900">Company Profile</h2>
             </div>
-        }
-    </div>
+            <div class="p-6">
+                <div class="flex flex-col sm:flex-row gap-6 lg:gap-8">
+                    <!-- Logo section -->
+                    <div class="flex-shrink-0 flex flex-col items-center sm:items-start gap-3">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Company Logo</p>
+                        <div
+                            class="w-28 h-28 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+                            <img id="companyLogo"
+                                 src="@(string.IsNullOrEmpty(Model.Profile.LogoUrl) ? Url.Content("~/images/logo.png") : Model.Profile.LogoUrl)"
+                                 alt="Company logo"              class="max-w-full max-h-full object-contain" />
+                        </div>
+                        @if (Model.IsEditMode)
+                        {
+                            <form method="post" asp-page-handler="UploadCompanyLogo" enctype="multipart/form-data" id="logoForm"
+                                  class="flex flex-col gap-2 w-full">
+                                @Html.AntiForgeryToken()
+                                <input id="fileInput" name="CompanyLogoFile" type="file" accept=".jpg,.jpeg,.png,.webp"
+                                       class="hidden" />
+                                <button type="button"              onclick="document.getElementById('fileInput')?.click()"
+                                        class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                         stroke="currentColor" class="size-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                    </svg>
 
-    <!-- Upload Controls -->
-    @if (Model.IsEditMode)
-    {
-        <div class="mt-4 pt-4 border-t border-gray-100">
-            <!-- Upload Area -->
-            <div class="relative">
-                <input type="file" 
-                       name="CompanyLogoFile" 
-                       accept="image/*" 
-                       id="fileInput"
-                       form="logoForm"
-                       onchange="document.getElementById('logoForm').submit()"
-                       class="hidden" />
-                
-                <label for="fileInput" class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium rounded-xl border-2 border-blue-200 border-dashed transition-all cursor-pointer">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Choose New Logo
-                </label>
-            </div>
-        </div>
-    }
-</div>
+                                    Change Logo
+                                </button>
+                                <button type="submit"                formaction="?handler=RemoveCompanyLogo"                          formmethod="post"
+                                        class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors">
+                                    <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    Remove
+                                </button>
+                            </form>
+                        }
+                        <p class="text-xs text-gray-400 text-center sm:text-left">PNG, JPG, WEBP · Max 2 MB</p>
+                    </div>
 
-
-                    <div class="space-y-6">
-                        <!-- Company Name - Featured -->
-                        <div class="bg-blue-50/30 p-4 rounded-xl border border-blue-100 mt-4">
-                            <label class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Company Name</label>
-                            <div class="mt-1 text-lg font-bold text-gray-900">
-                                @if (Model.IsEditMode)
-                                {
-                                    <input name="CompanyName" value="@Model.Profile.CompanyName" type="text"
-                                           class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                           placeholder="Enter company name" />
-                                }
-                                else
-                                {
-                                    <span id="companyNameDisplay" class="block py-2 px-3 bg-gray-50 rounded-xl border border-gray-200">
-                                        @(string.IsNullOrEmpty(Model.Profile.CompanyName) ? "—" : Model.Profile.CompanyName)
-                                    </span>
-                                }
+                    <!-- Owner Signature section -->
+                    <div class="flex-shrink-0 flex flex-col items-center sm:items-start gap-3">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Owner Signature</p>
+                        <div id="ownerSignatureContainer"
+                             class="w-28 h-28 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+                            <img id="ownerSignatureImg"                src="@(Model.Profile.OwnerSignatureUrl ?? "")"                    alt="Owner signature"
+                                 class="@(!string.IsNullOrEmpty(Model.Profile.OwnerSignatureUrl) ? "" : "hidden") max-w-full max-h-full object-contain" />
+                            <span id="ownerSignaturePlaceholder"
+                                  class="@(!string.IsNullOrEmpty(Model.Profile.OwnerSignatureUrl) ? "hidden" : "") text-xs text-gray-400 text-center px-2">No
+                                signature</span>
                             </div>
+                            @if (Model.IsEditMode)
+                            {
+                                <form method="post" asp-page-handler="UploadOwnerSignature" enctype="multipart/form-data"
+                                      id="signatureForm" class="flex flex-col gap-2 w-full">
+                                    @Html.AntiForgeryToken()
+                                    <input id="signatureFileInput" name="OwnerSignatureFile" type="file"
+                                           accept=".jpg,.jpeg,.png,.webp" class="hidden" />
+                                    <button type="button"                                    onclick="document.getElementById('signatureFileInput')?.click()"
+                                            class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                             stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                  d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                                        </svg>
+
+                                        Change Signature
+                                    </button>
+                                    <button type="submit" formaction="?handler=RemoveOwnerSignature" formmethod="post"
+                                            class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 transition-colors">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </form>
+                            }
+                            <p class="text-xs text-gray-400 text-center sm:text-left">PNG, JPG, WEBP · Max 2 MB</p>
                         </div>
 
-                        <!-- Grid for other fields -->
-                        <div class="gap-4">
-                            <!-- TIN -->
-                            <div class="bg-white p-4 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                <label class="flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                                    </svg>
-                                    TIN
-                                </label>
-                                <div class="mt-1">
+                        <!-- Company details grid -->
+                        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Company Name — full width -->
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Company
+                                    Name</label>
+                                    @if (Model.IsEditMode)
+                                    {
+                                        <input name="CompanyName" value="@Model.Profile.CompanyName" type="text"
+                                               class="block w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="Enter company name" />
+                                    }
+                                    else
+                                    {
+                                        <p id="companyNameDisplay" class="text-lg font-bold text-gray-900 py-1">
+                                            @(string.IsNullOrEmpty(Model.Profile.CompanyName) ? "—" : Model.Profile.CompanyName)
+                                        </p>
+                                    }
+                                </div>
+
+                                <!-- TIN -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">TIN</label>
                                     @if (Model.IsEditMode)
                                     {
                                         <input name="Tin" value="@(Model.Profile.Tin ?? "")" type="text"
-                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                               placeholder="Enter TIN" />
+                                               class="block w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                               placeholder="e.g. 123-456-789-000" />
                                     }
                                     else
                                     {
-                                        <span id="tinDisplay" class="block text-gray-900 font-medium">
-                                                @(string.IsNullOrEmpty(@Model.Profile.Tin) ? "No TIN specified" : @Model.Profile.Tin)
-                                            </span>
+                                        <span id="tinDisplay" class="block text-sm text-gray-800 py-1">
+                                            @(string.IsNullOrEmpty(Model.Profile.Tin) ? "No TIN specified" : Model.Profile.Tin)
+                                        </span>
                                     }
                                 </div>
-                            </div>
 
-                            <!-- Contact Phone -->
-                            <div class="bg-white p-4 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                <label class="flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                    </svg>
-                                    Contact
-                                </label>
-                                <div class="mt-1">
-                                    @if (Model.IsEditMode)
-                                    {
-                                        <input name="ContactPhone" value="@(Model.Profile.ContactPhone ?? "")" type="text"
-                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                               placeholder="Enter contact number" />
-                                    }
-                                    else
-                                    {
-                                        <span id="contactDisplay" class="block text-gray-900 font-medium">
-                                                @(string.IsNullOrEmpty(@Model.Profile.ContactPhone) ? "No contact specified"  : @Model.Profile.ContactPhone)
-                                            </span>
-                                    }
-                                </div>
-                            </div>
-
-                            <!-- Address - Full width -->
-                            <div class="md:col-span-2 bg-white p-4 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
-                                <label class="flex items-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Address
-                                </label>
-                                <div class="mt-1">
-                                    @if (Model.IsEditMode)
-                                    {
-                                        <textarea name="Address" rows="2"
-                                              class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                              placeholder="Enter complete address">@(Model.Profile.Address ?? "")</textarea>
-                                    }
-                                    else
-                                    {
-                                        <span id="addressDisplay" class="block text-gray-900">
-                                                @(string.IsNullOrEmpty(Model.Profile.Address) ? "No address specified" : Model.Profile.Address)
-                                            </span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Optional: Display metadata or helper text -->
-                        @if (!Model.IsEditMode)
-                        {
-                            <div class="flex items-center justify-end text-xs text-gray-400 border-t border-gray-100 pt-3 mt-2">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Click "Edit Profile" to update company information
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Role Configuration + Payroll -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex justify-between items-center mb-4">
+                                <!-- Contact Phone -->
                                 <div>
-                                    <div class="flex items-center mb-0 gap-3">
-                                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-  <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
-  <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
-</svg>
+                                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Contact
+                                        Phone</label>
+                                        @if (Model.IsEditMode)
+                                        {
+                                            <input name="ContactPhone" value="@(Model.Profile.ContactPhone ?? "")" type="text"
+                                                   class="block w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                                   placeholder="09XX XXX XXXX" />
+                                        }
+                                        else
+                                        {
+                                            <span id="contactDisplay" class="block text-sm text-gray-800 py-1">
+                                                @(string.IsNullOrEmpty(Model.Profile.ContactPhone) ? "No contact specified" :
+                                            Model.Profile.ContactPhone)
+                                            </span>
+                                        }
+                                    </div>
 
-
-                                        </div>
-                                        <h2 class="text-lg font-bold text-gray-900 flex items-center">Employee Roles & Salary Rates</h2>
+                                    <!-- Address — full width -->
+                                    <div class="sm:col-span-2">
+                                        <label
+                                        class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                                        @if (Model.IsEditMode)
+                                        {
+                                            <textarea name="Address" rows="2"
+                                                      class="block w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                                      placeholder="Full business address">@(Model.Profile.Address ?? "")</textarea>
+                                        }
+                                        else
+                                        {
+                                            <span id="addressDisplay" class="block text-sm text-gray-800 py-1">
+                                                @(string.IsNullOrEmpty(Model.Profile.Address) ? "No address specified" :
+                                            Model.Profile.Address)
+                                            </span>
+                                        }
                                     </div>
                                 </div>
-                        <div class="flex items-center space-x-2">
+                            </div>
+
                             @if (!Model.IsEditMode)
                             {
-                                <a href="/Settings?edit=true"
-                                   class="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                <p class="mt-4 text-xs text-gray-400 flex items-center gap-1 border-t border-gray-100 pt-3">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    Edit Profile
-                                </a>
+                                    Click <strong class="mx-0.5">Edit Profile</strong> at the top to update company information.
+                                </p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Role Configuration Card -->
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <h2 class="text-base font-semibold text-gray-900">Role Configuration</h2>
+                            </div>
+                            @if (Model.IsEditMode)
+                            {
+                                <button id="btnAddRole" type="button"
+                                        class="inline-flex items-center px-3 py-2 text-xs font-medium rounded-xl text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-100 transition-colors">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New Role
+                                </button>
                             }
                             else
                             {
-                                <a href="/Settings"
-                                   class="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm hover:shadow-md">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    Cancel Editing
-                                </a>
+                                <!-- Invisible placeholder keeps JS reference happy -->
+                                <button id="btnAddRole" type="button" class="hidden"></button>
                             }
                         </div>
-                    </div>
+                        <div class="p-6">
+                            <div class="overflow-x-auto">
+                                <div class="max-h-72 overflow-y-auto rounded-xl border border-gray-200">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50 sticky top-0">
+                                            <tr>
+                                                <th
+                                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Role</th>
+                                                    <th
+                                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Default Rate</th>
+                                                        <th
+                                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                            Rate Type</th>
+                                                            <th
+                                                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Status</th>
+                                                                <th class="px-6 py-3 relative"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="bg-white divide-y divide-gray-200" id="rolesList">
+                                                            @* JS renders rows *@
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    <div class="overflow-x-auto">
-                        <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-xl">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Default Rate</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Type</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 relative"></th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="rolesList">
-                                    @* JS renders rows *@
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                    <!-- Payroll Configuration Card -->
+                                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                                 class="w-5 h-5 text-blue-500">
+                                                <path fill-rule="evenodd"
+                                                      d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z"
+                                                      clip-rule="evenodd" />
+                                            </svg>
+                                            <h2 class="text-base font-semibold text-gray-900">Payroll Configuration</h2>
+                                        </div>
+                                        <div class="p-6">
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700">Payroll Frequency</label>
+                                                    <select name="PayrollCycle"
+                                                            class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                        @(Model.IsEditMode ? "" : "disabled")>
+                                                        <option value="0" selected="@(Model.Profile.PayrollCycle == 0)">Semi-Monthly (15th & 30th)
+                                                        </option>
+                                                        <option value="1"
+                                                                selected="@(Model.Profile.PayrollCycle == 1 || !Model.Profile.PayrollCycle.HasValue)">
+                                                            Monthly (30th)</option>
+                                                            <option value="2" selected="@(Model.Profile.PayrollCycle == 2)">Weekly (Friday)</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700">Work Hours per Day</label>
+                                                        <input name="WorkHoursPerDay" type="number" step="0.25"
+                                                               value="@(Model.Profile.WorkHoursPerDay ?? 8)" @(Model.IsEditMode ? "" : "disabled")
+                                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700">Overtime Rate</label>
+                                                        <input name="OvertimeRate" type="number" step="0.01" value="@(Model.Profile.OvertimeRate ?? 1.25m)"
+                                                        @(Model.IsEditMode ? "" : "disabled")
+                                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700">Late Grace Minutes</label>
+                                                        <input name="LateGraceMinutes" type="number" value="@(Model.Profile.LateGraceMinutes ?? 15)"
+                                                        @(Model.IsEditMode ? "" : "disabled")
+                                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700">Holiday Rate</label>
+                                                        <input name="HolidayRate" type="number" step="0.01" value="@(Model.Profile.HolidayRate ?? 2.00m)"
+                                                        @(Model.IsEditMode ? "" : "disabled")
+                                                               class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                    <div class="mt-4">
-                        <button id="btnAddRole" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors @(Model.IsEditMode ? "" : "hidden")">Add New Role</button>
-                    </div>
-                </div>
+                                        <!-- Work Schedule & Leave Card -->
+                                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                                            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                                     class="w-5 h-5 text-blue-500">
+                                                    <path fill-rule="evenodd"
+                                                          d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z"
+                                                          clip-rule="evenodd" />
+                                                </svg>
+                                                <h2 class="text-base font-semibold text-gray-900">Work Schedule &amp; Leave</h2>
+                                            </div>
+                                            <div class="p-6">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Scheduled Time In</label>
+                                                        <div class="relative">
+                                                            <input name="ScheduledTimeIn" type="time" value="@(Model.Profile.ScheduledTimeIn ?? "08:00")"
+                                                            @(Model.IsEditMode ? "" : "disabled")
+                                                                   class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pe-10 disabled:opacity-60 disabled:cursor-not-allowed" />
+                                                            <div class="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3.5">
+                                                                <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                                     fill="currentColor" viewBox="0 0 24 24">
+                                                                    <path fill-rule="evenodd"
+                                                                          d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+                                                                          clip-rule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <p class="mt-1 text-xs text-gray-500">Default daily time-in for employees.</p>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 mb-1">Scheduled Time Out <span
+                                                            id="autoCalcNote" class="text-xs font-normal text-blue-500"></span></label>
+                                                            <div class="relative">
+                                                                <input name="ScheduledTimeOut" type="time" value="@Model.Profile.ScheduledTimeOut"
+                                                                @(Model.IsEditMode ? "" : "disabled")
+                                                                       class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pe-10 disabled:opacity-60 disabled:cursor-not-allowed" />
+                                                                <div class="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3.5">
+                                                                    <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                                         fill="currentColor" viewBox="0 0 24 24">
+                                                                        <path fill-rule="evenodd"
+                                                                              d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z"
+                                                                              clip-rule="evenodd" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <p class="mt-1 text-xs text-gray-500">Auto-calculated from Time In + Work Hours + 1 hr lunch.</p>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-1">Time In Cutoff (Hours)</label>
+                                                            <input name="TimeInCutoffHours" type="number" min="0" max="12"
+                                                                   value="@(Model.Profile.TimeInCutoffHours ?? 0)"       @(Model.IsEditMode ? "" : "disabled")
+                                                                   class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed" />
+                                                            <p class="mt-1 text-xs text-gray-500">Hours after Time In during which employees can still clock in.
+                                                                After this, Time In is locked. 0 = no cutoff.</p>
+                                                                <span id="cutoffTimeDisplay"
+                                                                      class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"></span>
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-sm font-medium text-gray-700">Vacation Leave Days (<span
+                                                                    id="vacationResetLabel">@(Model.Profile.VacationLeaveResetType == 1 ? "Annually" :
+                                                                                                "Monthly")</span>)</label>
+                                                                    <input name="VacationLeaveDays" type="number" value="@(Model.Profile.VacationLeaveDays ?? 5)"
+                                                                    @(Model.IsEditMode ? "" : "disabled")
+                                                                           class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-sm font-medium text-gray-700">Leave Balance Reset</label>
+                                                                    <select name="VacationLeaveResetType"
+                                                                            class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                                        @(Model.IsEditMode ? "" : "disabled")>
+                                                                        <option value="0" selected="@(Model.Profile.VacationLeaveResetType == 0)">Monthly Reset</option>
+                                                                        <option value="1" selected="@(Model.Profile.VacationLeaveResetType == 1)">Yearly Reset</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                    <div class="flex items-center mb-4 gap-3">
-                        <div class="p-2 bg-blue-50 rounded-xl text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-  <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd" />
-</svg>
+                                                    @* Bottom save / cancel row — visible only in edit mode *@
+                                                    @if (Model.IsEditMode)
+                                                    {
+                                                        <div class="flex justify-end gap-3 pb-4">
+                                                            <a href="/Settings"
+                                                                   class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
+                                                                Cancel
+                                                            </a>
+                                                            <button type="button" onclick="saveAllSettings()"
+                                                                    class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm hover:shadow-md">
+                                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                                Save Changes
+                                                            </button>
+                                                        </div>
+                                                    }
+
+                                                    <!-- Flowbite-style Modal -->
+                                                    <div id="roleModal" tabindex="-1" aria-hidden="true"
+                                                         class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop-blur-sm">
+                                                        <div class="relative p-4 w-full max-w-md max-h-full">
+                                                            <!-- Modal content -->
+                                                            <div class="relative bg-white border border-gray-200 rounded-2xl shadow-lg p-4 md:p-6">
+                                                                <!-- Modal header -->
+                                                                <div class="flex items-center justify-between border-b border-gray-200 pb-4 md:pb-5">
+                                                                    <h3 id="roleModalTitle" class="text-lg font-bold text-gray-900">Add Role</h3>
+                                                                    <button type="button"
+                                                                            class="text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-9 h-9 ms-auto inline-flex justify-center items-center"
+                                                                            onclick="closeModal()">
+                                                                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                             height="24" fill="none" viewBox="0 0 24 24">
+                                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                  d="M6 18L17.94 6M18 18L6.06 6" />
+                                                                        </svg>
+                                                                        <span class="sr-only">Close modal</span>
+                                                                    </button>
+                                                                </div>
+                                                                <!-- Modal body -->
+                                                                <input type="hidden" id="editingRoleId" />
+                                                                <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
+                                                                    <div class="col-span-2">
+                                                                        <label for="roleName" class="block mb-2.5 text-sm font-medium text-gray-900">Role Name</label>
+                                                                        <input type="text" id="roleName"
+                                                                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5"
+                                                                               placeholder="Enter role name" required>
+                                                                    </div>
+                                                                    <div class="col-span-2 sm:col-span-1">
+                                                                        <label for="basicRate" class="block mb-2.5 text-sm font-medium text-gray-900">Basic Rate</label>
+                                                                        <input type="number" step="0.01" id="basicRate"
+                                                                               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5"
+                                                                               placeholder="0.00" required>
+                                                                    </div>
+                                                                    <div class="col-span-2 sm:col-span-1">
+                                                                        <label for="rateType" class="block mb-2.5 text-sm font-medium text-gray-900">Rate Type</label>
+                                                                        <select id="rateType"
+                                                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5">
+                                                                            <option value="Semi-Monthly">Semi-Monthly</option>
+                                                                            <option value="Monthly">Monthly</option>
+                                                                            <option value="Daily">Daily</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-span-2">
+                                                                        <label for="roleDesc" class="block mb-2.5 text-sm font-medium text-gray-900">Description</label>
+                                                                        <textarea id="roleDesc" rows="4"
+                                                                                  class="block bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 w-full p-3.5"
+                                                                                  placeholder="Write role description here"></textarea>
+                                                                    </div>
+                                                                    <div class="col-span-2">
+                                                                        <div class="flex items-center space-x-2">
+                                                                            <input type="checkbox" id="roleActive" checked
+                                                                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                                                                            <label for="roleActive" class="text-sm font-medium text-gray-900">Active</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex items-center space-x-4 border-t border-gray-200 pt-4 md:pt-6">
+                                                                    <button id="saveRole" type="button"
+                                                                            class="inline-flex items-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none transition-all shadow-sm">
+
+                                                                        Save Role
+                                                                    </button>
+                                                                    <button id="cancelRole" type="button"
+                                                                            class="text-gray-500 bg-gray-100 border border-gray-200 hover:bg-gray-200 hover:text-gray-900 focus:ring-4 focus:ring-gray-300 font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none transition-all">Cancel</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <script>
+                                                    // Toast helpers moved to shared layout. Page uses global showToast / showUploadToast / hideUploadToast.
+
+                                                    // Load roles from model
+
+                                                    document.getElementById('fileInput')?.addEventListener('change', function (e) {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                    // Show upload progress toast
+                                                    showUploadToast();
+                                                    // Auto-submit the logo upload form
+                                                    try {
+                                                    this.form.submit();
+                                                    } catch (err) {
+                                                    console.error('Failed to submit logo form', err);
+                                                    hideUploadToast();
+                                                    }
+                                                    }
+                                                    });
+
+                                                    document.getElementById('signatureFileInput')?.addEventListener('change', function (e) {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                    showUploadToast();
+                                                    try {
+                                                    this.form.submit();
+                                                    } catch (err) {
+                                                    console.error('Failed to submit signature form', err);
+                                                    hideUploadToast();
+                                                    }
+                                                    }
+                                                    });
+
+                                                    // TIN formatting: auto-insert hyphens → XXX-XXX-XXX-XXXX
+                                                    function formatTin(input) {
+                                                    let val = input.value.replace(/\D/g, '').substring(0, 12);
+                                                    let parts = [];
+                                                    if (val.length > 0) parts.push(val.substring(0, 3));
+                                                    if (val.length > 3) parts.push(val.substring(3, 6));
+                                                    if (val.length > 6) parts.push(val.substring(6, 9));
+                                                    if (val.length > 9) parts.push(val.substring(9, 12));
+                                                    input.value = parts.join('-');
+                                                    }
+
+                                                    // Phone formatting: digits only, starts with 09, max 11 digits
+                                                    function formatPhone(input) {
+                                                    let val = input.value.replace(/\D/g, '').substring(0, 11);
+                                                    if (val.length >= 2 && !val.startsWith('09')) {
+                                                    val = '09' + val.replace(/^0*9*/, '').substring(0, 9);
+                                                    }
+                                                    input.value = val;
+                                                    }
+
+                                                    document.querySelectorAll('input[name="Tin"]').forEach(el => {
+                                                    el.addEventListener('input', () => formatTin(el));
+                                                    });
+                                                    document.querySelectorAll('input[name="ContactPhone"]').forEach(el => {
+                                                    el.addEventListener('input', () => formatPhone(el));
+                                                    el.addEventListener('keydown', function (e) {
+                                                    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Tab' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') return;
+                                                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                                                    });
+                                                    });
+
+                                                    // upload toast helpers are provided globally in layout (showUploadToast/hideUploadToast)
 
 
-                        </div>
-                        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">Payroll Configuration</h2>
-                    </div>
+                                                    let roles = @Html.Raw(JsonSerializer.Serialize(Model.Roles));
+                                                    // Normalize role objects so rendering works whether API returns camelCase or PascalCase
+                                                    function normalizeRole(r) {
+                                                    if (!r) return { RoleId: 0, RoleName: '', BasicRate: 0, RateType: '', Description: '', IsActive: true };
+                                                    return {
+                                                    RoleId: r.RoleId ?? r.roleId ?? 0,
+                                                    RoleName: r.RoleName ?? r.roleName ?? r.name ?? '',
+                                                    BasicRate: (typeof r.BasicRate !== 'undefined') ? r.BasicRate : (typeof r.basicRate !== 'undefined' ? r.basicRate : 0),
+                                                    RateType: r.RateType ?? r.rateType ?? '',
+                                                    Description: r.Description ?? r.description ?? '',
+                                                    IsActive: (typeof r.IsActive !== 'undefined') ? r.IsActive : (typeof r.isActive !== 'undefined' ? r.isActive : true)
+                                                    };
+                                                    }
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Payroll Frequency</label>
-                            <select name="PayrollCycle" class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" @(Model.IsEditMode ? "" : "disabled")>
-                                <option value="0" selected>Semi-Monthly (15th & 30th)</option>
-                                <option value="1">Monthly (30th)</option>
-                                <option value="2">Weekly (Friday)</option>
-                            </select>
-                        </div>
+                                                    if (Array.isArray(roles) && roles.length > 0) {
+                                                    roles = roles.map(normalizeRole);
+                                                    }
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Work Hours per Day</label>
-                            <input name="WorkHoursPerDay" type="number" step="0.25" value="@(Model.Profile.WorkHoursPerDay ?? 8)" @(Model.IsEditMode ? "" : "disabled") class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                        </div>
+                                                    function renderRoles() {
+                                                    const tbody = document.getElementById('rolesList');
+                                                    tbody.innerHTML = '';
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Overtime Rate</label>
-                            <input name="OvertimeRate" type="number" step="0.01" value="@(Model.Profile.OvertimeRate ?? 1.25m)" @(Model.IsEditMode ? "" : "disabled") class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                        </div>
+                                                    if (!roles || roles.length === 0) {
+                                                    const tr = document.createElement('tr');
+                                                    tr.innerHTML = `
+                                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                                    <div class="flex flex-col items-center justify-center">
+                                                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                    <p class="text-sm">No Roles Configured</p>
+                                                    <p class="text-xs text-gray-400 mt-1">Click "Add New Role" to create one</p>
+                                                    </div>
+                                                    </td>
+                                                    `;
+                                                    tbody.appendChild(tr);
+                                                    return;
+                                                    }
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Late Grace Minutes</label>
-                            <input name="LateGraceMinutes" type="number" value="@(Model.Profile.LateGraceMinutes ?? 15)" @(Model.IsEditMode ? "" : "disabled") class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                        </div>
+                                                    roles.forEach(raw => {
+                                                    const r = normalizeRole(raw);
+                                                    const tr = document.createElement('tr');
+                                                    tr.className = 'hover:bg-gray-50/50 transition-colors';
+                                                    const statusBadge = r.IsActive ?
+                                                    '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-800">Active</span>' :
+                                                    '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-gray-100 text-gray-600">Inactive</span>';
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Holiday Rate</label>
-                            <input name="HolidayRate" type="number" step="0.01" value="@(Model.Profile.HolidayRate ?? 2.00m)" @(Model.IsEditMode ? "" : "disabled") class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                        </div>
+                                                    const editLink = @Model.IsEditMode.ToString().ToLower() ?
+                                                    `<a href="#" class="text-blue-600 hover:text-blue-800" onclick="openModal('edit', ${r.RoleId})">Edit</a>` :
+                                                    `<span class="text-gray-400">Edit</span>`;
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Absent Rate</label>
-                            <input name="AbsentRate" type="number" step="0.01" value="@(Model.Profile.AbsentRate ?? 0.00m)" @(Model.IsEditMode ? "" : "disabled") class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                        </div>
-                    </div>
-                </div>
+                                                    tr.innerHTML = `
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${r.RoleName}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₱${(r.BasicRate || 0).toFixed(2)}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.RateType || ''}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">${editLink}</td>
+                                                    `;
+                                                    tbody.appendChild(tr);
+                                                    });
+                                                    }
 
-                <!-- Page level Save button -->
-                <div class="flex justify-end">
-                    @if (Model.IsEditMode)
-                    {
-                        <button type="submit" class="px-6 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md">Save Changes</button>
-                    }
-                </div>
-            </div>
-        </div>
-    </form>
+                                                    function openModal(mode, id) {
+                                                    const modal = document.getElementById('roleModal');
+                                                    modal.classList.remove('hidden');
+                                                    modal.classList.add('flex');
+                                                    document.getElementById('roleModalTitle').innerText = mode === 'add' ? 'Add Role' : 'Edit Role';
 
-    <!-- Flowbite-style Modal -->
-    <div id="roleModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop-blur-sm">
-        <div class="relative p-4 w-full max-w-md max-h-full">
-            <!-- Modal content -->
-            <div class="relative bg-white border border-gray-200 rounded-2xl shadow-lg p-4 md:p-6">
-                <!-- Modal header -->
-                <div class="flex items-center justify-between border-b border-gray-200 pb-4 md:pb-5">
-                    <h3 id="roleModalTitle" class="text-lg font-bold text-gray-900">Add Role</h3>
-                    <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-9 h-9 ms-auto inline-flex justify-center items-center" onclick="closeModal()">
-                        <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L17.94 6M18 18L6.06 6" />
-                        </svg>
-                        <span class="sr-only">Close modal</span>
-                    </button>
-                </div>
-                <!-- Modal body -->
-                <input type="hidden" id="editingRoleId" />
-                <div class="grid gap-4 grid-cols-2 py-4 md:py-6">
-                    <div class="col-span-2">
-                        <label for="roleName" class="block mb-2.5 text-sm font-medium text-gray-900">Role Name</label>
-                        <input type="text" id="roleName" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5" placeholder="Enter role name" required>
-                    </div>
-                    <div class="col-span-2 sm:col-span-1">
-                        <label for="basicRate" class="block mb-2.5 text-sm font-medium text-gray-900">Basic Rate</label>
-                        <input type="number" step="0.01" id="basicRate" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5" placeholder="0.00" required>
-                    </div>
-                    <div class="col-span-2 sm:col-span-1">
-                        <label for="rateType" class="block mb-2.5 text-sm font-medium text-gray-900">Rate Type</label>
-                        <select id="rateType" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2.5">
-                            <option value="Semi-Monthly">Semi-Monthly</option>
-                            <option value="Monthly">Monthly</option>
-                            <option value="Daily">Daily</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2">
-                        <label for="roleDesc" class="block mb-2.5 text-sm font-medium text-gray-900">Description</label>
-                        <textarea id="roleDesc" rows="4" class="block bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 w-full p-3.5" placeholder="Write role description here"></textarea>
-                    </div>
-                    <div class="col-span-2">
-                        <div class="flex items-center space-x-2">
-                            <input type="checkbox" id="roleActive" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
-                            <label for="roleActive" class="text-sm font-medium text-gray-900">Active</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4 border-t border-gray-200 pt-4 md:pt-6">
-                    <button id="saveRole" type="button" class="inline-flex items-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none transition-all shadow-sm">
-                        
-                        Save Role
-                    </button>
-                    <button id="cancelRole" type="button" class="text-gray-500 bg-gray-100 border border-gray-200 hover:bg-gray-200 hover:text-gray-900 focus:ring-4 focus:ring-gray-300 font-medium leading-5 rounded-xl text-sm px-4 py-2.5 focus:outline-none transition-all">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                                                    if (mode === 'edit') {
+                                                    const numericId = Number(id);
+                                                    const r = roles.find(x => Number(x.RoleId) === numericId);
+                                                    if (!r) return;
+                                                    document.getElementById('editingRoleId').value = r.RoleId;
+                                                    document.getElementById('roleName').value = r.RoleName || '';
+                                                    document.getElementById('basicRate').value = r.BasicRate || '';
+                                                    const rtEl = document.getElementById('rateType');
+                                                    if (roleRateTypeLocked) {
+                                                    // If locked to company payroll, use mapped value instead of role value
+                                                    const payrollEl = document.getElementsByName('PayrollCycle')[0];
+                                                    const payrollVal = payrollEl ? payrollEl.value : null;
+                                                    rtEl.value = mapPayrollToRateType(payrollVal);
+                                                    rtEl.disabled = true;
+                                                    } else {
+                                                    rtEl.value = r.RateType || 'Semi-Monthly';
+                                                    rtEl.disabled = false;
+                                                    }
+                                                    document.getElementById('roleDesc').value = r.Description || '';
+                                                    document.getElementById('roleActive').checked = r.IsActive;
+                                                    } else {
+                                                    document.getElementById('editingRoleId').value = '';
+                                                    document.getElementById('roleName').value = '';
+                                                    document.getElementById('basicRate').value = '';
+                                                    const rtEl = document.getElementById('rateType');
+                                                    if (roleRateTypeLocked) {
+                                                    const payrollEl = document.getElementsByName('PayrollCycle')[0];
+                                                    const payrollVal = payrollEl ? payrollEl.value : null;
+                                                    rtEl.value = mapPayrollToRateType(payrollVal);
+                                                    rtEl.disabled = true;
+                                                    } else {
+                                                    rtEl.value = 'Semi-Monthly';
+                                                    rtEl.disabled = false;
+                                                    }
+                                                    document.getElementById('roleDesc').value = '';
+                                                    document.getElementById('roleActive').checked = true;
+                                                    }
+                                                    }
 
-<script>
-    // Toast helpers moved to shared layout. Page uses global showToast / showUploadToast / hideUploadToast.
+                                                    function closeModal() {
+                                                    const modal = document.getElementById('roleModal');
+                                                    modal.classList.add('hidden');
+                                                    modal.classList.remove('flex');
+                                                    }
 
-    // Load roles from model
+                                                    // Initialize immediately (script is placed at the end of the page)
+                                                    (function initRoles() {
+                                                    const btnAddRole = document.getElementById('btnAddRole');
+                                                    if (btnAddRole) {
+                                                    btnAddRole.addEventListener('click', () => openModal('add'));
+                                                    }
 
-    document.getElementById('fileInput')?.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Show upload progress toast
-            showUploadToast();
-            // Auto-submit the logo upload form
-            try { 
-                this.form.submit(); 
-            } catch (err) { 
-                console.error('Failed to submit logo form', err);
-                hideUploadToast();
-            }
-        }
-    });
+                                                    const cancelBtn = document.getElementById('cancelRole');
+                                                    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
 
-    // upload toast helpers are provided globally in layout (showUploadToast/hideUploadToast)
+                                                    const saveBtn = document.getElementById('saveRole');
+                                                    if (saveBtn) {
+                                                    saveBtn.addEventListener('click', async () => {
+                                                    const id = parseInt(document.getElementById('editingRoleId').value || '0');
+                                                    const name = document.getElementById('roleName').value.trim();
+                                                    const basicRate = parseFloat(document.getElementById('basicRate').value || '0');
+                                                    const rateType = document.getElementById('rateType').value;
+                                                    const desc = document.getElementById('roleDesc').value.trim();
+                                                    const isActive = document.getElementById('roleActive').checked;
 
+                                                    if (!name) {
+                                                    alert('Role name required');
+                                                    return;
+                                                    }
 
-    let roles = @Html.Raw(JsonSerializer.Serialize(Model.Roles));
-    // Normalize role objects so rendering works whether API returns camelCase or PascalCase
-    function normalizeRole(r) {
-        if (!r) return { RoleId: 0, RoleName: '', BasicRate: 0, RateType: '', Description: '', IsActive: true };
-        return {
-            RoleId: r.RoleId ?? r.roleId ?? 0,
-            RoleName: r.RoleName ?? r.roleName ?? r.name ?? '',
-            BasicRate: (typeof r.BasicRate !== 'undefined') ? r.BasicRate : (typeof r.basicRate !== 'undefined' ? r.basicRate : 0),
-            RateType: r.RateType ?? r.rateType ?? '',
-            Description: r.Description ?? r.description ?? '',
-            IsActive: (typeof r.IsActive !== 'undefined') ? r.IsActive : (typeof r.isActive !== 'undefined' ? r.isActive : true)
-        };
-    }
+                                                    if (id > 0) {
+                                                    const numericId = Number(id);
+                                                    const r = roles.find(x => Number(x.RoleId) === numericId);
+                                                    if (r) {
+                                                    r.RoleName = name;
+                                                    r.BasicRate = basicRate;
+                                                    r.RateType = rateType;
+                                                    r.Description = desc;
+                                                    r.IsActive = isActive;
+                                                    // show update toast
+                                                    showToast(`${name} Role Updated`, 'success');
+                                                    }
+                                                    } else {
+                                                    roles.push({
+                                                    RoleId: 0,
+                                                    RoleName: name,
+                                                    BasicRate: basicRate,
+                                                    RateType: rateType,
+                                                    Description: desc,
+                                                    IsActive: isActive
+                                                    });
+                                                    // show added toast
+                                                    showToast(`${name} Role Added`, 'success');
+                                                    }
 
-    if (Array.isArray(roles) && roles.length > 0) {
-        roles = roles.map(normalizeRole);
-    }
+                                                    closeModal();
+                                                    renderRoles();
 
-    function renderRoles() {
-        const tbody = document.getElementById('rolesList');
-        tbody.innerHTML = '';
+                                                    // Submit roles to page handler using fetch with antiforgery token (form-encoded)
+                                                    try {
+                                                    const antiTokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                                                    const token = antiTokenInput ? antiTokenInput.value : '';
+                                                    const payload = `__RequestVerificationToken=${encodeURIComponent(token)}&RolesJson=${encodeURIComponent(JSON.stringify(roles))}`;
+                                                    const url = window.location.pathname + '?handler=SaveCompanyRoles';
+                                                    saveBtn.setAttribute('disabled', 'disabled');
+                                                    const res = await fetch(url, {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                    body: payload
+                                                    });
 
-        if (!roles || roles.length === 0) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                    <div class="flex flex-col items-center justify-center">
-                        <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        <p class="text-sm">No Roles Configured</p>
-                        <p class="text-xs text-gray-400 mt-1">Click "Add New Role" to create one</p>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            return;
-        }
+                                                    // If server redirected (Razor Pages redirect), follow it; otherwise keep user on page and refresh roles list
+                                                    if (res.redirected) {
+                                                    window.location.href = res.url;
+                                                    } else {
+                                                    // refresh roles from server without a full page reload
+                                                    try {
+                                                    await loadRemoteData();
+                                                    showToast('Roles saved successfully', 'success');
+                                                    } catch {
+                                                    // fall back silently if refresh fails
+                                                    }
+                                                    }
+                                                    } catch (err) {
+                                                    console.error('Failed to save roles', err);
+                                                    alert('Failed to save roles. Check console for details.');
+                                                    saveBtn.removeAttribute('disabled');
+                                                    }
+                                                    });
+                                                    }
 
-        roles.forEach(raw => {
-            const r = normalizeRole(raw);
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-gray-50/50 transition-colors';
-            const statusBadge = r.IsActive ?
-                '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-800">Active</span>' :
-                '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-gray-100 text-gray-600">Inactive</span>';
+                                                    // Track whether role rate type should be locked to company payroll cycle
+                                                    let roleRateTypeLocked = false;
 
-            const editLink = @Model.IsEditMode.ToString().ToLower() ?
-                `<a href="#" class="text-blue-600 hover:text-blue-800" onclick="openModal('edit', ${r.RoleId})">Edit</a>` :
-                `<span class="text-gray-400">Edit</span>`;
+                                                    function mapPayrollToRateType(payrollCycle) {
+                                                    // payrollCycle mapping: 0 = Semi-Monthly, 1 = Monthly, 2 = Weekly
+                                                    // When payroll is Weekly we map role rate type to Daily (company-wide policy)
+                                                    switch (Number(payrollCycle)) {
+                                                    case 1: return 'Monthly';
+                                                    case 2: return 'Daily';
+                                                    default: return 'Semi-Monthly';
+                                                    }
+                                                    }
 
-            tr.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${r.RoleName}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₱${(r.BasicRate || 0).toFixed(2)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.RateType || ''}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">${editLink}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+                                                    function applyRateTypeLock(payrollCycle) {
+                                                    const rtEl = document.getElementById('rateType');
+                                                    if (!rtEl) return;
+                                                    // If company payrollCycle is defined, lock rate type to mapped value
+                                                    if (typeof payrollCycle !== 'undefined' && payrollCycle !== null) {
+                                                    const mapped = mapPayrollToRateType(payrollCycle);
+                                                    rtEl.value = mapped;
+                                                    rtEl.disabled = true;
+                                                    roleRateTypeLocked = true;
+                                                    } else {
+                                                    rtEl.disabled = false;
+                                                    roleRateTypeLocked = false;
+                                                    }
+                                                    }
 
-    function openModal(mode, id) {
-        const modal = document.getElementById('roleModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.getElementById('roleModalTitle').innerText = mode === 'add' ? 'Add Role' : 'Edit Role';
+                                                    // Fetch latest profile and roles without blocking initial render
+                                                    async function loadRemoteData() {
+                                                    try {
+                                                    // fetch company profile
+                                                    const profileRes = await fetch(window.location.pathname + '?handler=CompanyProfileJson');
+                                                    if (profileRes.ok) {
+                                                    const profile = await profileRes.json();
+                                                    // update logo (prefer logoUrl); apply gray fallback when missing
+                                                    const logo = document.getElementById('companyLogo');
+                                                    if (logo) {
+                                                    const src = (profile?.logoUrl) ? profile.logoUrl : (profile?.logoUrl ? profile.logoUrl : '/images/logo.png');
+                                                    logo.src = src;
 
-        if (mode === 'edit') {
-            const numericId = Number(id);
-            const r = roles.find(x => Number(x.RoleId) === numericId);
-            if (!r) return;
-            document.getElementById('editingRoleId').value = r.RoleId;
-            document.getElementById('roleName').value = r.RoleName || '';
-            document.getElementById('basicRate').value = r.BasicRate || '';
-            const rtEl = document.getElementById('rateType');
-            if (roleRateTypeLocked) {
-                // If locked to company payroll, use mapped value instead of role value
-                const payrollEl = document.getElementsByName('PayrollCycle')[0];
-                const payrollVal = payrollEl ? payrollEl.value : null;
-                rtEl.value = mapPayrollToRateType(payrollVal);
-                rtEl.disabled = true;
-            } else {
-                rtEl.value = r.RateType || 'Semi-Monthly';
-                rtEl.disabled = false;
-            }
-            document.getElementById('roleDesc').value = r.Description || '';
-            document.getElementById('roleActive').checked = r.IsActive;
-        } else {
-            document.getElementById('editingRoleId').value = '';
-            document.getElementById('roleName').value = '';
-            document.getElementById('basicRate').value = '';
-            const rtEl = document.getElementById('rateType');
-            if (roleRateTypeLocked) {
-                const payrollEl = document.getElementsByName('PayrollCycle')[0];
-                const payrollVal = payrollEl ? payrollEl.value : null;
-                rtEl.value = mapPayrollToRateType(payrollVal);
-                rtEl.disabled = true;
-            } else {
-                rtEl.value = 'Semi-Monthly';
-                rtEl.disabled = false;
-            }
-            document.getElementById('roleDesc').value = '';
-            document.getElementById('roleActive').checked = true;
-        }
-    }
+                                                    // Sync to layout and storage if valid logo
+                                                    if (profile?.logoUrl) {
+                                                    localStorage.setItem('payrex_company_logo', src);
+                                                    const layoutLogo = document.getElementById('layout-header-logo');
+                                                    if (layoutLogo) layoutLogo.src = src;
+                                                    }
 
-    function closeModal() {
-        const modal = document.getElementById('roleModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+                                                    if (!profile?.logoUrl) {
+                                                    logo.classList.add('filter', 'grayscale', 'opacity-50');
+                                                    } else {
+                                                    logo.classList.remove('filter', 'grayscale', 'opacity-50');
+                                                    }
+                                                    }
+                                                    // update owner signature display
+                                                    const sigImg = document.getElementById('ownerSignatureImg');
+                                                    const sigPlaceholder = document.getElementById('ownerSignaturePlaceholder');
+                                                    if (sigImg && sigPlaceholder) {
+                                                    if (profile?.ownerSignatureUrl) {
+                                                    sigImg.src = profile.ownerSignatureUrl;
+                                                    sigImg.classList.remove('hidden');
+                                                    sigPlaceholder.classList.add('hidden');
+                                                    } else {
+                                                    sigImg.classList.add('hidden');
+                                                    sigPlaceholder.classList.remove('hidden');
+                                                    }
+                                                    }
 
-    // Initialize immediately (script is placed at the end of the page)
-    (function initRoles() {
-        const btnAddRole = document.getElementById('btnAddRole');
-        if (btnAddRole) {
-            btnAddRole.addEventListener('click', () => openModal('add'));
-        }
+                                                    // populate inputs if in edit mode
+                                                    const setIf = (name, val) => { const el = document.getElementsByName(name)[0]; if (el) el.value = val ?? ''; };
+                                                    setIf('CompanyName', profile.companyName ?? '');
+                                                    setIf('Address', profile.address ?? '');
+                                                    setIf('ContactEmail', profile.contactEmail ?? '');
+                                                    setIf('ContactPhone', profile.contactPhone ?? '');
+                                                    setIf('Tin', profile.tin ?? '');
+                                                    setIf('PayrollCycle', profile.payrollCycle ?? 1);
+                                                    // Apply rate type lock based on fetched payroll cycle
+                                                    applyRateTypeLock(profile?.payrollCycle);
+                                                    setIf('WorkHoursPerDay', profile.workHoursPerDay ?? 8);
+                                                    setIf('OvertimeRate', profile.overtimeRate ?? 1.25);
+                                                    setIf('LateGraceMinutes', profile.lateGraceMinutes ?? 15);
+                                                    setIf('HolidayRate', profile.holidayRate ?? 2.0);
 
-        const cancelBtn = document.getElementById('cancelRole');
-        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+                                                    // Work Schedule & Leave fields
+                                                    setIf('ScheduledTimeIn', profile.scheduledTimeIn || '08:00');
+                                                    setIf('ScheduledTimeOut', profile.scheduledTimeOut || '');
+                                                    setIf('TimeInCutoffHours', profile.timeInCutoffHours ?? 0);
+                                                    setIf('VacationLeaveDays', (profile.vacationLeaveDays !== null && typeof profile.vacationLeaveDays !== 'undefined') ? profile.vacationLeaveDays : ((profile.vacationLeaveResetType || 0) === 1 ? 15 : 5));
+                                                    setIf('VacationLeaveResetType', profile.vacationLeaveResetType ?? 0);
+                                                    updateVacationLabel();
+                                                    // Auto-calculate time out if the server didn't provide one
+                                                    if (!profile.scheduledTimeOut) setTimeout(autoCalcTimeOut, 0);
+                                                    // Update cutoff time display
+                                                    setTimeout(updateCutoffDisplay, 0);
 
-        const saveBtn = document.getElementById('saveRole');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', async () => {
-                const id = parseInt(document.getElementById('editingRoleId').value || '0');
-                const name = document.getElementById('roleName').value.trim();
-                const basicRate = parseFloat(document.getElementById('basicRate').value || '0');
-                const rateType = document.getElementById('rateType').value;
-                const desc = document.getElementById('roleDesc').value.trim();
-                const isActive = document.getElementById('roleActive').checked;
+                                                    // update non-edit display fields
+                                                    const setDisplay = (id, val, empty) => { const el = document.getElementById(id); if (!el) return; el.textContent = (val && val !== '') ? val : empty; };
+                                                    setDisplay('companyNameDisplay', profile.companyName, '—');
+                                                    setDisplay('tinDisplay', profile.tin, 'No TIN specified');
+                                                    // prefer phone then email for contact display
+                                                    setDisplay('contactDisplay', profile.contactPhone ?? profile.contactEmail, 'No contact specified');
+                                                    setDisplay('addressDisplay', profile.address, 'No address specified');
+                                                    }
 
-                if (!name) {
-                    alert('Role name required');
-                    return;
-                }
+                                                    // fetch roles
+                                                    const rolesRes = await fetch(window.location.pathname + '?handler=EmployeeRolesJson');
+                                                    if (rolesRes.ok) {
+                                                    const remoteRoles = await rolesRes.json();
+                                                    if (Array.isArray(remoteRoles)) {
+                                                    roles = remoteRoles.map(normalizeRole);
+                                                    renderRoles();
+                                                    }
+                                                    } else {
+                                                    const txt = await rolesRes.text();
+                                                    console.error('Failed to fetch roles:', rolesRes.status, txt);
+                                                    }
+                                                    } catch (err) {
+                                                    console.debug('Error loading profile/roles', err);
+                                                    }
+                                                    }
 
-                if (id > 0) {
-                    const numericId = Number(id);
-                    const r = roles.find(x => Number(x.RoleId) === numericId);
-                    if (r) {
-                        r.RoleName = name;
-                        r.BasicRate = basicRate;
-                        r.RateType = rateType;
-                        r.Description = desc;
-                        r.IsActive = isActive;
-                        // show update toast
-                        showToast(`${name} Role Updated`, 'success');
-                    }
-                } else {
-                    roles.push({
-                        RoleId: 0,
-                        RoleName: name,
-                        BasicRate: basicRate,
-                        RateType: rateType,
-                        Description: desc,
-                        IsActive: isActive
-                    });
-                    // show added toast
-                    showToast(`${name} Role Added`, 'success');
-                }
+                                                    loadRemoteData();
+                                                    })();
 
-                closeModal();
-                renderRoles();
+                                                    // wire delete to set inactive (no physical delete)
+                                                    async function setRoleInactive(id) {
+                                                    const r = roles.find(x => x.RoleId === id);
+                                                    if (!r) return;
+                                                    r.IsActive = false;
+                                                    renderRoles();
+                                                    document.getElementById('RolesJson').value = JSON.stringify(roles);
+                                                    document.getElementById('rolesSyncForm')?.submit();
+                                                    }
 
-                // Submit roles to page handler using fetch with antiforgery token (form-encoded)
-                try {
-                    const antiTokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                    const token = antiTokenInput ? antiTokenInput.value : '';
-                    const payload = `__RequestVerificationToken=${encodeURIComponent(token)}&RolesJson=${encodeURIComponent(JSON.stringify(roles))}`;
-                    const url = window.location.pathname + '?handler=SaveCompanyRoles';
-                    saveBtn.setAttribute('disabled', 'disabled');
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: payload
-                    });
+                                                    // Auto-calculate Time Out = Time In + Work Hours + 1 hr lunch
+                                                    function autoCalcTimeOut() {
+                                                    const timeInEl = document.querySelector('[name="ScheduledTimeIn"]');
+                                                    const workHrsEl = document.querySelector('[name="WorkHoursPerDay"]');
+                                                    const timeOutEl = document.querySelector('[name="ScheduledTimeOut"]');
+                                                    if (!timeInEl || !workHrsEl || !timeOutEl) return;
 
-                    // If server redirected (Razor Pages redirect), follow it; otherwise reload
-                    if (res.redirected) {
-                        window.location.href = res.url;
-                    } else {
-                        window.location.reload();
-                    }
-                } catch (err) {
-                    console.error('Failed to save roles', err);
-                    alert('Failed to save roles. Check console for details.');
-                    saveBtn.removeAttribute('disabled');
-                }
-            });
-        }
+                                                    const timeIn = timeInEl.value;
+                                                    const workHrs = parseFloat(workHrsEl.value) || 8;
+                                                    if (!timeIn) return;
 
-        // Track whether role rate type should be locked to company payroll cycle
-        let roleRateTypeLocked = false;
+                                                    const [h, m] = timeIn.split(':').map(Number);
+                                                    const totalMinutes = h * 60 + m + (workHrs * 60) + 60; // +60 for 1hr lunch
+                                                    const outH = Math.floor(totalMinutes / 60) % 24;
+                                                    const outM = totalMinutes % 60;
+                                                    timeOutEl.value = String(outH).padStart(2, '0') + ':' + String(outM).padStart(2, '0');
+                                                    const note = document.getElementById('autoCalcNote');
+                                                    if (note) note.textContent = '(auto-calculated)';
+                                                    }
+                                                    document.querySelector('[name="ScheduledTimeIn"]')?.addEventListener('change', autoCalcTimeOut);
+                                                    document.querySelector('[name="WorkHoursPerDay"]')?.addEventListener('change', autoCalcTimeOut);
 
-        function mapPayrollToRateType(payrollCycle) {
-            // payrollCycle mapping: 0 = Semi-Monthly, 1 = Monthly, 2 = Weekly
-            // When payroll is Weekly we map role rate type to Daily (company-wide policy)
-            switch (Number(payrollCycle)) {
-                case 1: return 'Monthly';
-                case 2: return 'Daily';
-                default: return 'Semi-Monthly';
-            }
-        }
+                                                    // Update the cutoff time hint badge: Time In + Cutoff Hours = lock time
+                                                    function updateCutoffDisplay() {
+                                                    const timeInEl = document.querySelector('[name="ScheduledTimeIn"]');
+                                                    const cutoffEl = document.querySelector('[name="TimeInCutoffHours"]');
+                                                    const displayEl = document.getElementById('cutoffTimeDisplay');
+                                                    if (!displayEl) return;
+                                                    const timeIn = timeInEl ? timeInEl.value : '';
+                                                    const hours = parseInt(cutoffEl ? cutoffEl.value : '0') || 0;
+                                                    if (!timeIn || hours === 0) {
+                                                    displayEl.textContent = '';
+                                                    displayEl.style.display = 'none';
+                                                    return;
+                                                    }
+                                                    const [h, m] = timeIn.split(':').map(Number);
+                                                    const totalMins = h * 60 + m + hours * 60;
+                                                    const cutH = Math.floor(totalMins / 60) % 24;
+                                                    const cutM = totalMins % 60;
+                                                    const ampm = cutH >= 12 ? 'PM' : 'AM';
+                                                    const displayH = cutH > 12 ? cutH - 12 : (cutH === 0 ? 12 : cutH);
+                                                    displayEl.textContent = `\u23F0 Employees can clock in until ${String(displayH).padStart(2, '0')}:${String(cutM).padStart(2, '0')} ${ampm}`;
+                                                    displayEl.style.display = 'inline-flex';
+                                                    }
+                                                    document.querySelector('[name="ScheduledTimeIn"]')?.addEventListener('change', updateCutoffDisplay);
+                                                    document.querySelector('[name="TimeInCutoffHours"]')?.addEventListener('input', updateCutoffDisplay);
 
-        function applyRateTypeLock(payrollCycle) {
-            const rtEl = document.getElementById('rateType');
-            if (!rtEl) return;
-            // If company payrollCycle is defined, lock rate type to mapped value
-            if (typeof payrollCycle !== 'undefined' && payrollCycle !== null) {
-                const mapped = mapPayrollToRateType(payrollCycle);
-                rtEl.value = mapped;
-                rtEl.disabled = true;
-                roleRateTypeLocked = true;
-            } else {
-                rtEl.disabled = false;
-                roleRateTypeLocked = false;
-            }
-        }
+                                                    // Dynamic vacation leave label
+                                                    function updateVacationLabel() {
+                                                    const resetEl = document.querySelector('[name="VacationLeaveResetType"]');
+                                                    const label = document.getElementById('vacationResetLabel');
+                                                    if (!resetEl || !label) return;
+                                                    label.textContent = resetEl.value === '0' ? 'Monthly' : 'Annually';
+                                                    }
+                                                    document.querySelector('[name="VacationLeaveResetType"]')?.addEventListener('change', updateVacationLabel);
 
-        // Fetch latest profile and roles without blocking initial render
-        async function loadRemoteData() {
-            try {
-                // fetch company profile
-                const profileRes = await fetch(window.location.pathname + '?handler=CompanyProfileJson');
-                if (profileRes.ok) {
-                    const profile = await profileRes.json();
-                    // update logo (prefer logoUrl); apply gray fallback when missing
-                    const logo = document.getElementById('companyLogo');
-                    if (logo) {
-                        const src = (profile?.logoUrl) ? profile.logoUrl : (profile?.logoUrl ? profile.logoUrl : '/images/logo.png');
-                        logo.src = src;
-                        
-                        // Sync to layout and storage if valid logo
-                        if (profile?.logoUrl) {
-                            localStorage.setItem('payrex_company_logo', src);
-                            const layoutLogo = document.getElementById('layout-header-logo');
-                            if (layoutLogo) layoutLogo.src = src;
-                        }
+                                                    async function saveAllSettings() {
+                                                    // Gather all named inputs from the page and submit as form data
+                                                    const formData = new FormData();
+                                                    const antiToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                                                    if (antiToken) formData.append('__RequestVerificationToken', antiToken.value);
 
-                        if (!profile?.logoUrl) {
-                            logo.classList.add('filter','grayscale','opacity-50');
-                        } else {
-                            logo.classList.remove('filter','grayscale','opacity-50');
-                        }
-                    }
-                    // populate inputs if in edit mode
-                    const setIf = (name, val) => { const el = document.getElementsByName(name)[0]; if (el) el.value = val ?? ''; };
-                    setIf('CompanyName', profile.companyName ?? '');
-                    setIf('Address', profile.address ?? '');
-                    setIf('ContactEmail', profile.contactEmail ?? '');
-                    setIf('ContactPhone', profile.contactPhone ?? '');
-                    setIf('Tin', profile.tin ?? '');
-                    setIf('PayrollCycle', profile.payrollCycle ?? 0);
-                    // Apply rate type lock based on fetched payroll cycle
-                    applyRateTypeLock(profile?.payrollCycle);
-                    setIf('WorkHoursPerDay', profile.workHoursPerDay ?? 8);
-                    setIf('OvertimeRate', profile.overtimeRate ?? 1.25);
-                    setIf('LateGraceMinutes', profile.lateGraceMinutes ?? 15);
-                    setIf('HolidayRate', profile.holidayRate ?? 2.0);
-                    setIf('AbsentRate', profile.absentRate ?? 0.0);
+                                                    // Collect all named inputs (text, number, select, textarea, time)
+                                                    const fieldNames = ['CompanyName', 'Tin', 'ContactPhone', 'ContactEmail', 'Address',
+                                                    'PayrollCycle', 'WorkHoursPerDay', 'OvertimeRate', 'LateGraceMinutes', 'HolidayRate',
+                                                    'ScheduledTimeIn', 'ScheduledTimeOut', 'TimeInCutoffHours', 'VacationLeaveDays', 'VacationLeaveResetType'];
 
-                    // update non-edit display fields
-                    const setDisplay = (id, val, empty) => { const el = document.getElementById(id); if (!el) return; el.textContent = (val && val !== '') ? val : empty; };
-                    setDisplay('companyNameDisplay', profile.companyName, '—');
-                    setDisplay('tinDisplay', profile.tin, 'No TIN specified');
-                    // prefer phone then email for contact display
-                    setDisplay('contactDisplay', profile.contactPhone ?? profile.contactEmail, 'No contact specified');
-                    setDisplay('addressDisplay', profile.address, 'No address specified');
-                }
+                                                    fieldNames.forEach(name => {
+                                                    const el = document.querySelector(`[name="${name}"]`);
+                                                    if (el) formData.append(name, el.value);
+                                                    });
 
-                // fetch roles
-                    const rolesRes = await fetch(window.location.pathname + '?handler=EmployeeRolesJson');
-                if (rolesRes.ok) {
-                    const remoteRoles = await rolesRes.json();
-                    if (Array.isArray(remoteRoles)) {
-                        roles = remoteRoles.map(normalizeRole);
-                        renderRoles();
-                    }
-                } else {
-                    const txt = await rolesRes.text();
-                    console.error('Failed to fetch roles:', rolesRes.status, txt);
-                }
-            } catch (err) {
-                console.debug('Error loading profile/roles', err);
-            }
-        }
+                                                    try {
+                                                    const res = await fetch(window.location.pathname + '?handler=SaveCompany', {
+                                                    method: 'POST',
+                                                    body: formData
+                                                    });
+                                                    if (res.redirected) {
+                                                    window.location.href = res.url;
+                                                    } else if (res.ok) {
+                                                    showToast('Settings saved successfully', 'success');
+                                                    // Reload to reflect changes
+                                                    setTimeout(() => window.location.href = '/Settings', 1000);
+                                                    } else {
+                                                    showToast('Failed to save settings', 'error');
+                                                    }
+                                                    } catch (err) {
+                                                    console.error('Save settings error:', err);
+                                                    showToast('An error occurred while saving', 'error');
+                                                    }
+                                                    }
+                                                </script>
 
-        loadRemoteData();
-    })();
+                                                <form id="rolesSyncForm" method="post" asp-page-handler="SaveCompanyRoles" class="hidden">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" id="RolesJson" name="RolesJson" />
+                                                </form>
 
-    // wire delete to set inactive (no physical delete)
-    async function setRoleInactive(id) {
-        const r = roles.find(x => x.RoleId === id);
-        if (!r) return;
-        r.IsActive = false;
-        renderRoles();
-        document.getElementById('RolesJson').value = JSON.stringify(roles);
-        document.getElementById('rolesSyncForm')?.submit();
-    }
-</script>
-
-<form id="rolesSyncForm" method="post" asp-page-handler="SaveCompanyRoles" class="hidden">
-    @Html.AntiForgeryToken()
-    <input type="hidden" id="RolesJson" name="RolesJson" />
-</form>
-
-    @* Toast animations moved to shared layout *@
+                                                @* Toast animations moved to shared layout *@

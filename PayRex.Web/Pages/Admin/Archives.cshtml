@@ -1,0 +1,260 @@
+@page
+@model PayRex.Web.Pages.Admin.ArchivesModel
+@{
+    ViewData["Title"] = "Archives";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-red-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-6 py-8 sm:px-10 relative z-10">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Archives</h1>
+            <p class="mt-2 text-gray-600">Manage inactive users and companies. Restore them when needed.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <script>document.addEventListener('DOMContentLoaded',()=>showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatusMessage)), '@(Model.StatusMessage!.StartsWith("Failed") ? "error" : "success")'));</script>
+    }
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex gap-4">
+            <button onclick="switchTab('users')" id="tab-users" class="px-4 py-2 text-sm font-semibold border-b-2 border-blue-600 text-blue-600">
+                Inactive Users (@Model.InactiveUsers.Count)
+            </button>
+            <button onclick="switchTab('companies')" id="tab-companies" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Inactive Companies (@Model.InactiveCompanies.Count)
+            </button>
+            <button onclick="switchTab('billing')" id="tab-billing" class="px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                Archived Billing (@Model.ArchivedInvoices.Count)
+            </button>
+        </nav>
+    </div>
+
+    <!-- Inactive Users Tab -->
+    <div id="panel-users" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-base font-semibold text-gray-900">Inactive Users</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (Model.InactiveUsers.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No inactive users</p>
+                                    <p class="text-sm text-gray-400 mt-1">All users are currently active</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var user in Model.InactiveUsers)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(user.ProfileImageUrl))
+                                        {
+                                            <img src="@user.ProfileImageUrl" alt="" class="w-8 h-8 rounded-full object-cover" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">@user.FirstName.Substring(0, 1)</div>
+                                        }
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900">@user.FirstName @user.LastName</p>
+                                            <p class="text-xs text-gray-500">@user.Email</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@user.Role</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@(user.CompanyName ?? "—")</td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-semibold text-red-700">@user.Status</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="px-6 py-4">
+                                    <form method="post" asp-page-handler="RestoreUser" onsubmit="return confirm('Restore this user to Active status?')">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+                                            Restore
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Inactive Companies Tab -->
+    <div id="panel-companies" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-base font-semibold text-gray-900">Inactive Companies</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Plan</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Users</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Employees</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (Model.InactiveCompanies.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No inactive companies</p>
+                                    <p class="text-sm text-gray-400 mt-1">All companies are currently active</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var company in Model.InactiveCompanies)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if (!string.IsNullOrEmpty(company.LogoUrl))
+                                        {
+                                            <img src="@company.LogoUrl" alt="" class="w-8 h-8 rounded-lg object-cover" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">@company.CompanyName.Substring(0, 1)</div>
+                                        }
+                                        <span class="text-sm font-semibold text-gray-900">@company.CompanyName</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@company.PlanName</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@company.UserCount</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@company.EmployeeCount</td>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-semibold text-red-700">@company.Status</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">@company.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td class="px-6 py-4">
+                                    <form method="post" asp-page-handler="RestoreCompany" onsubmit="return confirm('Restore this company to Active status?')">
+                                        <input type="hidden" name="companyId" value="@company.CompanyId" />
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+                                            Restore
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Archived Billing Tab -->
+    <div id="panel-billing" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <h2 class="text-base font-semibold text-gray-900">Archived Invoices</h2>
+            <p class="text-sm text-gray-500 mt-0.5">Invoices archived from Admin Billing</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Invoice #</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">VAT (12%)</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Original Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Due Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Created</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @if (Model.ArchivedInvoices.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No archived invoices</p>
+                                    <p class="text-sm text-gray-400 mt-1">Use the Archive button on Admin Billing to archive invoices</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var inv in Model.ArchivedInvoices)
+                        {
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">@inv.InvoiceNumber</td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900">@inv.CompanyName</td>
+                                <td class="px-6 py-4 text-sm font-semibold text-gray-900">₱@inv.Amount.ToString("N2")</td>
+                                <td class="px-6 py-4 text-sm font-semibold text-gray-500">₱@inv.VatAmount.ToString("N2")</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                                        Archived
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">@inv.DueDate.ToString("MMM dd, yyyy")</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">@inv.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function switchTab(tab) {
+        const tabs = ['users', 'companies', 'billing'];
+        tabs.forEach(t => {
+            document.getElementById(`panel-${t}`).classList.toggle('hidden', tab !== t);
+            document.getElementById(`tab-${t}`).classList.toggle('border-blue-600', tab === t);
+            document.getElementById(`tab-${t}`).classList.toggle('text-blue-600', tab === t);
+            document.getElementById(`tab-${t}`).classList.toggle('border-transparent', tab !== t);
+            document.getElementById(`tab-${t}`).classList.toggle('text-gray-500', tab !== t);
+        });
+    }
+</script>
+}

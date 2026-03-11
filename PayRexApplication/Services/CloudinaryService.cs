@@ -29,6 +29,11 @@ namespace PayRexApplication.Services
     Task<string?> UploadCompanyLogoAsync(Stream imageStream, string fileName, string companyId);
 
         /// <summary>
+        /// Upload a user signature to Cloudinary (no crop/resize)
+        /// </summary>
+    Task<string?> UploadSignatureAsync(Stream imageStream, string fileName, string userId);
+
+        /// <summary>
         /// Delete an image from Cloudinary by public ID
      /// </summary>
         /// <param name="publicId">Cloudinary public ID</param>
@@ -197,6 +202,60 @@ Transformation = new Transformation()
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error uploading logo to Cloudinary for company {CompanyId}", companyId);
+                return null;
+            }
+        }
+
+        public async Task<string?> UploadSignatureAsync(Stream imageStream, string fileName, string userId)
+        {
+            if (!_isConfigured)
+            {
+                _logger.LogWarning("Cloudinary is not configured. Cannot upload image.");
+                return null;
+            }
+
+            var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension))
+            {
+                _logger.LogWarning("Invalid file extension: {Extension}", extension);
+                return null;
+            }
+
+            if (imageStream.Length > MaxFileSizeBytes)
+            {
+                _logger.LogWarning("File size {Size} exceeds maximum allowed", imageStream.Length);
+                return null;
+            }
+
+            try
+            {
+                var publicId = $"payrex/signatures/user_{userId}_{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(fileName, imageStream),
+                    PublicId = publicId,
+                    Overwrite = true,
+                    Transformation = new Transformation()
+                        .Quality("auto")
+                        .FetchFormat("auto"),
+                    Tags = "signature"
+                };
+
+                var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+                if (uploadResult.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    _logger.LogInformation("Signature uploaded successfully for user {UserId}: {Url}", userId, uploadResult.SecureUrl);
+                    return uploadResult.SecureUrl?.ToString();
+                }
+
+                _logger.LogError("Cloudinary upload failed: {Error}", uploadResult.Error?.Message);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading signature to Cloudinary for user {UserId}", userId);
                 return null;
             }
         }

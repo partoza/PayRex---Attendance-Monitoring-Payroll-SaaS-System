@@ -67,7 +67,11 @@ namespace PayRex.Web.Pages
             var token = GetAuthToken();
             if (!string.IsNullOrEmpty(token))
             {
-                var profile = await _authApi.GetUserProfileAsync(token);
+                var profileTask = _authApi.GetUserProfileAsync(token);
+                var twoTask = _authApi.GetTwoFactorStatusAsync(token);
+                await Task.WhenAll(profileTask, twoTask);
+
+                var profile = profileTask.Result;
                 if (profile != null)
                 {
                     FirstName = profile.FirstName ?? FirstName;
@@ -80,7 +84,7 @@ namespace PayRex.Web.Pages
                     IsTwoFactorEnabled = profile.IsTwoFactorEnabled;
                 }
 
-                var two = await _authApi.GetTwoFactorStatusAsync(token);
+                var two = twoTask.Result;
                 if (two != null)
                 {
                     // OR with status endpoint
@@ -364,7 +368,7 @@ namespace PayRex.Web.Pages
             [Required, DataType(DataType.Password)]
             public string CurrentPassword { get; set; } = "";
 
-            [Required, MinLength(8), DataType(DataType.Password)]
+            [Required, MinLength(12), DataType(DataType.Password)]
             public string NewPassword { get; set; } = "";
 
             [Required, Compare("NewPassword"), DataType(DataType.Password)]

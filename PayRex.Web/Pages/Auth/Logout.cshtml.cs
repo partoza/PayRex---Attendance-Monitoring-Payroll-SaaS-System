@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -12,21 +13,32 @@ namespace PayRex.Web.Pages.Auth
    _logger = logger;
       }
 
-  public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
+    {
+        var cookieOptions = new CookieOptions { Path = "/" };
+        var host = Request.Host.Host ?? string.Empty;
+        if (!host.Contains("localhost") && host.Contains("runasp.net"))
         {
-        // Remove the authentication cookie with matching path
-       Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
-            _logger.LogInformation("User logged out");
-            return Page();
+          cookieOptions.Domain = ".runasp.net";
+          cookieOptions.Secure = true;
+        }
+        Response.Cookies.Delete("PayRex.AuthToken", cookieOptions);
+      _logger.LogInformation("User logged out");
+      return RedirectToPage("/Auth/Login");
     }
 
-  public IActionResult OnPost()
- {
-                Response.Cookies.Delete("PayRex.AuthToken", new CookieOptions { Path = "/" });
-            _logger.LogInformation("User logged out");
-                // Perform a server-side redirect to Index so the browser requests
-                // the homepage without the auth cookie (unauthenticated state).
-                return RedirectToPage("/Index");
-          }
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var cookieOptions = new CookieOptions { Path = "/" };
+        var host = Request.Host.Host ?? string.Empty;
+        if (!host.Contains("localhost") && host.Contains("runasp.net"))
+        {
+          cookieOptions.Domain = ".runasp.net";
+          cookieOptions.Secure = true;
+        }
+        Response.Cookies.Delete("PayRex.AuthToken", cookieOptions);
+      _logger.LogInformation("User logged out");
+      return RedirectToPage("/Auth/Login");
+    }
     }
 }

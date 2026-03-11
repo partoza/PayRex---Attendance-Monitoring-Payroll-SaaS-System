@@ -55,9 +55,13 @@ namespace PayRex.Web.Pages
         [StringLength(256)]
         public string Email { get; set; }
 
+        [Required]
         public string ContactNumber { get; set; }
+
+        [Required]
         public string CivilStatus { get; set; }
 
+        [Required]
         [DataType(DataType.Date)]
         public DateTime? Birthdate { get; set; }
 
@@ -66,9 +70,16 @@ namespace PayRex.Web.Pages
         [DataType(DataType.Date)]
         public DateTime? StartDate { get; set; }
 
+        [Required]
         public string TIN { get; set; }
+
+        [Required]
         public string SSS { get; set; }
+
+        [Required]
         public string PhilHealth { get; set; }
+
+        [Required]
         public string PagIbig { get; set; }
 
         public IFormFile ProfilePhoto { get; set; }

@@ -66,6 +66,13 @@ namespace PayRexApplication.Models
       [MaxLength(512)]
         public string? LogoUrl { get; set; }
 
+        [Column("ownerSignatureUrl")]
+      [MaxLength(512)]
+        public string? OwnerSignatureUrl { get; set; }
+
+        [Column("isSetupComplete")]
+        public bool IsSetupComplete { get; set; } = false;
+
         // Navigation properties
       [ForeignKey("PlanId")]
         public virtual SubscriptionPlan SubscriptionPlan { get; set; } = null!;

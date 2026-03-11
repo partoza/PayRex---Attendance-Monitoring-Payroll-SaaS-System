@@ -64,6 +64,7 @@ client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bear
    public class CompanyItem
         {
        public int CompanyId { get; set; }
+       public string CompanyCode { get; set; } = "";
      public string CompanyName { get; set; } = "";
    public string Status { get; set; } = "";
     public bool IsActive { get; set; }
@@ -71,6 +72,7 @@ client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bear
        public int UserCount { get; set; }
    public int EmployeeCount { get; set; }
  public DateTime CreatedAt { get; set; }
+        public string? LogoUrl { get; set; }
    }
     }
 }

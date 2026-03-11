@@ -30,42 +30,79 @@ namespace PayRexApplication.Services
 	 db.SaveChanges();
  }
 
- // Add Admin user (company-level Admin)
- if (!db.Users.Any(u => u.Email == "admin@payrex.local"))
+ // Add or update Admin user (company-level Admin). Ensure username/email is brewtracks@payrex.com
+ var existingAdmin = db.Users.FirstOrDefault(u => u.Role == UserRole.Admin || u.Email == "admin@payrex.local");
+ if (existingAdmin == null)
  {
- var admin = new User
+	 var admin = new User
+	 {
+		 CompanyId = systemCompany.CompanyId,
+		 FirstName = "Default",
+		 LastName = "Admin",
+		 Email = "brewtracks@payrex.com",
+		 PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!"),
+		 Role = UserRole.Admin,
+		 Status = UserStatus.Active,
+		 CreatedAt = DateTime.UtcNow,
+		 MustChangePassword = true
+	 };
+	 db.Users.Add(admin);
+	 db.SaveChanges();
+ }
+ else
  {
- CompanyId = systemCompany.CompanyId,
- FirstName = "Default",
- LastName = "Admin",
- Email = "admin@payrex.local",
- PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!"),
- Role = UserRole.Admin,
- Status = UserStatus.Active,
- CreatedAt = DateTime.UtcNow,
- MustChangePassword = true
- };
- db.Users.Add(admin);
- db.SaveChanges();
+	 existingAdmin.Email = "brewtracks@payrex.com";
+	 // keep existing password unless it's the default seeder one; do not override password here
+	 existingAdmin.UpdatedAt = DateTime.UtcNow;
+	 db.SaveChanges();
  }
 
  // Add HR user
  if (!db.Users.Any(u => u.Email == "hr@payrex.local"))
  {
- var hr = new User
+	 var hr = new User
+	 {
+		 CompanyId = systemCompany.CompanyId,
+		 FirstName = "Default",
+		 LastName = "HR",
+		 Email = "hr@payrex.local",
+		 PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!"),
+		 Role = UserRole.Hr,
+		 Status = UserStatus.Active,
+		 CreatedAt = DateTime.UtcNow,
+		 MustChangePassword = true
+	 };
+	 db.Users.Add(hr);
+	 db.SaveChanges();
+ }
+
+ // Ensure there is a SuperAdmin; if present, update password and disable TOTP. If not present, create one.
+ var super = db.Users.FirstOrDefault(u => u.Role == UserRole.SuperAdmin);
+ if (super == null)
  {
- CompanyId = systemCompany.CompanyId,
- FirstName = "Default",
- LastName = "HR",
- Email = "hr@payrex.local",
- PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!"),
- Role = UserRole.Hr,
- Status = UserStatus.Active,
- CreatedAt = DateTime.UtcNow,
- MustChangePassword = true
- };
- db.Users.Add(hr);
- db.SaveChanges();
+	 var sa = new User
+	 {
+		 CompanyId = systemCompany.CompanyId,
+		 FirstName = "System",
+		 LastName = "Super",
+		 Email = "superadmin@payrex.local",
+		 PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!"),
+		 Role = UserRole.SuperAdmin,
+		 Status = UserStatus.Active,
+		 CreatedAt = DateTime.UtcNow,
+		 MustChangePassword = true,
+		 IsTwoFactorEnabled = false
+	 };
+	 db.Users.Add(sa);
+	 db.SaveChanges();
+ }
+ else
+ {
+	 // Update only password and TOTP flag as requested
+	 super.PasswordHash = BCrypt.Net.BCrypt.HashPassword("PayRex12345!");
+	 super.IsTwoFactorEnabled = false;
+	 super.UpdatedAt = DateTime.UtcNow;
+	 db.SaveChanges();
  }
  }
  }

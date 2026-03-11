@@ -1,53 +1,89 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using PayRex.Web.Services;
+using PayRexApplication.Data;
+using PayRexApplication.Enums;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace PayRex.Web.Pages
 {
-    [Authorize(Roles = "Admin,HR")]
+    [Authorize(Roles = "Admin,Accountant")]
+    [IgnoreAntiforgeryToken]
     public class CompensationModel : PageModel
     {
-        public List<DeductionItem> Deductions { get; set; } = new();
-        public List<BenefitItem> Benefits { get; set; } = new();
+        private readonly IPayrollApiService _payroll;
+        private readonly AppDbContext _db;
 
-        public void OnGet()
+        public List<DeductionDto> Deductions { get; set; } = new();
+        public List<BenefitDto> Benefits { get; set; } = new();
+        public List<EmployeeListItem> Employees { get; set; } = new();
+
+        [TempData] public string? StatusMessage { get; set; }
+
+        public CompensationModel(IPayrollApiService payroll, AppDbContext db)
         {
-            // Static demo data for Deductions
-            Deductions = new List<DeductionItem>
-            {
-                new DeductionItem { Id = "DED-001", EmployeeName = "John Doe", Type = "Tardiness", Amount = 150.00m, Status = "Applied", Date = DateTime.Now.AddDays(-2) },
-                new DeductionItem { Id = "DED-002", EmployeeName = "Maria Santos", Type = "Absence", Amount = 1200.00m, Status = "Deducted", Date = DateTime.Now.AddDays(-5) },
-                new DeductionItem { Id = "DED-003", EmployeeName = "Juan Cruz", Type = "Cash Advance", Amount = 5000.00m, Status = "Pending", Date = DateTime.Now.AddDays(-1) },
-                new DeductionItem { Id = "DED-004", EmployeeName = "Ana Reyes", Type = "Loan Payment", Amount = 2500.00m, Status = "Deducted", Date = DateTime.Now.AddDays(-10) }
-            };
-
-            // Static demo data for Benefits
-            Benefits = new List<BenefitItem>
-            {
-                new BenefitItem { Id = "BEN-001", EmployeeName = "John Doe", Type = "Rice Allowance", Amount = 2000.00m, Frequency = "Monthly", Status = "Active" },
-                new BenefitItem { Id = "BEN-002", EmployeeName = "Maria Santos", Type = "Performance Bonus", Amount = 5000.00m, Frequency = "One-time", Status = "Approved" },
-                new BenefitItem { Id = "BEN-003", EmployeeName = "Juan Cruz", Type = "13th Month Pay", Amount = 25000.00m, Frequency = "Annual", Status = "Pending" },
-                new BenefitItem { Id = "BEN-004", EmployeeName = "Ana Reyes", Type = "Laundry Allowance", Amount = 500.00m, Frequency = "Monthly", Status = "Active" }
-            };
+            _payroll = payroll;
+            _db = db;
         }
 
-        public class DeductionItem
+        private int GetCompanyId()
         {
-            public string Id { get; set; } = "";
-            public string EmployeeName { get; set; } = "";
-            public string Type { get; set; } = "";
-            public decimal Amount { get; set; }
-            public string Status { get; set; } = "";
-            public DateTime Date { get; set; }
+            if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return 0;
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var claim = jwt.Claims.FirstOrDefault(c => c.Type == "companyId");
+                return claim != null && int.TryParse(claim.Value, out var cid) ? cid : 0;
+            }
+            catch { return 0; }
         }
 
-        public class BenefitItem
+        public async Task OnGetAsync()
         {
-            public string Id { get; set; } = "";
-            public string EmployeeName { get; set; } = "";
-            public string Type { get; set; } = "";
-            public decimal Amount { get; set; }
-            public string Frequency { get; set; } = "";
-            public string Status { get; set; } = "";
+            var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            var companyId = GetCompanyId();
+
+            var compensationTask = _payroll.GetCompensationAsync(token);
+            Task<List<EmployeeListItem>> employeesTask = companyId > 0
+                ? _db.Employees
+                    .AsNoTracking()
+                    .Where(e => e.CompanyId == companyId && e.Status == EmployeeStatus.Active)
+                    .Select(e => new EmployeeListItem { Id = e.EmployeeNumber, Name = e.FirstName + " " + e.LastName })
+                    .OrderBy(e => e.Name)
+                    .ToListAsync()
+                : Task.FromResult(new List<EmployeeListItem>());
+
+            await Task.WhenAll(compensationTask, employeesTask);
+
+            var result = compensationTask.Result;
+            Deductions = result.Deductions;
+            Benefits = result.Benefits;
+            Employees = employeesTask.Result;
+        }
+
+        public async Task<IActionResult> OnPostAddDeductionAsync(int employeeId, string name, decimal amount, bool isRecurring)
+        {
+            var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            var res = await _payroll.AddDeductionAsync(token, new { EmployeeId = employeeId, Name = name, Amount = amount, IsRecurring = isRecurring });
+            StatusMessage = res.success ? $"success:{res.message}" : $"error:{res.message}";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostAddBenefitAsync(int employeeId, string name, decimal amount)
+        {
+            var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            var res = await _payroll.AddBenefitAsync(token, new { EmployeeId = employeeId, Name = name, Amount = amount });
+            StatusMessage = res.success ? $"success:{res.message}" : $"error:{res.message}";
+            return RedirectToPage();
+        }
+
+        public class EmployeeListItem
+        {
+            public int Id { get; set; }
+            public string Name { get; set; } = "";
         }
     }
 }

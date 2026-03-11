@@ -1,0 +1,18 @@
+﻿  Determining projects to restore...
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj : warning NU1603: PayRex.Web depends on QuestPDF (>= 2024.11.0) but QuestPDF 2024.11.0 was not found. QuestPDF 2024.12.0 was resolved instead.
+  All projects are up-to-date for restore.
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj : warning NU1603: PayRex.Web depends on QuestPDF (>= 2024.11.0) but QuestPDF 2024.11.0 was not found. QuestPDF 2024.12.0 was resolved instead.
+  PayRex.API -> C:\Users\r3x\source\repos\PayRexApplication\PayRexApplication\bin\Debug\net9.0\PayRex.API.dll
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\Pages\Attendance.cshtml.cs(315,10): error CS1513: } expected [C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj]
+
+Build FAILED.
+
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj : warning NU1603: PayRex.Web depends on QuestPDF (>= 2024.11.0) but QuestPDF 2024.11.0 was not found. QuestPDF 2024.12.0 was resolved instead.
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj : warning NU1603: PayRex.Web depends on QuestPDF (>= 2024.11.0) but QuestPDF 2024.11.0 was not found. QuestPDF 2024.12.0 was resolved instead.
+C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\Pages\Attendance.cshtml.cs(315,10): error CS1513: } expected [C:\Users\r3x\source\repos\PayRexApplication\PayRex.Web\PayRex.Web.csproj]
+    2 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:13.39
+
+Workload updates are available. Run `dotnet workload list` for more information.

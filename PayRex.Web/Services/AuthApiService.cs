@@ -447,6 +447,34 @@ namespace PayRex.Web.Services
   }
  }
 
+ public async Task<ProfileImageResponseDto?> UploadOwnerSignatureAsync(string token, Stream imageStream, string fileName, string contentType)
+ {
+  try
+  {
+  using var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/company/signature");
+  var clean = NormalizeToken(token);
+  if (!string.IsNullOrEmpty(clean))
+  request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+
+  var content = new MultipartFormDataContent();
+  var streamContent = new StreamContent(imageStream);
+  streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+  content.Add(streamContent, "file", fileName);
+
+  request.Content = content;
+
+  var response = await _httpClient.SendAsync(request);
+  var responseContent = await response.Content.ReadAsStringAsync();
+
+  return JsonSerializer.Deserialize<ProfileImageResponseDto>(responseContent, JsonOptions);
+  }
+  catch (Exception ex)
+  {
+  _logger.LogError(ex, "Error calling UploadOwnerSignature API");
+  return new ProfileImageResponseDto { Success = false, Message = "An error occurred while uploading signature" };
+  }
+ }
+
  public async Task<(bool Success, string? Message)> RemoveProfileImageAsync(string token)
  {
  try
@@ -764,6 +792,27 @@ namespace PayRex.Web.Services
  {
  _logger.LogError(ex, "Error calling DeleteEmployeeRole API");
  return (false, ex.Message);
+ }
+ }
+
+ public async Task<string?> RefreshTokenAsync(string token)
+ {
+ try
+ {
+ using var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/refresh-token");
+ var clean = NormalizeToken(token);
+ if (!string.IsNullOrEmpty(clean))
+ request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clean);
+ var response = await _httpClient.SendAsync(request);
+ if (!response.IsSuccessStatusCode) return null;
+ var content = await response.Content.ReadAsStringAsync();
+ var doc = JsonSerializer.Deserialize<JsonElement>(content, JsonOptions);
+ return doc.TryGetProperty("token", out var t) ? t.GetString() : null;
+ }
+ catch (Exception ex)
+ {
+ _logger.LogError(ex, "Error calling RefreshToken API");
+ return null;
  }
  }
  } // <- This closing brace was missing

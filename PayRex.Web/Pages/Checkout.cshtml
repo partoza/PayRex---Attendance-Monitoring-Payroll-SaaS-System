@@ -1,0 +1,215 @@
+@page
+@model PayRex.Web.Pages.CheckoutModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Checkout - PayRex";
+
+    var plan = Model.Plan!;
+    var subtotal = plan.Price;
+    var vat = subtotal * 0.12m;
+    var total = subtotal + vat;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@@1.11.1/font/bootstrap-icons.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/icon/payrexiconofficial.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        window.ApiBaseUrl = '@Model.ApiBaseUrl';
+    </script>
+</head>
+
+<body class="min-h-screen flex flex-col justify-center items-center py-10 px-4" style="font-family:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif">
+    <style>
+        body { background: white; }
+        body::before {
+            content: ''; position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: url('/images/loginbg.png') center/cover no-repeat;
+            opacity:0.2; z-index: -1;
+        }
+    </style>
+
+    <div class="w-full max-w-5xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex flex-col items-center mb-8">
+            <a href="/">
+                <img src="/images/logo.png" alt="PayRex Logo" class="h-14 w-auto mb-3" />
+            </a>
+            <h1 class="text-3xl md:text-4xl font-semibold text-gray-800 mb-2">Complete Your Purchase</h1>
+            <p class="text-gray-500 text-base max-w-md text-center">You're subscribing to the <strong>@plan.Name</strong> plan</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-md w-full max-w-2xl mx-auto overflow-hidden">
+
+            <!-- Plan Summary Header -->
+            <div class="px-6 py-5 border-b border-gray-100" style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">@plan.Name Plan</h2>
+                        <p class="text-sm text-gray-500">@(plan.Description ?? "PayRex Subscription")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8 space-y-6">
+
+                <!-- Plan Features -->
+                <div class="bg-gray-50 rounded-xl p-4 space-y-2.5">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">What's included</p>
+                    <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Up to <strong class="ml-1">@plan.MaxEmployees</strong>&nbsp;employees
+                    </div>
+                    @if (plan.PlanUserLimit.HasValue)
+                    {
+                    <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Up to <strong class="ml-1">@plan.PlanUserLimit</strong>&nbsp;admin/HR users
+                    </div>
+                    }
+                    <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        QR Code Attendance & Payroll
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700">
+                        <svg class="w-4 h-4 text-green-500 mr-2.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        BIR Tax Calculation
+                    </div>
+                </div>
+
+                <!-- Price Breakdown -->
+                <div class="space-y-3 border-t border-gray-100 pt-5">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Subtotal (@plan.Name Plan)</span>
+                        <span class="font-medium text-gray-900">₱@subtotal.ToString("N2")</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">VAT (12%)</span>
+                        <span class="font-medium text-gray-900">₱@vat.ToString("N2")</span>
+                    </div>
+                    <div class="border-t border-gray-200 pt-3 flex justify-between items-center">
+                        <span class="text-base font-bold text-gray-900">Total Due</span>
+                        <span class="text-2xl font-extrabold text-blue-600">₱@total.ToString("N2")</span>
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Accepted Payment Methods</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div class="flex items-center justify-center gap-1.5 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">
+                            <img src="https://www.paymentscardsandmobile.com/wp-content/uploads/2020/05/visa-mastercard.png" alt="Card" class="h-4 w-auto object-contain" />
+                            <span class="text-xs font-medium text-gray-700">Card</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">
+                            <img src="https://logodix.com/logo/2206207.png" alt="GCash" class="h-4 w-auto object-contain" />
+                            <span class="text-xs font-medium text-gray-700">GCash</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">
+                            <img src="https://logowik.com/content/uploads/images/grabpay-wallet8796.logowik.com.webp" alt="GrabPay" class="h-4 w-auto object-contain" />
+                            <span class="text-xs font-medium text-gray-700">GrabPay</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">
+                            <img src="https://cdn.manilastandard.net/wp-content/uploads/2025/02/maya-logo-black.png" alt="Maya" class="h-4 w-auto object-contain" />
+                            <span class="text-xs font-medium text-gray-700">Maya</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="flex items-start gap-3 bg-blue-50 rounded-xl p-4 border border-blue-100">
+                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    <div>
+                        <p class="text-sm font-medium text-blue-800">Secure Payment via PayMongo</p>
+                        <p class="text-xs text-blue-600 mt-0.5">Your payment is processed securely by PayMongo, a PCI-DSS Level 1 compliant provider.</p>
+                    </div>
+                </div>
+
+                <!-- Checkout Button -->
+                <button onclick="proceedToCheckout()" id="checkoutBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-4 py-4 text-base transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0">
+                    Proceed to Payment
+                </button>
+
+                <!-- Back -->
+                <p class="text-center">
+                    <a href="/#pricing" class="text-sm text-gray-400 hover:text-gray-600 transition-colors inline-flex items-center gap-1">
+                        <i class="bi bi-arrow-left"></i> Back to Plans
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-gray-400 text-xs mt-6 flex items-center justify-center gap-2">
+            <i class="bi bi-shield-check text-gray-300"></i>
+            PayRex © 2025 · Secure checkout
+        </p>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
+
+    <script>
+        function showToast(message, type) {
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            var bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600';
+            toast.className = bgColor + ' text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium flex items-center gap-2 animate-fade-in';
+            toast.innerHTML = '<i class="bi ' + (type === 'error' ? 'bi-x-circle' : 'bi-check-circle') + '"></i> ' + message;
+            container.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 5000);
+        }
+
+        function proceedToCheckout() {
+            var btn = document.getElementById('checkoutBtn');
+            var originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Connecting to PayMongo...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            var token = '@(HttpContext.Request.Cookies["PayRex.AuthToken"] ?? "")';
+
+            fetch(window.ApiBaseUrl + '/api/billing/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ planId: @plan.PlanId })
+            })
+            .then(function(r) {
+                if (!r.ok) return r.json().then(function(d) { throw d; });
+                return r.json();
+            })
+            .then(function(data) {
+                if (data.checkoutUrl) {
+                    window.location.href = data.checkoutUrl;
+                } else {
+                    showToast(data.message || 'Could not create checkout session. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            })
+            .catch(function(err) {
+                showToast(err.message || 'Failed to connect to payment provider. Please try again.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            });
+        }
+    </script>
+</body>
+</html>

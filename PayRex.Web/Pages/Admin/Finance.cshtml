@@ -1,0 +1,242 @@
+@page
+@model PayRex.Web.Pages.Admin.FinanceModel
+@{
+    ViewData["Title"] = "Finance";
+}
+
+<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-green-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-6 py-8 sm:px-10 relative z-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Finance</h1>
+                    <p class="mt-2 text-gray-600">Track income, deductions, and profit overview</p>
+                </div>
+                <button type="button" onclick="openAddEntryModal()" class="inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    Add Entry
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+    {
+        <script>document.addEventListener('DOMContentLoaded',()=>showToast(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.StatusMessage)), '@(Model.StatusMessage!.StartsWith("Failed") ? "error" : "success")'));</script>
+    }
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Income</p>
+                    <p class="mt-1 text-2xl font-bold text-green-700">₱@Model.Summary.TotalIncome.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Deductions</p>
+                    <p class="mt-1 text-2xl font-bold text-red-700">₱@Model.Summary.TotalDeductions.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5 5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Tax (VAT)</p>
+                    <p class="mt-1 text-2xl font-bold text-yellow-700">₱@Model.Summary.TotalVat.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Net Profit</p>
+                    <p class="mt-1 text-2xl font-bold @(Model.Summary.NetProfit >= 0 ? "text-blue-700" : "text-red-700")">₱@Model.Summary.NetProfit.ToString("N2")</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.22-.071-.412-.164-.567-.267C8.07 12.34 8 12.114 8 12a1 1 0 10-2 0c0 1.414.935 2.846 2.5 3.502V17a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 15.766 14 14.991 14 14c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 11.092V9.151c.22.071.412.164.567.267.364.243.433.468.433.582a1 1 0 102 0c0-1.414-.935-2.846-2.5-3.502V4z" clip-rule="evenodd" /></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entries Table -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Finance Entries</h2>
+                    <p class="text-sm text-gray-500 mt-0.5" id="tableInfo">Showing @Model.Entries.Count entries</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="typeFilter" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        <option value="Income">Income</option>
+                        <option value="Deduction">Deduction</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50/80">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">VAT</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100" id="entriesBody">
+                    @if (Model.Entries.Count == 0)
+                    {
+                        <tr id="emptyRow">
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                                        <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.22-.071-.412-.164-.567-.267C8.07 12.34 8 12.114 8 12a1 1 0 10-2 0c0 1.414.935 2.846 2.5 3.502V17a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 15.766 14 14.991 14 14c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 11.092V9.151c.22.071.412.164.567.267.364.243.433.468.433.582a1 1 0 102 0c0-1.414-.935-2.846-2.5-3.502V4z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <p class="text-gray-500 font-medium">No finance entries yet</p>
+                                    <p class="text-sm text-gray-400 mt-1">Click "Add Entry" to create your first entry</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var entry in Model.Entries)
+                        {
+                            var typeColor = entry.Type == "Income" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+                            <tr class="hover:bg-gray-50/50 transition-colors data-row" data-type="@entry.Type">
+                                <td class="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">@entry.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold @typeColor">@entry.Type</span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900 font-medium max-w-[250px] truncate">@entry.Description</td>
+                                <td class="px-6 py-4 text-sm text-gray-600">@(entry.Category ?? "—")</td>
+                                <td class="px-6 py-4 text-sm font-semibold @(entry.Type == "Income" ? "text-green-700" : "text-red-700")">
+                                    @(entry.Type == "Income" ? "+" : "-")₱@entry.Amount.ToString("N2")
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">₱@entry.VatAmount.ToString("N2")</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    @if (entry.IsAutoGenerated)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Auto</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Manual</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Finance Entry Modal -->
+<div id="addEntryModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" onclick="closeAddEntryModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[50%] max-w-lg mx-auto">
+            <form method="post" asp-page-handler="AddEntry">
+                <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900">Add Finance Entry</h3>
+                    <button type="button" onclick="closeAddEntryModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                <div class="px-4 py-4 sm:px-6 sm:py-5 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Type</label>
+                        <select name="type" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                            <option value="Income">Income</option>
+                            <option value="Deduction">Deduction</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                        <input type="text" name="description" required placeholder="e.g., Subscription payment from Company X" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Amount (₱)</label>
+                        <input type="number" name="amount" required min="0.01" step="0.01" placeholder="0.00" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                        <select name="category" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                            <option value="">Select Category</option>
+                            <option value="Subscription">Subscription</option>
+                            <option value="Hosting">Hosting</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Reference (optional)</label>
+                        <input type="text" name="reference" placeholder="e.g., INV-2026-001" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeAddEntryModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function openAddEntryModal() {
+        document.getElementById('addEntryModal').classList.remove('hidden');
+    }
+    function closeAddEntryModal() {
+        document.getElementById('addEntryModal').classList.add('hidden');
+    }
+
+    // Simple type filter
+    document.addEventListener('DOMContentLoaded', function () {
+        const filter = document.getElementById('typeFilter');
+        if (filter) {
+            filter.addEventListener('change', function () {
+                const type = this.value;
+                document.querySelectorAll('.data-row').forEach(row => {
+                    if (!type || row.dataset.type === type) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+}
