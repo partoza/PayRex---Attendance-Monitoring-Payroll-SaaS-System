@@ -15,6 +15,7 @@ node_modules/
 
 # Logs
 *.log
+dberror.txt
 
 # JetBrains Rider
 .idea/
@@ -30,6 +31,8 @@ packages/
 # Secret files
 .env
 secrets.json
+*.env.local
+*.env.production
 
 # Others
 .vscode/
@@ -39,16 +42,36 @@ appsettings.json
 appsettings.*.json
 **/appsettings.json
 **/appsettings.*.json
+# But allow template files
+!appsettings.TEMPLATE.json
+!**/appsettings.TEMPLATE.json
 
-# Ignore Program.cs files
+# Ignore Program.cs files (contains sensitive configuration)
 **/Program.cs
 
-# Ignore Markdown files (except SonarQube documentation)
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+
+# Temporary SQL files
+*.sql
+
+# Migration snapshots (optional - remove if you want to keep them)
+# **/Migrations/*ModelSnapshot.cs
+
+# Ignore Markdown files (except specific documentation)
 *.md
 **/*.md
 !SONARQUBE_*.md
 !SONARLINT_*.md
 !README.md
+!SETUP_GUIDE.md
+!PRE_PUSH_CHECKLIST.md
+!MIGRATION_GUIDE.md
+!MIGRATION_SUMMARY.md
 
 # SonarQube/SonarLint
 .sonarqube/
@@ -56,3 +79,30 @@ appsettings.*.json
 !.sonarlint/PayRexApplication/
 !.sonarlint/PayRexApplication/settings.json
 TestResults/
+
+# Compiled CSS (Tailwind)
+**/wwwroot/css/site.css
+**/wwwroot/css/site.css.map
+
+# NPM package lock (optional - uncomment if you want to ignore)
+# package-lock.json
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
