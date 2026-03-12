@@ -16,6 +16,7 @@ namespace PayRex.Web.Pages
 
         public SubscriptionInfoDto? Subscription { get; set; }
         public List<InvoiceItemDto> Invoices { get; set; } = new();
+        public List<PlanItemDto> Plans { get; set; } = new();
         public string? UserRole { get; set; }
         public string? ErrorMessage { get; set; }
         [TempData(Key = "Billing_SuccessMessage")] public string? SuccessMessage { get; set; }
@@ -53,6 +54,22 @@ namespace PayRex.Web.Pages
             await Task.WhenAll(subTask, invTask);
             Subscription = subTask.Result;
             Invoices = invTask.Result;
+
+            // Fetch available plans for upgrade/downgrade section
+            try
+            {
+                var factory = HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
+                var apiClient = factory.CreateClient("PayRexApi");
+                apiClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var planResp = await apiClient.GetAsync("api/superadmin/plans");
+                if (planResp.IsSuccessStatusCode)
+                {
+                    var json = await planResp.Content.ReadAsStringAsync();
+                    var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    Plans = System.Text.Json.JsonSerializer.Deserialize<List<PlanItemDto>>(json, opts) ?? new();
+                }
+            }
+            catch { }
 
             // After a successful payment redirect, refresh the JWT so subscriptionStatus and
             // isSetupComplete claims are updated without requiring the user to log out / in.
@@ -167,6 +184,31 @@ namespace PayRex.Web.Pages
                 BillingTempError = "Unable to delete invoice. Only unpaid invoices can be deleted.";
 
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostScheduleDowngradeAsync(int planId)
+        {
+            if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token) || string.IsNullOrEmpty(token))
+                return RedirectToPage("/Auth/Login");
+
+            var (success, message) = await _billing.ScheduleDowngradeAsync(token, planId);
+            if (success)
+                SuccessMessage = message;
+            else
+                BillingTempError = message;
+
+            return RedirectToPage();
+        }
+
+        public class PlanItemDto
+        {
+            public int PlanId { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public decimal Price { get; set; }
+            public string BillingCycle { get; set; } = string.Empty;
+            public int MaxEmployees { get; set; }
+            public string? Description { get; set; }
+            public string Status { get; set; } = string.Empty;
         }
     }
 }

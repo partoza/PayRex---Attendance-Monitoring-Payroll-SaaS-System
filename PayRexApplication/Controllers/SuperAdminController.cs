@@ -11,7 +11,7 @@ namespace PayRexApplication.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public class SuperAdminController : ControllerBase
     {
         private readonly ISuperAdminService _service;
@@ -24,9 +24,13 @@ namespace PayRexApplication.Controllers
         }
 
         [HttpGet("dashboard")]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<IActionResult> GetDashboard([FromQuery] string? from = null, [FromQuery] string? to = null)
         {
-            var kpis = await _service.GetDashboardKpisAsync();
+            DateTime? fromDate = null, toDate = null;
+            if (DateTime.TryParse(from, out var fd)) fromDate = fd;
+            if (DateTime.TryParse(to, out var td)) toDate = td;
+
+            var kpis = await _service.GetDashboardKpisAsync(fromDate, toDate);
             return Ok(kpis);
         }
 
@@ -227,16 +231,20 @@ namespace PayRexApplication.Controllers
         // ===== Finance Endpoints =====
 
         [HttpGet("finance")]
-        public async Task<IActionResult> GetFinanceEntries([FromQuery] string? type, [FromQuery] string? category)
+        public async Task<IActionResult> GetFinanceEntries([FromQuery] string? type, [FromQuery] string? category, [FromQuery] string? fromDate, [FromQuery] string? toDate)
         {
-            var entries = await _service.GetFinanceEntriesAsync(type, category);
+            DateTime? from = DateTime.TryParse(fromDate, out var fd) ? fd : null;
+            DateTime? to = DateTime.TryParse(toDate, out var td) ? td : null;
+            var entries = await _service.GetFinanceEntriesAsync(type, category, from, to);
             return Ok(entries);
         }
 
         [HttpGet("finance/summary")]
-        public async Task<IActionResult> GetFinanceSummary()
+        public async Task<IActionResult> GetFinanceSummary([FromQuery] string? fromDate, [FromQuery] string? toDate)
         {
-            var summary = await _service.GetFinanceSummaryAsync();
+            DateTime? from = DateTime.TryParse(fromDate, out var fd) ? fd : null;
+            DateTime? to = DateTime.TryParse(toDate, out var td) ? td : null;
+            var summary = await _service.GetFinanceSummaryAsync(from, to);
             return Ok(summary);
         }
 
@@ -297,8 +305,32 @@ namespace PayRexApplication.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetNotificationsForRole(string role)
         {
-            var notifs = await _service.GetActiveNotificationsForRoleAsync(role);
+            int? userId = null;
+            if (int.TryParse(User.FindFirst("uid")?.Value, out var uid))
+                userId = uid;
+
+            var notifs = await _service.GetActiveNotificationsForRoleAsync(role, userId);
             return Ok(notifs);
+        }
+
+        [HttpPost("system-notifications/{id}/read")]
+        public async Task<IActionResult> MarkNotificationRead(int id)
+        {
+            if (!int.TryParse(User.FindFirst("uid")?.Value, out var userId))
+                return Unauthorized(new { message = "User not authenticated" });
+
+            var result = await _service.MarkNotificationReadAsync(userId, id);
+            return result ? Ok(new { message = "Notification marked as read" }) : BadRequest(new { message = "Failed to mark notification" });
+        }
+
+        [HttpPost("system-notifications/read-all")]
+        public async Task<IActionResult> MarkAllNotificationsRead([FromBody] MarkAllReadRequest request)
+        {
+            if (!int.TryParse(User.FindFirst("uid")?.Value, out var userId))
+                return Unauthorized(new { message = "User not authenticated" });
+
+            var result = await _service.MarkAllNotificationsReadAsync(userId, request.Role);
+            return result ? Ok(new { message = "All notifications marked as read" }) : BadRequest(new { message = "Failed" });
         }
     }
 
@@ -351,5 +383,10 @@ namespace PayRexApplication.Controllers
     public class ToggleNotificationRequest
     {
         public bool IsActive { get; set; }
+    }
+
+    public class MarkAllReadRequest
+    {
+        public string Role { get; set; } = string.Empty;
     }
 }

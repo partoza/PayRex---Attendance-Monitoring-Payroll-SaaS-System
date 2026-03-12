@@ -273,7 +273,14 @@
                                     </div>
 
                                     <div>
-                                        <img src="@Model.SignatureUrl" class="signature" alt="Signature">
+                                        @if (!string.IsNullOrEmpty(Model.SignatureUrl))
+                                        {
+                                            <img src="@Model.SignatureUrl" class="signature" alt="Signature" style="max-height: 30px; object-fit: contain;">
+                                        }
+                                        else
+                                        {
+                                            <div style="width: 75px; height: 30px; border-bottom: 1px solid rgba(0,0,0,0.3); margin-bottom: 4px;"></div>
+                                        }
                                         <div class="signature-label">Employee Signature</div>
                                         <div class="note">Use QR Code during Attendance</div>
                                     </div>

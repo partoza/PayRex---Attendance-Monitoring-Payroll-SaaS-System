@@ -381,10 +381,13 @@ namespace PayRexApplication.Controllers
                     var hoursWorked = (now.ToTimeSpan() - record.TimeIn.Value.ToTimeSpan()).TotalHours;
                     record.TotalHoursWorked = (decimal)Math.Round(hoursWorked, 2);
 
-                    var expectedHours = (decimal)(scheduledTimeOut.ToTimeSpan() - scheduledTimeIn.ToTimeSpan()).TotalHours;
-                    if (record.TotalHoursWorked > expectedHours)
+                    // Overtime: 1-hour allowance after scheduled time out before OT starts counting
+                    // e.g., if scheduled out is 5:00 PM, OT only counts from 6:00 PM onward
+                    var overtimeStart = scheduledTimeOut.AddMinutes(60);
+                    if (now > overtimeStart)
                     {
-                        record.OvertimeHours = record.TotalHoursWorked - expectedHours;
+                        var overtimeHours = (now.ToTimeSpan() - overtimeStart.ToTimeSpan()).TotalHours;
+                        record.OvertimeHours = (decimal)Math.Round(overtimeHours, 2);
                     }
 
                     if (now < scheduledTimeOut)

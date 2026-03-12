@@ -265,6 +265,32 @@ namespace PayRexApplication.Controllers
         }
 
         /// <summary>
+        /// Restore an archived leave request.
+        /// </summary>
+        [HttpPut("{id}/unarchive")]
+        [Authorize(Roles = "HR,Admin")]
+        public async Task<IActionResult> UnarchiveLeaveRequest(int id)
+        {
+            var (userId, companyId, _) = GetUserInfo();
+            if (companyId == 0) return Unauthorized();
+
+            var leave = await _db.LeaveRequests.FirstOrDefaultAsync(lr => lr.LeaveRequestId == id && lr.CompanyId == companyId);
+            if (leave == null) return NotFound(new { message = "Leave request not found" });
+
+            if (!leave.IsArchived)
+                return BadRequest(new { message = "Leave request is not archived." });
+
+            leave.IsArchived = false;
+            leave.UpdatedAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Leave request {Id} restored by user {UserId}", id, userId);
+
+            return Ok(new { message = "Leave request restored successfully." });
+        }
+
+        /// <summary>
         /// Get leave balance summary for an employee.
         /// </summary>
         [HttpGet("balance")]

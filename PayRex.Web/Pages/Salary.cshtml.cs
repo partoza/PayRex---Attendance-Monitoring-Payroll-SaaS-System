@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PayRex.Web.DTOs;
 using PayRex.Web.Services;
 
 namespace PayRex.Web.Pages
@@ -9,18 +10,26 @@ namespace PayRex.Web.Pages
     public class SalaryModel : PageModel
     {
         private readonly IPayrollApiService _payroll;
+        private readonly IAuthApiService _auth;
         public List<PayrollSummaryDto> Payrolls { get; set; } = new();
         public List<PayrollPeriodDto> Periods { get; set; } = new();
+        public CompanyProfileDto? Company { get; set; }
         public int? SelectedPeriodId { get; set; }
         public string SelectedPeriodStatus { get; set; } = "";
         public string CurrentPeriod { get; set; } = "No Period Selected";
         public decimal TotalPayrollCost { get; set; }
 
-        public SalaryModel(IPayrollApiService payroll) => _payroll = payroll;
+        public SalaryModel(IPayrollApiService payroll, IAuthApiService auth)
+        {
+            _payroll = payroll;
+            _auth = auth;
+        }
 
         public async Task OnGetAsync(int? periodId)
         {
             var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            
+            Company = await _auth.GetCompanyProfileAsync(token);
 
             // Auto-generate draft periods for the current month based on company payroll cycle
             if (User.IsInRole("Admin") || User.IsInRole("Accountant") || User.IsInRole("HR"))

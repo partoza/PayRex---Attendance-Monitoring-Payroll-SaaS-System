@@ -46,7 +46,8 @@ namespace PayRex.Web.Pages
             {
                 TotalSSS = Contributions.Where(c => c.Type == "SSS").Sum(c => c.EmployeeShare + c.EmployerShare),
                 TotalPhilHealth = Contributions.Where(c => c.Type == "PhilHealth").Sum(c => c.EmployeeShare + c.EmployerShare),
-                TotalPagIBIG = Contributions.Where(c => c.Type is "PagIBIG" or "Pag-IBIG" or "PagIig" or "PagIbig").Sum(c => c.EmployeeShare + c.EmployerShare)
+                TotalPagIBIG = Contributions.Where(c => c.Type is "PagIBIG" or "Pag-IBIG" or "PagIig" or "PagIbig").Sum(c => c.EmployeeShare + c.EmployerShare),
+                TotalTax = Contributions.Where(c => c.Type is "Tax" or "BIR" or "Withholding Tax").Sum(c => c.EmployeeShare)
             };
         }
 
@@ -55,6 +56,7 @@ namespace PayRex.Web.Pages
             public decimal TotalSSS { get; set; }
             public decimal TotalPhilHealth { get; set; }
             public decimal TotalPagIBIG { get; set; }
+            public decimal TotalTax { get; set; }
         }
     }
 }

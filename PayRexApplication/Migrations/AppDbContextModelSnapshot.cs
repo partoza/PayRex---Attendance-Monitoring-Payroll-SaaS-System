@@ -1221,6 +1221,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("category");
 
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int")
+                        .HasColumnName("companyId");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("createdAt");
@@ -1421,6 +1425,37 @@ namespace PayRex.API.Migrations
                     b.HasIndex("ReviewedBy");
 
                     b.ToTable("leaveRequests");
+                });
+
+            modelBuilder.Entity("PayRexApplication.Models.NotificationRead", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("NotificationId")
+                        .HasColumnType("int")
+                        .HasColumnName("notificationId");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("readAt");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("userId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotificationId");
+
+                    b.HasIndex("UserId", "NotificationId")
+                        .IsUnique();
+
+                    b.ToTable("notificationReads");
                 });
 
             modelBuilder.Entity("PayRexApplication.Models.Payment", b =>
@@ -1674,9 +1709,17 @@ namespace PayRex.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PayslipId"));
 
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("archivedAt");
+
                     b.Property<DateTime>("GeneratedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("generatedAt");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("bit")
+                        .HasColumnName("isArchived");
 
                     b.Property<int>("PayrollSummaryId")
                         .HasColumnType("int")
@@ -1756,7 +1799,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "User Management",
+                            ModuleName = "Employee Management",
                             RoleName = "Admin"
                         },
                         new
@@ -1766,7 +1809,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Employee Management",
+                            ModuleName = "Attendance Monitoring",
                             RoleName = "Admin"
                         },
                         new
@@ -1776,7 +1819,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Attendance",
+                            ModuleName = "Leave Management",
                             RoleName = "Admin"
                         },
                         new
@@ -1826,7 +1869,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Payslips",
+                            ModuleName = "Payslip",
                             RoleName = "Admin"
                         },
                         new
@@ -1836,7 +1879,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Company Settings",
+                            ModuleName = "Billing",
                             RoleName = "Admin"
                         },
                         new
@@ -1846,7 +1889,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Archives",
+                            ModuleName = "Company Settings",
                             RoleName = "Admin"
                         },
                         new
@@ -1856,18 +1899,18 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Audit Logs",
+                            ModuleName = "Archives",
                             RoleName = "Admin"
                         },
                         new
                         {
                             PermissionId = 12,
-                            CanAdd = false,
-                            CanInactivate = false,
-                            CanUpdate = false,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "User Management",
-                            RoleName = "HR"
+                            ModuleName = "Audit Logs",
+                            RoleName = "Admin"
                         },
                         new
                         {
@@ -1886,17 +1929,17 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Attendance",
+                            ModuleName = "Attendance Monitoring",
                             RoleName = "HR"
                         },
                         new
                         {
                             PermissionId = 15,
-                            CanAdd = false,
+                            CanAdd = true,
                             CanInactivate = false,
-                            CanUpdate = false,
+                            CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Salary Computation",
+                            ModuleName = "Leave Management",
                             RoleName = "HR"
                         },
                         new
@@ -1906,7 +1949,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Tax & Contributions",
+                            ModuleName = "Salary Computation",
                             RoleName = "HR"
                         },
                         new
@@ -1916,7 +1959,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Finance",
+                            ModuleName = "Tax & Contributions",
                             RoleName = "HR"
                         },
                         new
@@ -1926,7 +1969,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Compensation",
+                            ModuleName = "Finance",
                             RoleName = "HR"
                         },
                         new
@@ -1936,7 +1979,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Payslips",
+                            ModuleName = "Compensation",
                             RoleName = "HR"
                         },
                         new
@@ -1946,7 +1989,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Company Settings",
+                            ModuleName = "Payslip",
                             RoleName = "HR"
                         },
                         new
@@ -1956,7 +1999,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Archives",
+                            ModuleName = "Billing",
                             RoleName = "HR"
                         },
                         new
@@ -1966,7 +2009,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Audit Logs",
+                            ModuleName = "Company Settings",
                             RoleName = "HR"
                         },
                         new
@@ -1976,12 +2019,22 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "User Management",
-                            RoleName = "Accountant"
+                            ModuleName = "Archives",
+                            RoleName = "HR"
                         },
                         new
                         {
                             PermissionId = 24,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 25,
                             CanAdd = false,
                             CanInactivate = false,
                             CanUpdate = false,
@@ -1991,32 +2044,22 @@ namespace PayRex.API.Migrations
                         },
                         new
                         {
-                            PermissionId = 25,
+                            PermissionId = 26,
                             CanAdd = false,
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Attendance",
-                            RoleName = "Accountant"
-                        },
-                        new
-                        {
-                            PermissionId = 26,
-                            CanAdd = true,
-                            CanInactivate = true,
-                            CanUpdate = true,
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Salary Computation",
+                            ModuleName = "Attendance Monitoring",
                             RoleName = "Accountant"
                         },
                         new
                         {
                             PermissionId = 27,
-                            CanAdd = true,
-                            CanInactivate = true,
-                            CanUpdate = true,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Tax & Contributions",
+                            ModuleName = "Leave Management",
                             RoleName = "Accountant"
                         },
                         new
@@ -2026,7 +2069,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Finance",
+                            ModuleName = "Salary Computation",
                             RoleName = "Accountant"
                         },
                         new
@@ -2036,37 +2079,37 @@ namespace PayRex.API.Migrations
                             CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Compensation",
+                            ModuleName = "Tax & Contributions",
                             RoleName = "Accountant"
                         },
                         new
                         {
                             PermissionId = 30,
                             CanAdd = true,
-                            CanInactivate = false,
+                            CanInactivate = true,
                             CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Payslips",
+                            ModuleName = "Finance",
                             RoleName = "Accountant"
                         },
                         new
                         {
                             PermissionId = 31,
-                            CanAdd = false,
-                            CanInactivate = false,
-                            CanUpdate = false,
+                            CanAdd = true,
+                            CanInactivate = true,
+                            CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Company Settings",
+                            ModuleName = "Compensation",
                             RoleName = "Accountant"
                         },
                         new
                         {
                             PermissionId = 32,
-                            CanAdd = false,
+                            CanAdd = true,
                             CanInactivate = false,
-                            CanUpdate = false,
+                            CanUpdate = true,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Archives",
+                            ModuleName = "Payslip",
                             RoleName = "Accountant"
                         },
                         new
@@ -2076,7 +2119,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Audit Logs",
+                            ModuleName = "Billing",
                             RoleName = "Accountant"
                         },
                         new
@@ -2086,12 +2129,32 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "User Management",
-                            RoleName = "Employee"
+                            ModuleName = "Company Settings",
+                            RoleName = "Accountant"
                         },
                         new
                         {
                             PermissionId = 35,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 36,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Audit Logs",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 37,
                             CanAdd = false,
                             CanInactivate = false,
                             CanUpdate = false,
@@ -2101,32 +2164,12 @@ namespace PayRex.API.Migrations
                         },
                         new
                         {
-                            PermissionId = 36,
-                            CanAdd = false,
-                            CanInactivate = false,
-                            CanUpdate = false,
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Attendance",
-                            RoleName = "Employee"
-                        },
-                        new
-                        {
-                            PermissionId = 37,
-                            CanAdd = false,
-                            CanInactivate = false,
-                            CanUpdate = false,
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Salary Computation",
-                            RoleName = "Employee"
-                        },
-                        new
-                        {
                             PermissionId = 38,
                             CanAdd = false,
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Tax & Contributions",
+                            ModuleName = "Attendance Monitoring",
                             RoleName = "Employee"
                         },
                         new
@@ -2136,7 +2179,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Finance",
+                            ModuleName = "Leave Management",
                             RoleName = "Employee"
                         },
                         new
@@ -2146,7 +2189,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Compensation",
+                            ModuleName = "Salary Computation",
                             RoleName = "Employee"
                         },
                         new
@@ -2156,7 +2199,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Payslips",
+                            ModuleName = "Tax & Contributions",
                             RoleName = "Employee"
                         },
                         new
@@ -2166,7 +2209,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Company Settings",
+                            ModuleName = "Finance",
                             RoleName = "Employee"
                         },
                         new
@@ -2176,7 +2219,7 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ModuleName = "Archives",
+                            ModuleName = "Compensation",
                             RoleName = "Employee"
                         },
                         new
@@ -2186,8 +2229,198 @@ namespace PayRex.API.Migrations
                             CanInactivate = false,
                             CanUpdate = false,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Payslip",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 45,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Billing",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 46,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Company Settings",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 47,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Archives",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 48,
+                            CanAdd = false,
+                            CanInactivate = false,
+                            CanUpdate = false,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             ModuleName = "Audit Logs",
                             RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 49,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Attendance",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 50,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Leave Request",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 51,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Payslips",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 52,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Contributions",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 53,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My QR Code",
+                            RoleName = "Employee"
+                        },
+                        new
+                        {
+                            PermissionId = 54,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Attendance",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 55,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Leave Request",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 56,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Payslips",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 57,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Contributions",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 58,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My QR Code",
+                            RoleName = "HR"
+                        },
+                        new
+                        {
+                            PermissionId = 59,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Attendance",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 60,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "Leave Request",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 61,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Payslips",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 62,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My Contributions",
+                            RoleName = "Accountant"
+                        },
+                        new
+                        {
+                            PermissionId = 63,
+                            CanAdd = true,
+                            CanInactivate = false,
+                            CanUpdate = true,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ModuleName = "My QR Code",
+                            RoleName = "Accountant"
                         });
                 });
 
@@ -2228,6 +2461,10 @@ namespace PayRex.API.Migrations
                         .HasColumnType("int")
                         .HasColumnName("lastPaymentId");
 
+                    b.Property<int?>("PendingDowngradePlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("pendingDowngradePlanId");
+
                     b.Property<int>("PlanId")
                         .HasColumnType("int")
                         .HasColumnName("planId");
@@ -2249,6 +2486,8 @@ namespace PayRex.API.Migrations
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("LastPaymentId");
+
+                    b.HasIndex("PendingDowngradePlanId");
 
                     b.HasIndex("PlanId");
 
@@ -2574,7 +2813,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = true,
                             LastName = "Partoza",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$U0764bCOcE5PLat96cDvVefLE/4XTC.tJjYRq1mrqBtek0MI3ysLG",
+                            PasswordHash = "$2a$11$SaOp5BENZcleUSrpg/EGCO/LWIfWrt7L33Fuf4bYEiME65lVKBz1S",
                             Role = 0,
                             Status = 0,
                             TotpSecretKey = "JBSWY3DPEHPK3PXP"
@@ -2589,7 +2828,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Samson",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$zD.85cLNvaaC6koqINpnW.Wb/fmz5iDVOrou0aUb/DeGQA9Osx9em",
+                            PasswordHash = "$2a$11$Uju9rbj9tjxvsf9XRAhmQe5R63nmKqSbq5P6j3hAJId3tURIPhxuy",
                             Role = 1,
                             Status = 0
                         },
@@ -2603,7 +2842,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Cruz",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$lz.jhX3fCh9NFcV/NFEy1uqFhgoZijB2aWYCwjtX3VFBlBRJKBk6G",
+                            PasswordHash = "$2a$11$ZdgAqSS0mpGd/MifhkJO0uZf4FfHr93I2crDmqsvkscrQGF5R8iFi",
                             Role = 2,
                             Status = 0
                         },
@@ -2617,7 +2856,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Santos",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$70uE6RG4C3bbvePB6yRNy.OZuQYZ/JfUNPn5Fns0U0K8AfwcL3elK",
+                            PasswordHash = "$2a$11$QPNVrdZTcmfSCMMTAztZM.yXR1aBCg51SsFoq.S/DhOtm/Y5EC7Yy",
                             Role = 4,
                             Status = 0
                         },
@@ -2631,7 +2870,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Dela Cruz",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$pYXCyKT/u1SbjIk/riBkSOXXIrVTvzQITRX8OmfD5cfrXqC3qHo9e",
+                            PasswordHash = "$2a$11$0dTKPdKHMXjqmcsa/bMA..z20IbvrxiiA4/JleFIa8TZCTsMLaF..",
                             Role = 3,
                             Status = 0
                         },
@@ -2645,7 +2884,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Garcia",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$QfNP/ZEDIrhrBqf4aAkRh.EW.3Y1bgLxVxE9waOf1HwxfsKdz3IQe",
+                            PasswordHash = "$2a$11$AXpMtGTiYZgBSuylAtm8iOfcWijBOh4cQOYNAgJ5bv7h2wzkLp/dK",
                             Role = 3,
                             Status = 0
                         },
@@ -2659,7 +2898,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Reyes",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$CR1UIp9P5TtoBSF8r8WtxOGNPwuQJbDz3lpYcJutaIvw/kzUyKQsm",
+                            PasswordHash = "$2a$11$IcWLaTqbmRGbewR9SX8/BuzQkbV9Ed/N/f3EoQqvjH3jXvNhNXnAS",
                             Role = 3,
                             Status = 0
                         },
@@ -2673,7 +2912,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Mendoza",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$t908VdhGr38H0b7U7IS/OOpl2VkapRsOqbhyecnvPkmMj2/XU332a",
+                            PasswordHash = "$2a$11$0OTKRWLiuSEU5QQR6/oKTOZPBZG3P8nEJTbekKNppDvcDM6n8VwFm",
                             Role = 3,
                             Status = 0
                         },
@@ -2687,7 +2926,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Villanueva",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$fRsm3oTxHO8lgVpABK6fV.s0HM9uYgjM/A15JbKwHhRZjBu/zpqle",
+                            PasswordHash = "$2a$11$fgebdg8dlGDutJavcdZ7gOknnD4KOpXi9wdzrQ0Z3mhihW9U.lNKa",
                             Role = 3,
                             Status = 0
                         },
@@ -2701,7 +2940,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Lopez",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$Cv7m.BZKYkwrikUl5DpCzupSz8vH1U.jd6j.xE8KYVEIeaVDNr9dm",
+                            PasswordHash = "$2a$11$abEvqLSzIT4G4XCzTslgFOiS.aBezLO.scEztp1dSu9OCrLFMj0o.",
                             Role = 3,
                             Status = 0
                         },
@@ -2715,7 +2954,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Ramos",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$cCYLS0duHprAKJkGgGT9DuJSLvbfSKiriNy7LM/HDmgb4MQtdYNVu",
+                            PasswordHash = "$2a$11$atizO/bYmxIaTG5.K3cavuJqT9WuhNo6KDcxV.Ir3RqKeH1HfL1cK",
                             Role = 3,
                             Status = 0
                         },
@@ -2729,7 +2968,7 @@ namespace PayRex.API.Migrations
                             IsTwoFactorEnabled = false,
                             LastName = "Tan",
                             MustChangePassword = false,
-                            PasswordHash = "$2a$11$WFFGIaZyqHKbb0.SFMOnleOJAZvqE7I3OQhnJV2T8DdOCpKSP2z3e",
+                            PasswordHash = "$2a$11$G0WnQxhm58XXQWbskMcfX.gck7FG1/GmV7YA8JtDtVVkoixOsi5lG",
                             Role = 3,
                             Status = 0
                         });
@@ -3029,6 +3268,17 @@ namespace PayRex.API.Migrations
                     b.Navigation("Reviewer");
                 });
 
+            modelBuilder.Entity("PayRexApplication.Models.NotificationRead", b =>
+                {
+                    b.HasOne("PayRexApplication.Models.SystemNotification", "Notification")
+                        .WithMany()
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+                });
+
             modelBuilder.Entity("PayRexApplication.Models.Payment", b =>
                 {
                     b.HasOne("PayRexApplication.Models.Company", "Company")
@@ -3120,6 +3370,10 @@ namespace PayRex.API.Migrations
                         .HasForeignKey("LastPaymentId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("PayRexApplication.Models.SubscriptionPlan", "PendingDowngradePlan")
+                        .WithMany()
+                        .HasForeignKey("PendingDowngradePlanId");
+
                     b.HasOne("PayRexApplication.Models.SubscriptionPlan", "SubscriptionPlan")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PlanId")
@@ -3129,6 +3383,8 @@ namespace PayRex.API.Migrations
                     b.Navigation("Company");
 
                     b.Navigation("LastPayment");
+
+                    b.Navigation("PendingDowngradePlan");
 
                     b.Navigation("SubscriptionPlan");
                 });

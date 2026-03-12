@@ -18,6 +18,14 @@ namespace PayRexApplication.Services
       public decimal MonthlyRevenue { get; set; }
         public int TotalPlans { get; set; }
         public int PendingInvoices { get; set; }
+        public List<GrowthDataPoint> GrowthData { get; set; } = new();
+    }
+
+    public class GrowthDataPoint
+    {
+        public string Label { get; set; } = string.Empty;
+        public int UserCount { get; set; }
+        public decimal Revenue { get; set; }
     }
 
     public class AdminNotificationDto
@@ -98,6 +106,8 @@ public int? PlanUserLimit { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? PeriodStart { get; set; }
+        public DateTime? PeriodEnd { get; set; }
     }
 
     public class RolePermissionDto
@@ -110,42 +120,6 @@ public int? PlanUserLimit { get; set; }
         public bool CanInactivate { get; set; }
     }
 
-    /// <summary>
-    /// Service for SuperAdmin operations.
-    /// </summary>
-    public interface ISuperAdminService
-    {
-        Task<DashboardKpisDto> GetDashboardKpisAsync();
-        Task<List<AdminNotificationDto>> GetNotificationsAsync();
-        Task<bool> SetUserStatusAsync(int userId, UserStatus status, int actorUserId, string? ipAddress, string? userAgent);
-        Task<bool> SetUserRoleAsync(int userId, string newRole, int adminId, string? ip, string? userAgent);
-        Task<bool> ResetUserPasswordAsync(int userId, int adminId, string? ip, string? userAgent);
-        Task<bool> SetCompanyStatusAsync(string companyId, bool isActive, int actorUserId, string? ipAddress, string? userAgent);
-        Task<bool> SetPlanUserLimitAsync(int planId, int? limit, int actorUserId, string? ipAddress, string? userAgent);
-        Task<SystemSettingDto?> GetCurrentSystemSettingsAsync();
-        Task<bool> UpdateSystemSettingsAsync(UpdateSystemSettingDto dto, int actorUserId, string? ipAddress, string? userAgent);
-        Task<List<PlanDto>> GetPlansAsync();
-        Task<List<AdminUserDto>> GetUsersAsync();
-        Task<List<AdminUserDto>> GetAllUsersAsync();
-        Task<List<AdminCompanyDto>> GetCompaniesAsync();
-        Task<List<AdminCompanyDto>> GetAllCompaniesAsync();
-        Task<List<AdminBillingDto>> GetBillingAsync();
-        Task<List<AdminBillingDto>> GetArchivedBillingAsync();
-        Task<bool> ArchiveInvoiceAsync(int invoiceId);
-        Task<List<RolePermissionDto>> GetPermissionsAsync();
-        Task<bool> SavePermissionsAsync(List<RolePermissionDto> permissions);
-        Task<DTOs.AuditLogListDto> GetAuditLogsAsync(int page, int pageSize, string? search, string? action, DateTime? fromDate, DateTime? toDate, int? companyId);
-        Task<DTOs.AuditLogStatsDto> GetAuditLogStatsAsync(int? companyId);
-        Task<List<FinanceEntryDto>> GetFinanceEntriesAsync(string? type, string? category);
-        Task<FinanceSummaryDto> GetFinanceSummaryAsync();
-        Task<bool> AddFinanceEntryAsync(string type, string description, decimal amount, string? category, string? reference, int? createdBy);
-        Task<bool> UpdatePlanAsync(int planId, string name, decimal price, int maxEmployees, string? description);
-        Task<List<SystemNotificationDto>> GetSystemNotificationsAsync();
-        Task<bool> AddSystemNotificationAsync(string title, string message, string type, string? targetRoles, int? createdBy);
-        Task<bool> ToggleSystemNotificationAsync(int notificationId, bool isActive);
-        Task<bool> DeleteSystemNotificationAsync(int notificationId);
-        Task<List<SystemNotificationDto>> GetActiveNotificationsForRoleAsync(string role);
-    }
 
     public class SuperAdminService : ISuperAdminService
     {
@@ -160,25 +134,81 @@ public int? PlanUserLimit { get; set; }
        _logger = logger;
         }
 
-      public async Task<DashboardKpisDto> GetDashboardKpisAsync()
+        public async Task<DashboardKpisDto> GetDashboardKpisAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
-  var now = DateTime.UtcNow;
- var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var queryCompanies = _db.Companies.Where(c => c.CompanyCode != "0000");
+            var queryUsers = _db.Users.Where(u => u.Role != UserRole.SuperAdmin);
+            var queryEmployees = _db.Employees.AsQueryable();
+            var queryPayments = _db.Payments.Where(p => p.Status == PaymentStatus.Success && p.Amount.HasValue);
+
+            if (fromDate.HasValue)
+            {
+                queryCompanies = queryCompanies.Where(c => c.CreatedAt >= fromDate.Value);
+                queryUsers = queryUsers.Where(u => u.CreatedAt >= fromDate.Value);
+                queryEmployees = queryEmployees.Where(e => e.CreatedAt >= fromDate.Value);
+                queryPayments = queryPayments.Where(p => p.PaidAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                var end = toDate.Value.Date.AddDays(1);
+                queryCompanies = queryCompanies.Where(c => c.CreatedAt < end);
+                queryUsers = queryUsers.Where(u => u.CreatedAt < end);
+                queryEmployees = queryEmployees.Where(e => e.CreatedAt < end);
+                queryPayments = queryPayments.Where(p => p.PaidAt < end);
+            }
+
+            // Fallback for revenue if no range provided: month-to-date
+            if (!fromDate.HasValue && !toDate.HasValue)
+            {
+                var now = DateTime.UtcNow;
+                var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                queryPayments = queryPayments.Where(p => p.PaidAt >= startOfMonth);
+            }
 
             return new DashboardKpisDto
-       {
-     TotalCompanies = await _db.Companies.CountAsync(c => c.CompanyCode != "0000"),
-       ActiveCompanies = await _db.Companies.CountAsync(c => c.CompanyCode != "0000" && c.IsActive && c.Status == CompanyStatus.Active),
-           TotalUsers = await _db.Users.CountAsync(u => u.Role != UserRole.SuperAdmin),
-    ActiveUsers = await _db.Users.CountAsync(u => u.Role != UserRole.SuperAdmin && u.Status == UserStatus.Active),
-                TotalEmployees = await _db.Employees.CountAsync(),
-          MonthlyRevenue = await _db.Payments
-      .Where(p => p.PaidAt >= startOfMonth && p.Status == PaymentStatus.Success && p.Amount.HasValue)
-  .SumAsync(p => p.Amount!.Value),
-      TotalPlans = await _db.SubscriptionPlans.CountAsync(p => p.Status == PlanStatus.Active && p.Name != "Enterprise"),
-     PendingInvoices = await _db.BillingInvoices.CountAsync(i => i.Status == InvoiceStatus.Unpaid)
-};
-    }
+            {
+                TotalCompanies = await queryCompanies.CountAsync(),
+                ActiveCompanies = await queryCompanies.CountAsync(c => c.IsActive && c.Status == CompanyStatus.Active),
+                TotalUsers = await queryUsers.CountAsync(),
+                ActiveUsers = await queryUsers.CountAsync(u => u.Status == UserStatus.Active),
+                TotalEmployees = await queryEmployees.CountAsync(),
+                MonthlyRevenue = await queryPayments.SumAsync(p => p.Amount!.Value),
+                TotalPlans = await _db.SubscriptionPlans.CountAsync(p => p.Status == PlanStatus.Active && p.Name != "Enterprise"),
+                PendingInvoices = await _db.BillingInvoices.CountAsync(i => i.Status == InvoiceStatus.Unpaid),
+                GrowthData = await GetGrowthDataAsync()
+            };
+        }
+
+        private async Task<List<GrowthDataPoint>> GetGrowthDataAsync()
+        {
+            var growthData = new List<GrowthDataPoint>();
+            var now = DateTime.UtcNow;
+
+            for (int i = 5; i >= 0; i--)
+            {
+                var date = now.AddMonths(-i);
+                var monthStart = new DateTime(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                var monthEnd = monthStart.AddMonths(1);
+                var label = monthStart.ToString("MMM");
+
+                var userCount = await _db.Users
+                    .CountAsync(u => u.Role != UserRole.SuperAdmin && u.CreatedAt < monthEnd);
+
+                var revenue = await _db.Payments
+                    .Where(p => p.Status == PaymentStatus.Success && p.Amount.HasValue && p.PaidAt >= monthStart && p.PaidAt < monthEnd)
+                    .SumAsync(p => p.Amount!.Value);
+
+                growthData.Add(new GrowthDataPoint
+                {
+                    Label = label,
+                    UserCount = userCount,
+                    Revenue = revenue
+                });
+            }
+
+            return growthData;
+        }
 
     public async Task<List<AdminNotificationDto>> GetNotificationsAsync()
         {
@@ -211,6 +241,44 @@ public int? PlanUserLimit { get; set; }
         Message = $"{pendingCount} pending invoices require attention",
     Timestamp = DateTime.UtcNow
  });
+            }
+
+            // 5-day expiry warnings
+            var now = DateTime.UtcNow;
+            var expiringSubscriptions = await _db.Subscriptions
+                .Include(s => s.SubscriptionPlan)
+                .Include(s => s.Company)
+                .Where(s => (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trial)
+                         && s.EndDate >= now
+                         && s.EndDate <= now.AddDays(5)
+                         && s.Company.CompanyCode != "0000")
+                .ToListAsync();
+            foreach (var sub in expiringSubscriptions)
+            {
+                var daysLeft = (int)Math.Ceiling((sub.EndDate - now).TotalDays);
+                var planType = sub.Status == SubscriptionStatus.Trial ? "trial" : $"{sub.SubscriptionPlan.Name} subscription";
+                notifications.Add(new AdminNotificationDto
+                {
+                    Type = "ExpiringSubscription",
+                    Message = $"{sub.Company.CompanyName}\u2019s {planType} expires in {daysLeft} day{(daysLeft == 1 ? "" : "s")}",
+                    Timestamp = sub.EndDate
+                });
+            }
+
+            // Pending downgrades
+            var pendingDowngrades = await _db.Subscriptions
+                .Include(s => s.Company)
+                .Where(s => s.PendingDowngradePlanId != null && s.Company.CompanyCode != "0000")
+                .ToListAsync();
+            foreach (var sub in pendingDowngrades)
+            {
+                var newPlan = await _db.SubscriptionPlans.FindAsync(sub.PendingDowngradePlanId);
+                notifications.Add(new AdminNotificationDto
+                {
+                    Type = "PendingDowngrade",
+                    Message = $"{sub.Company.CompanyName} has scheduled a downgrade to {newPlan?.Name ?? "lower plan"} effective {sub.EndDate:MMM dd, yyyy}",
+                    Timestamp = sub.UpdatedAt ?? sub.CreatedAt
+                });
             }
 
        return notifications.OrderByDescending(n => n.Timestamp).ToList();
@@ -536,7 +604,9 @@ CompanyId = u.CompanyId,
                     VatAmount = i.VatAmount,
                     Status = i.Status.ToString(),
                     DueDate = i.DueDate,
-                    CreatedAt = i.CreatedAt
+                    CreatedAt = i.CreatedAt,
+                    PeriodStart = i.PeriodStart,
+                    PeriodEnd = i.PeriodEnd
                 })
                 .ToListAsync();
         }
@@ -557,7 +627,9 @@ CompanyId = u.CompanyId,
                     VatAmount = i.VatAmount,
                     Status = i.Status.ToString(),
                     DueDate = i.DueDate,
-                    CreatedAt = i.CreatedAt
+                    CreatedAt = i.CreatedAt,
+                    PeriodStart = i.PeriodStart,
+                    PeriodEnd = i.PeriodEnd
                 })
                 .ToListAsync();
         }
@@ -767,7 +839,7 @@ CompanyId = u.CompanyId,
 
         // ===== Finance Methods =====
 
-        public async Task<List<FinanceEntryDto>> GetFinanceEntriesAsync(string? type, string? category)
+        public async Task<List<FinanceEntryDto>> GetFinanceEntriesAsync(string? type, string? category, DateTime? fromDate = null, DateTime? toDate = null)
         {
             var query = _db.FinanceEntries.AsNoTracking().AsQueryable();
 
@@ -775,6 +847,10 @@ CompanyId = u.CompanyId,
                 query = query.Where(f => f.Type == type);
             if (!string.IsNullOrEmpty(category))
                 query = query.Where(f => f.Category == category);
+            if (fromDate.HasValue)
+                query = query.Where(f => f.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue)
+                query = query.Where(f => f.CreatedAt < toDate.Value.AddDays(1));
 
             return await query.OrderByDescending(f => f.CreatedAt)
                 .Select(f => new FinanceEntryDto
@@ -792,9 +868,12 @@ CompanyId = u.CompanyId,
                 .ToListAsync();
         }
 
-        public async Task<FinanceSummaryDto> GetFinanceSummaryAsync()
+        public async Task<FinanceSummaryDto> GetFinanceSummaryAsync(DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var entries = await _db.FinanceEntries.AsNoTracking().ToListAsync();
+            var query = _db.FinanceEntries.AsNoTracking().AsQueryable();
+            if (fromDate.HasValue) query = query.Where(f => f.CreatedAt >= fromDate.Value);
+            if (toDate.HasValue) query = query.Where(f => f.CreatedAt < toDate.Value.AddDays(1));
+            var entries = await query.ToListAsync();
             var totalIncome = entries.Where(e => e.Type == "Income").Sum(e => e.Amount);
             var totalDeductions = entries.Where(e => e.Type == "Deduction").Sum(e => e.Amount);
             var totalVat = entries.Sum(e => e.VatAmount);
@@ -892,12 +971,37 @@ CompanyId = u.CompanyId,
             return true;
         }
 
-        public async Task<List<SystemNotificationDto>> GetActiveNotificationsForRoleAsync(string role)
+        public async Task<List<SystemNotificationDto>> GetActiveNotificationsForRoleAsync(string role, int? userId = null)
         {
-            return await _db.SystemNotifications
+            var query = _db.SystemNotifications
                 .AsNoTracking()
                 .Where(n => n.IsActive)
-                .Where(n => n.TargetRoles == null || n.TargetRoles == "" || n.TargetRoles.Contains(role))
+                .Where(n => n.TargetRoles == null || n.TargetRoles == "" || n.TargetRoles.Contains(role));
+
+            if (userId.HasValue)
+            {
+                var readIds = await _db.NotificationReads
+                    .AsNoTracking()
+                    .Where(r => r.UserId == userId.Value)
+                    .Select(r => r.NotificationId)
+                    .ToListAsync();
+
+                return await query
+                    .OrderByDescending(n => n.CreatedAt)
+                    .Select(n => new SystemNotificationDto
+                    {
+                        NotificationId = n.NotificationId,
+                        Title = n.Title,
+                        Message = n.Message,
+                        Type = n.Type,
+                        TargetRoles = n.TargetRoles,
+                        IsActive = n.IsActive,
+                        CreatedAt = n.CreatedAt,
+                        IsRead = readIds.Contains(n.NotificationId)
+                    }).ToListAsync();
+            }
+
+            return await query
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new SystemNotificationDto
                 {
@@ -909,6 +1013,50 @@ CompanyId = u.CompanyId,
                     IsActive = n.IsActive,
                     CreatedAt = n.CreatedAt
                 }).ToListAsync();
+        }
+
+        public async Task<bool> MarkNotificationReadAsync(int userId, int notificationId)
+        {
+            var exists = await _db.NotificationReads
+                .AnyAsync(r => r.UserId == userId && r.NotificationId == notificationId);
+            if (exists) return true;
+
+            _db.NotificationReads.Add(new NotificationRead
+            {
+                UserId = userId,
+                NotificationId = notificationId,
+                ReadAt = DateTime.UtcNow
+            });
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> MarkAllNotificationsReadAsync(int userId, string role)
+        {
+            var activeNotifIds = await _db.SystemNotifications
+                .AsNoTracking()
+                .Where(n => n.IsActive)
+                .Where(n => n.TargetRoles == null || n.TargetRoles == "" || n.TargetRoles.Contains(role))
+                .Select(n => n.NotificationId)
+                .ToListAsync();
+
+            var alreadyReadIds = await _db.NotificationReads
+                .Where(r => r.UserId == userId && activeNotifIds.Contains(r.NotificationId))
+                .Select(r => r.NotificationId)
+                .ToListAsync();
+
+            var unreadIds = activeNotifIds.Except(alreadyReadIds).ToList();
+            foreach (var nid in unreadIds)
+            {
+                _db.NotificationReads.Add(new NotificationRead
+                {
+                    UserId = userId,
+                    NotificationId = nid,
+                    ReadAt = DateTime.UtcNow
+                });
+            }
+            await _db.SaveChangesAsync();
+            return true;
         }
     }
 
@@ -944,5 +1092,6 @@ CompanyId = u.CompanyId,
         public string? TargetRoles { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsRead { get; set; }
     }
 }

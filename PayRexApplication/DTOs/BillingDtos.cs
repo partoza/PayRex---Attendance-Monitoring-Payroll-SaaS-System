@@ -18,6 +18,8 @@ namespace PayRexApplication.DTOs
         public bool IsExpired { get; set; }
         public bool IsInGracePeriod { get; set; }
         public bool IsTrialing { get; set; }
+        public int? PendingDowngradePlanId { get; set; }
+        public string? PendingDowngradePlanName { get; set; }
     }
 
     public class BillingInvoiceDto

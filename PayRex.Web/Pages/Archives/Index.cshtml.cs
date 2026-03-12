@@ -28,6 +28,7 @@ namespace PayRex.Web.Pages.Archives
         public List<EmployeesModel.RoleItem> Roles { get; set; } = new();
         public PayRex.Web.Services.AttendanceArchiveResponse AttendanceArchives { get; set; } = new();
         public List<LeaveRequestDto> ArchivedLeaves { get; set; } = new();
+        public List<ArchivedPayslipDto> ArchivedPayslips { get; set; } = new();
 
         private int GetCompanyId()
         {
@@ -88,6 +89,7 @@ namespace PayRex.Web.Pages.Archives
             {
                 AttendanceArchives = await _attendanceApi.GetArchivedRecordsAsync(token);
                 ArchivedLeaves = await _payrollApi.GetArchivedLeaveRequestsAsync(token);
+                ArchivedPayslips = await _payrollApi.GetArchivedPayslipsAsync(token);
             }
         }
 
@@ -98,6 +100,23 @@ namespace PayRex.Web.Pages.Archives
             if (e == null) return Forbid();
             e.Status = EmployeeStatus.Active;
             await _db.SaveChangesAsync();
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRestoreLeaveAsync(int id)
+        {
+            var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
+            if (string.IsNullOrEmpty(token)) return RedirectToPage();
+
+            var (success, _) = await _payrollApi.RestoreLeaveRequestAsync(token, id);
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRestorePayslipPeriodAsync(string periodName)
+        {
+            var token = Request.Cookies.TryGetValue("PayRex.AuthToken", out var t) ? t : null;
+            if (string.IsNullOrEmpty(token)) return RedirectToPage();
+            await _payrollApi.RestorePayslipsByPeriodAsync(token, periodName);
             return RedirectToPage();
         }
     }

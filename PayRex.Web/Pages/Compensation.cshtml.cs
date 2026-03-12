@@ -6,6 +6,7 @@ using PayRex.Web.Services;
 using PayRexApplication.Data;
 using PayRexApplication.Enums;
 using System.IdentityModel.Tokens.Jwt;
+using PayRex.Web.QuestPdf;
 
 namespace PayRex.Web.Pages
 {
@@ -15,6 +16,7 @@ namespace PayRex.Web.Pages
     {
         private readonly IPayrollApiService _payroll;
         private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
 
         public List<DeductionDto> Deductions { get; set; } = new();
         public List<BenefitDto> Benefits { get; set; } = new();
@@ -22,10 +24,11 @@ namespace PayRex.Web.Pages
 
         [TempData] public string? StatusMessage { get; set; }
 
-        public CompensationModel(IPayrollApiService payroll, AppDbContext db)
+        public CompensationModel(IPayrollApiService payroll, AppDbContext db, IWebHostEnvironment env)
         {
             _payroll = payroll;
             _db = db;
+            _env = env;
         }
 
         private int GetCompanyId()
@@ -78,6 +81,84 @@ namespace PayRex.Web.Pages
             var res = await _payroll.AddBenefitAsync(token, new { EmployeeId = employeeId, Name = name, Amount = amount });
             StatusMessage = res.success ? $"success:{res.message}" : $"error:{res.message}";
             return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostExportPdfAsync()
+        {
+            var token = Request.Cookies["PayRex.AuthToken"] ?? "";
+            var type = Request.Form["exportType"].ToString(); // "deduction" or "benefit"
+            
+            var result = await _payroll.GetCompensationAsync(token);
+            var generator = new CompensationPdfGenerator();
+            
+            byte[]? logoBytes = null;
+            try
+            {
+                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                if (System.IO.File.Exists(logoPath))
+                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+            }
+            catch { }
+
+            string issuerName = "Administrator";
+            string issuerPosition = "Admin";
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var given = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+                var family = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+                if (!string.IsNullOrEmpty(given))
+                    issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+                
+                var role = jwt.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
+                if (!string.IsNullOrEmpty(role)) issuerPosition = role;
+            }
+            catch { }
+
+            CompensationPdfGeneratorOptions opts;
+            if (type == "deduction")
+            {
+                opts = new CompensationPdfGeneratorOptions
+                {
+                    Title = "Deductions & Penalties Report",
+                    IsDeduction = true,
+                    IssuerName = issuerName,
+                    IssuerPosition = issuerPosition,
+                    LogoBytes = logoBytes,
+                    Rows = result.Deductions.Select(d => new CompensationExportRow
+                    {
+                        EmployeeName = d.EmployeeName,
+                        Type = d.Type,
+                        Amount = d.Amount,
+                        DateOrFrequency = d.CreatedAt.ToShortDateString(),
+                        Status = d.IsActive ? "Active" : "Inactive"
+                    }).ToList()
+                };
+            }
+            else
+            {
+                opts = new CompensationPdfGeneratorOptions
+                {
+                    Title = "Allowances & Benefits Report",
+                    IsDeduction = false,
+                    IssuerName = issuerName,
+                    IssuerPosition = issuerPosition,
+                    LogoBytes = logoBytes,
+                    Rows = result.Benefits.Select(b => new CompensationExportRow
+                    {
+                        EmployeeName = b.EmployeeName,
+                        Type = b.Type,
+                        Amount = b.Amount,
+                        DateOrFrequency = b.IsActive ? "Recurring" : "One-time",
+                        Status = b.IsActive ? "Active" : "Inactive"
+                    }).ToList()
+                };
+            }
+
+            var pdfBytes = generator.Generate(opts);
+            var filename = $"PayRex_{type}_{DateTime.Now:yyyyMMdd}.pdf";
+            return new FileContentResult(pdfBytes, "application/pdf") { FileDownloadName = filename };
         }
 
         public class EmployeeListItem

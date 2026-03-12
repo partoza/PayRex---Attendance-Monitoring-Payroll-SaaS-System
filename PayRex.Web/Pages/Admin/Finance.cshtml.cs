@@ -4,23 +4,30 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using PayRex.Web.QuestPdf;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace PayRex.Web.Pages.Admin
 {
     [Authorize(Roles = "SuperAdmin")]
+    [IgnoreAntiforgeryToken]
     public class FinanceModel : PageModel
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<FinanceModel> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public List<FinanceEntryItem> Entries { get; set; } = new();
         public FinanceSummaryItem Summary { get; set; } = new();
         [TempData] public string? StatusMessage { get; set; }
+        [BindProperty(SupportsGet = true)] public string? FromDate { get; set; }
+        [BindProperty(SupportsGet = true)] public string? ToDate { get; set; }
 
-        public FinanceModel(IHttpClientFactory httpClientFactory, ILogger<FinanceModel> logger)
+        public FinanceModel(IHttpClientFactory httpClientFactory, ILogger<FinanceModel> logger, IWebHostEnvironment env)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _env = env;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -33,8 +40,13 @@ namespace PayRex.Web.Pages.Admin
 
             try
             {
-                var entriesTask = client.GetAsync("api/superadmin/finance");
-                var summaryTask = client.GetAsync("api/superadmin/finance/summary");
+                var qs = new List<string>();
+                if (!string.IsNullOrEmpty(FromDate)) qs.Add($"fromDate={Uri.EscapeDataString(FromDate)}");
+                if (!string.IsNullOrEmpty(ToDate)) qs.Add($"toDate={Uri.EscapeDataString(ToDate)}");
+                var qsStr = qs.Count > 0 ? "?" + string.Join("&", qs) : "";
+
+                var entriesTask = client.GetAsync($"api/superadmin/finance{qsStr}");
+                var summaryTask = client.GetAsync($"api/superadmin/finance/summary{qsStr}");
                 await Task.WhenAll(entriesTask, summaryTask);
 
                 if (entriesTask.Result.IsSuccessStatusCode)
@@ -48,6 +60,111 @@ namespace PayRex.Web.Pages.Admin
             return Page();
         }
 
+        public async Task<IActionResult> OnPostExportPdfAsync()
+        {
+            if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return RedirectToPage("/Auth/Login");
+
+            var client = _httpClientFactory.CreateClient("PayRexApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var qs = new List<string>();
+            if (!string.IsNullOrEmpty(FromDate)) qs.Add($"fromDate={Uri.EscapeDataString(FromDate)}");
+            if (!string.IsNullOrEmpty(ToDate)) qs.Add($"toDate={Uri.EscapeDataString(ToDate)}");
+            var qsStr = qs.Count > 0 ? "?" + string.Join("&", qs) : "";
+
+            var entriesResp = await client.GetAsync($"api/superadmin/finance{qsStr}");
+            var summaryResp = await client.GetAsync($"api/superadmin/finance/summary{qsStr}");
+
+            var entries = entriesResp.IsSuccessStatusCode 
+                ? JsonSerializer.Deserialize<List<FinanceEntryItem>>(await entriesResp.Content.ReadAsStringAsync(), jsonOpts) ?? new()
+                : new();
+            
+            var summary = summaryResp.IsSuccessStatusCode
+                ? JsonSerializer.Deserialize<FinanceSummaryItem>(await summaryResp.Content.ReadAsStringAsync(), jsonOpts) ?? new()
+                : new();
+
+            // Forecasting Logic
+            string forecastText;
+            string summaryConclusion;
+
+            if (summary.NetProfit > 0)
+            {
+                var projected = summary.NetProfit * 1.15m;
+                forecastText = $"Based on the current net profit of ₱{summary.NetProfit:N2}, we project a 15% growth for the next period, estimated at ₱{projected:N2}. This trend indicates a strong market position and efficient cost management.";
+                summaryConclusion = "The platform is currently operating with a healthy profit margin. Continued focus on expanding the user base while maintaining current cost levels will further strengthen the financial outlook.";
+            }
+            else if (summary.NetProfit < 0)
+            {
+                forecastText = "Current data shows a net loss. A recovery plan is projected to reach break-even within the next quarter through a targeted 20% reduction in operational expenditures and optimized resource allocation.";
+                summaryConclusion = "Financial performance is currently below targets. Immediate attention to cost-scaling and review of high-expense categories is recommended to restore profitability.";
+            }
+            else
+            {
+                forecastText = "Financial stability is maintained. Future projections remain pending further market developments and expansion of service offerings.";
+                summaryConclusion = "The platform is currently at break-even. Efficiency improvements in operational processes could shift the performance towards a positive margin.";
+            }
+
+            // Identification
+            string issuerName = "Administrator";
+            string issuerPosition = "Super Admin";
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var given = jwt.Claims.FirstOrDefault(c => c.Type == "given_name" || c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+                var family = jwt.Claims.FirstOrDefault(c => c.Type == "family_name" || c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+                if (!string.IsNullOrEmpty(given))
+                    issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+            }
+            catch { }
+
+            // Logo
+            byte[]? logoBytes = null;
+            try
+            {
+                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                if (System.IO.File.Exists(logoPath))
+                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+            }
+            catch { }
+
+            var generator = new FinancePdfGenerator();
+            var pdfOptions = new FinancePdfGeneratorOptions
+            {
+                CompanyName = "PayRex",
+                CompanyTagline = "Financial Management & Payroll Platform",
+                CompanyAddress = "Quezon City, Metro Manila, Philippines",
+                CompanyPhone = "+63 912 345 6789",
+                CompanyEmail = "admin@payrex.com",
+                Period = (string.IsNullOrEmpty(FromDate) && string.IsNullOrEmpty(ToDate)) ? "All Time" : $"{FromDate ?? "..."} to {ToDate ?? "..."}",
+                TotalIncome = summary.TotalIncome,
+                TotalCost = summary.TotalDeductions,
+                TotalVat = summary.TotalVat,
+                NetProfit = summary.NetProfit,
+                ForecastText = forecastText,
+                SummaryConclusion = summaryConclusion,
+                IssuerName = issuerName,
+                IssuerPosition = issuerPosition,
+                LogoBytes = logoBytes,
+                Entries = entries.Select(e => new FinanceExportRow
+                {
+                    Date = e.CreatedAt.ToString("MMM dd, yyyy"),
+                    Type = e.Type,
+                    Description = e.Description,
+                    Category = e.Category ?? "—",
+                    Amount = e.Amount,
+                    Vat = e.VatAmount
+                }).ToList()
+            };
+
+            var pdfBytes = generator.Generate(pdfOptions);
+            return new FileContentResult(pdfBytes, "application/pdf")
+            {
+                FileDownloadName = $"PayRex_Finance_Report_{DateTime.Now:yyyyMMdd}.pdf"
+            };
+        }
+
         public async Task<IActionResult> OnPostAddEntryAsync(string type, string description, decimal amount, string? category, string? reference)
         {
             if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token)) return RedirectToPage("/Auth/Login");
@@ -57,8 +174,12 @@ namespace PayRex.Web.Pages.Admin
 
             var body = new StringContent(JsonSerializer.Serialize(new { type, description, amount, category, reference }), Encoding.UTF8, "application/json");
             var response = await client.PostAsync("api/superadmin/finance", body);
-            StatusMessage = response.IsSuccessStatusCode ? "Finance entry added successfully" : "Failed to add finance entry";
+            var message = response.IsSuccessStatusCode ? "Finance entry added successfully" : "Failed to add finance entry";
 
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return new JsonResult(new { success = response.IsSuccessStatusCode, message });
+
+            StatusMessage = message;
             return RedirectToPage();
         }
 

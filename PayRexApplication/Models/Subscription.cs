@@ -51,6 +51,9 @@ namespace PayRexApplication.Models
         [Column("lastPaymentId")]
         public int? LastPaymentId { get; set; }
 
+        [Column("pendingDowngradePlanId")]
+        public int? PendingDowngradePlanId { get; set; }
+
         // Navigation properties
         [ForeignKey("CompanyId")]
         public virtual Company Company { get; set; } = null!;
@@ -60,5 +63,8 @@ namespace PayRexApplication.Models
 
         [ForeignKey("LastPaymentId")]
         public virtual Payment? LastPayment { get; set; }
+
+        [ForeignKey("PendingDowngradePlanId")]
+        public virtual SubscriptionPlan? PendingDowngradePlan { get; set; }
     }
 }

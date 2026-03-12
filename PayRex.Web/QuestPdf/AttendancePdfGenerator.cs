@@ -63,20 +63,13 @@ namespace PayRex.Web.QuestPdf
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4.Landscape());
-                    page.Margin(30);
+                    page.Margin(28);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+                    page.DefaultTextStyle(x => x.FontSize(9).FontColor(TextDark).FontFamily("Helvetica"));
 
                     page.Header().Element(c => ComposeHeader(c, opts, logoBytes, now, list.Count));
-                    page.Content().Element(c => ComposeContent(c, opts, list, sigBytes));
-                    
-                    page.Footer().AlignCenter().Text(x =>
-                    {
-                        x.Span("Page ").FontSize(9).FontColor(TextGray);
-                        x.CurrentPageNumber().FontSize(9).FontColor(TextGray);
-                        x.Span(" of ").FontSize(9).FontColor(TextGray);
-                        x.TotalPages().FontSize(9).FontColor(TextGray);
-                    });
+                    page.Content().PaddingHorizontal(0).PaddingTop(8).Element(c => ComposeContent(c, opts, list, sigBytes));
+                    page.Footer().Element(c => ComposeFooter(c, opts, now));
                 });
             });
 
@@ -252,18 +245,48 @@ namespace PayRex.Web.QuestPdf
                         {
                             if (sigBytes != null)
                             {
-                                cn.Height(50).Image(sigBytes);
+                                cn.Height(60).Width(160).Image(sigBytes);
                             }
                             else
                             {
-                                cn.Height(50).AlignBottom().Text("_________________________").FontColor(Colors.Grey.Medium);
+                                cn.Width(160).Height(60).AlignLeft().AlignBottom()
+                                    .Text("Signature").FontSize(9).FontColor(TextGray);
                             }
                         });
+
+                        r.RelativeItem();
                     });
 
-                    sig.Item().PaddingTop(2).Text($"Issued by: {issuerName}").FontSize(10).Bold().FontColor(TextDark);
-                    sig.Item().Text(string.IsNullOrWhiteSpace(issuerPosition) ? "Authorized Signatory" : issuerPosition)
-                        .FontSize(9).FontColor(TextGray);
+                    var issuedBy = string.IsNullOrWhiteSpace(issuerName) ? "" : issuerName;
+                    sig.Item().PaddingTop(4).Text($"Issued by: {issuedBy}").FontSize(10).SemiBold().FontColor(TextDark);
+                    sig.Item().Text(issuerPosition).FontSize(9).FontColor(TextGray);
+                });
+            });
+        }
+
+        private void ComposeFooter(IContainer container, AttendancePdfGeneratorOptions opts, DateTime now)
+        {
+            container.Column(c =>
+            {
+                c.Item().Height(2).Background(Colors.Grey.Lighten2);
+
+                c.Item().PaddingTop(6).Row(r =>
+                {
+                    r.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(opts.CompanyName).FontSize(9).Bold().FontColor(PrimaryColor);
+                        col.Item().Text($"Generated: {now:MM/dd/yyyy hh:mm tt}").FontSize(8).FontColor(TextGray);
+                        col.Item().Text("Document is confidential and intended for internal use only.")
+                            .FontSize(8).FontColor(TextGray);
+                    });
+
+                    r.RelativeItem().AlignRight().AlignMiddle().Text(text =>
+                    {
+                        text.Span("Page ").FontSize(8).FontColor(TextGray);
+                        text.CurrentPageNumber().FontSize(8).Bold().FontColor(PrimaryColor);
+                        text.Span(" of ").FontSize(8).FontColor(TextGray);
+                        text.TotalPages().FontSize(8).Bold().FontColor(PrimaryColor);
+                    });
                 });
             });
         }

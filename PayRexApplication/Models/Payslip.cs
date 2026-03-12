@@ -30,6 +30,12 @@ namespace PayRexApplication.Models
   [Column("releasedAt")]
         public DateTime? ReleasedAt { get; set; }
 
+        [Column("isArchived")]
+        public bool IsArchived { get; set; } = false;
+
+        [Column("archivedAt")]
+        public DateTime? ArchivedAt { get; set; }
+
         // Navigation properties
         [ForeignKey("PayrollSummaryId")]
         public virtual PayrollSummary PayrollSummary { get; set; } = null!;

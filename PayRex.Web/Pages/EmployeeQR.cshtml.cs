@@ -90,6 +90,7 @@ namespace PayRex.Web.Pages
             Salary = emp.Role?.BasicRate ?? 0m;
             StartDate = emp.StartDate;
             ProfileImageUrl = emp.User?.ProfileImageUrl;
+            SignatureUrl = emp.User?.SignatureUrl;
             CompanyName = emp.Company?.CompanyName;
             CompanyAddress = emp.Company?.Address;
             CompanyContact = emp.Company?.ContactPhone ?? emp.Company?.ContactEmail;

@@ -1,6 +1,8 @@
 namespace PayRex.Web.Configuration
 {
     using PayRex.Web.Models;
+    using System.Linq;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Static configuration for application menu items with role-based access.
@@ -167,7 +169,7 @@ namespace PayRex.Web.Configuration
         /// </summary>
         public static readonly string[] EmployeePagePaths = new[]
         {
-            "/EmployeePortal", "/MyAttendance", "/EmployeeQR"
+            "/EmployeePortal", "/MyAttendance", "/EmployeeQR", "/Payslips", "/Contributions"
         };
 
         /// <summary>
@@ -183,9 +185,9 @@ namespace PayRex.Web.Configuration
         /// Built from the management menu items plus known sub-pages.
         /// This is the single source of truth used by PermissionPageFilter.
         /// </summary>
-        public static Dictionary<string, string> GetPageToModuleMap()
+        public static ILookup<string, string> GetPageToModuleMap()
         {
-            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var list = new List<KeyValuePair<string, string>>();
 
             foreach (var item in GetManagementMenuItems())
             {
@@ -198,24 +200,22 @@ namespace PayRex.Web.Configuration
                 if (item.Url.Equals("/Dashboard", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (!map.ContainsKey(item.Url))
-                    map[item.Url] = item.Title;
+                list.Add(new KeyValuePair<string, string>(item.Url, item.Title));
             }
 
             // Sub-pages that belong to existing modules
-            map["/AddEmployee"] = "Employee Management";
-            map["/EditEmployee"] = "Employee Management";
+            list.Add(new KeyValuePair<string, string>("/AddEmployee", "Employee Management"));
+            list.Add(new KeyValuePair<string, string>("/EditEmployee", "Employee Management"));
 
             // Employee-view pages
             foreach (var item in GetEmployeeViewMenuItems())
             {
                 if (item.Url.Equals("/Dashboard", StringComparison.OrdinalIgnoreCase))
                     continue;
-                if (!map.ContainsKey(item.Url))
-                    map[item.Url] = item.Title;
+                list.Add(new KeyValuePair<string, string>(item.Url, item.Title));
             }
 
-            return map;
+            return list.ToLookup(kvp => kvp.Key, kvp => kvp.Value, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>

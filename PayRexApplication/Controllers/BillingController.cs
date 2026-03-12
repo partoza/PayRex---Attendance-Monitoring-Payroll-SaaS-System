@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PayRexApplication.Data;
 using PayRexApplication.DTOs;
 using PayRexApplication.Helpers;
 using PayRexApplication.Services;
@@ -16,19 +18,22 @@ namespace PayRexApplication.Controllers
         private readonly IActivityLoggerService _audit;
         private readonly IConfiguration _config;
         private readonly ILogger<BillingController> _logger;
+        private readonly AppDbContext _db;
 
         public BillingController(
             ISubscriptionService subscription,
             IPayMongoService payMongo,
             IActivityLoggerService audit,
             IConfiguration config,
-            ILogger<BillingController> logger)
+            ILogger<BillingController> logger,
+            AppDbContext db)
         {
             _subscription = subscription;
             _payMongo = payMongo;
             _audit = audit;
             _config = config;
             _logger = logger;
+            _db = db;
         }
 
         [HttpGet("subscription")]
@@ -204,6 +209,27 @@ namespace PayRexApplication.Controllers
             return Ok(new { status = "pending" });
         }
 
+        [HttpGet("finance-summary")]
+        public async Task<IActionResult> GetCompanyFinanceSummary()
+        {
+            var companyId = GetCompanyId();
+            if (companyId == null) return Unauthorized();
+
+            var entries = await _db.FinanceEntries
+                .AsNoTracking()
+                .Where(f => f.CompanyId == companyId)
+                .ToListAsync();
+
+            var totalCost = entries.Where(e => e.Type == "Deduction").Sum(e => e.Amount);
+            var totalPaid = totalCost; // Cost = subscription spend, same value
+
+            return Ok(new
+            {
+                TotalSubscriptionCost = totalCost,
+                EntryCount = entries.Count
+            });
+        }
+
         private int? GetCompanyId()
         {
             var claim = User.FindFirst("companyId")?.Value;
@@ -241,5 +267,23 @@ namespace PayRexApplication.Controllers
 
             return Ok(new { message = "Invoice deleted successfully" });
         }
+
+        [HttpPost("downgrade")]
+        public async Task<IActionResult> ScheduleDowngrade([FromBody] ScheduleDowngradeRequest request)
+        {
+            var companyId = GetCompanyId();
+            if (companyId == null) return Unauthorized();
+
+            var (success, error) = await _subscription.ScheduleDowngradeAsync(companyId.Value, request.PlanId);
+            if (!success) return BadRequest(new { message = error });
+
+            var (actorId, _) = ClaimsHelper.GetUserIdFromClaims(User);
+            await _audit.LogAsync(actorId, companyId.Value, "DowngradeScheduled", "Subscription",
+                companyId.ToString(), null, $"Downgrade to plan {request.PlanId} scheduled");
+
+            return Ok(new { message = "Downgrade scheduled. It will take effect when your current plan expires." });
+        }
     }
+
+    public record ScheduleDowngradeRequest(int PlanId);
 }

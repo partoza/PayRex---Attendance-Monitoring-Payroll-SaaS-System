@@ -25,8 +25,10 @@ namespace PayRex.Web.Pages
         
         public DashboardStats Stats { get; set; } = new();
         public FinanceStats Finance { get; set; } = new();
+        public List<MonthlyFinanceData> YearlyFinanceData { get; set; } = new();
         public SuperAdminKpisData SuperAdminKpis { get; set; } = new();
         public SuperAdminFinanceData SuperAdminFinance { get; set; } = new();
+        public List<GrowthDataPoint> SuperAdminGrowthData { get; set; } = new();
         public List<ActivityItem> RecentActivities { get; set; } = new();
         public List<AttendanceRecordDto> RecentAttendance { get; set; } = new();
         public List<PayrollPeriodDto> RecentPeriods { get; set; } = new();
@@ -129,6 +131,9 @@ namespace PayRex.Web.Pages
 
                     // Finance stats: aggregate payroll summaries for selected month
                     await LoadFinanceStatsAsync(token, periods);
+
+                    // Yearly finance data for bar chart (Admin/Accountant)
+                    await LoadYearlyFinanceDataAsync(token, periods);
                 }
 
                 // Fetch holidays
@@ -287,11 +292,70 @@ namespace PayRex.Web.Pages
                 catch { /* skip failed period */ }
             }
 
-            // Load contributions as government taxes
+            // Load contributions filtered by date range (matching periods only)
+            foreach (var period in monthPeriods)
+            {
+                try
+                {
+                    var contributions = await _payroll.GetContributionsAsync(token, period.PayrollPeriodId);
+                    Finance.GovernmentTaxes += contributions.Sum(c => c.EmployeeShare + c.EmployerShare);
+                }
+                catch { /* skip failed period */ }
+            }
+        }
+
+        private async Task LoadYearlyFinanceDataAsync(string token, List<PayrollPeriodDto> periods)
+        {
+            var year = DateTime.Now.Year;
+            for (int month = 1; month <= 12; month++)
+            {
+                var monthStart = new DateTime(year, month, 1);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+                var label = monthStart.ToString("MMM");
+
+                var monthPeriods = periods.Where(p =>
+                {
+                    if (DateTime.TryParse(p.StartDate, out var start) && DateTime.TryParse(p.EndDate, out var end))
+                        return start.Date <= monthEnd && end.Date >= monthStart;
+                    return false;
+                }).ToList();
+
+                decimal income = 0, cost = 0, net = 0;
+                foreach (var period in monthPeriods)
+                {
+                    try
+                    {
+                        var summaries = await _payroll.GetSummariesAsync(token, period.PayrollPeriodId);
+                        income += summaries.Sum(s => s.GrossPay);
+                        cost += summaries.Sum(s => s.TotalDeductions);
+                        net += summaries.Sum(s => s.NetPay);
+                    }
+                    catch { }
+                }
+
+                YearlyFinanceData.Add(new MonthlyFinanceData
+                {
+                    Month = label,
+                    Income = income,
+                    Cost = cost,
+                    Profit = income - cost,
+                    GovtContributions = 0
+                });
+            }
+
+            // Load contributions and distribute across months
             try
             {
                 var contributions = await _payroll.GetContributionsAsync(token);
-                Finance.GovernmentTaxes = contributions.Sum(c => c.EmployeeShare + c.EmployerShare);
+                var totalGovt = contributions.Sum(c => c.EmployeeShare + c.EmployerShare);
+                // Distribute total contributions across months with payroll activity
+                var activeMonths = YearlyFinanceData.Where(m => m.Income > 0).ToList();
+                if (activeMonths.Any() && totalGovt > 0)
+                {
+                    var perMonth = totalGovt / activeMonths.Count;
+                    foreach (var m in activeMonths)
+                        m.GovtContributions = perMonth;
+                }
             }
             catch { }
         }
@@ -314,6 +378,23 @@ namespace PayRex.Web.Pages
             public decimal MonthlyRevenue { get; set; }
             public int TotalPlans { get; set; }
             public int PendingInvoices { get; set; }
+            public List<GrowthDataPoint> GrowthData { get; set; } = new();
+        }
+
+        public class GrowthDataPoint
+        {
+            public string Label { get; set; } = "";
+            public int UserCount { get; set; }
+            public decimal Revenue { get; set; }
+        }
+
+        public class MonthlyFinanceData
+        {
+            public string Month { get; set; } = "";
+            public decimal Income { get; set; }
+            public decimal Cost { get; set; }
+            public decimal Profit { get; set; }
+            public decimal GovtContributions { get; set; }
         }
 
         public class SuperAdminFinanceData
@@ -346,6 +427,7 @@ namespace PayRex.Web.Pages
                 {
                     var json = await resp.Content.ReadAsStringAsync();
                     SuperAdminKpis = JsonSerializer.Deserialize<SuperAdminKpisData>(json, jsonOpts) ?? new();
+                    SuperAdminGrowthData = SuperAdminKpis.GrowthData ?? new();
                 }
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to load SuperAdmin KPIs"); }

@@ -93,5 +93,29 @@ namespace PayRex.Web.Services
                 return null;
             }
         }
+
+        public async Task<(bool Success, string Message)> ScheduleDowngradeAsync(string token, int planId)
+        {
+            SetAuth(token);
+            try
+            {
+                var body = new { PlanId = planId };
+                var content = new StringContent(JsonSerializer.Serialize(body, JsonOptions), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("api/billing/downgrade", content);
+                var json = await response.Content.ReadAsStringAsync();
+                if (response.IsSuccessStatusCode)
+                {
+                    using var doc = JsonDocument.Parse(json);
+                    return (true, doc.RootElement.GetProperty("message").GetString() ?? "Downgrade scheduled.");
+                }
+                using var errDoc = JsonDocument.Parse(json);
+                return (false, errDoc.RootElement.GetProperty("message").GetString() ?? "Failed to schedule downgrade.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error scheduling downgrade");
+                return (false, "An error occurred.");
+            }
+        }
     }
 }

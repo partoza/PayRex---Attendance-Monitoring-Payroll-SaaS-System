@@ -21,11 +21,15 @@ namespace PayRex.Web.Services
         Task<(bool success, string message)> CreateLeaveRequestAsync(string token, object request);
         Task<(bool success, string message)> ReviewLeaveRequestAsync(string token, int id, object review);
         Task<(bool success, string message)> ArchiveLeaveRequestAsync(string token, int id);
+        Task<(bool success, string message)> RestoreLeaveRequestAsync(string token, int id);
         Task<LeaveBalanceDto> GetLeaveBalanceAsync(string token);
         Task<List<HolidayDto>> GetHolidaysAsync(string token, int year);
         Task<(bool success, string message)> ApprovePeriodAsync(string token, int periodId);
         Task<(bool success, string message)> RejectPeriodAsync(string token, int periodId, string remarks);
         Task<(bool success, string message)> ReleasePeriodAsync(string token, int periodId);
+        Task<(bool success, string message)> ArchivePayslipsByPeriodAsync(string token, string periodName);
+        Task<(bool success, string message)> RestorePayslipsByPeriodAsync(string token, string periodName);
+        Task<List<ArchivedPayslipDto>> GetArchivedPayslipsAsync(string token);
     }
 
     // DTOs
@@ -105,12 +109,24 @@ namespace PayRex.Web.Services
         public decimal TotalDeductions { get; set; }
         public decimal NetPay { get; set; }
         public bool Released { get; set; }
+        public bool IsArchived { get; set; }
         public DateTime GeneratedAt { get; set; }
         // Contribution breakdowns
         public decimal SssContribution { get; set; }
         public decimal PhilHealthContribution { get; set; }
         public decimal PagIbigContribution { get; set; }
         public decimal WithholdingTax { get; set; }
+    }
+
+    public class ArchivedPayslipDto
+    {
+        public int PayslipId { get; set; }
+        public string EmployeeName { get; set; } = "";
+        public string? PeriodName { get; set; }
+        public decimal GrossPay { get; set; }
+        public decimal TotalDeductions { get; set; }
+        public decimal NetPay { get; set; }
+        public DateTime? ArchivedAt { get; set; }
     }
 
     public class LeaveRequestDto
@@ -324,6 +340,14 @@ namespace PayRex.Web.Services
             return (res.IsSuccessStatusCode, GetMessage(body));
         }
 
+        public async Task<(bool, string)> RestoreLeaveRequestAsync(string token, int id)
+        {
+            SetAuth(token);
+            var res = await _http.PutAsync($"api/leaverequest/{id}/unarchive", null);
+            var body = await res.Content.ReadAsStringAsync();
+            return (res.IsSuccessStatusCode, GetMessage(body));
+        }
+
         public async Task<LeaveBalanceDto> GetLeaveBalanceAsync(string token)
         {
             SetAuth(token);
@@ -370,6 +394,29 @@ namespace PayRex.Web.Services
                 return doc.RootElement.TryGetProperty("message", out var m) ? m.GetString() ?? "OK" : "OK";
             }
             catch { return "OK"; }
+        }
+
+        public async Task<(bool, string)> ArchivePayslipsByPeriodAsync(string token, string periodName)
+        {
+            SetAuth(token);
+            var res = await _http.PostAsJsonAsync("api/payroll/payslips/archive-period", new { periodName });
+            var body = await res.Content.ReadAsStringAsync();
+            return (res.IsSuccessStatusCode, GetMessage(body));
+        }
+
+        public async Task<(bool, string)> RestorePayslipsByPeriodAsync(string token, string periodName)
+        {
+            SetAuth(token);
+            var res = await _http.PostAsJsonAsync("api/payroll/payslips/restore-period", new { periodName });
+            var body = await res.Content.ReadAsStringAsync();
+            return (res.IsSuccessStatusCode, GetMessage(body));
+        }
+
+        public async Task<List<ArchivedPayslipDto>> GetArchivedPayslipsAsync(string token)
+        {
+            SetAuth(token);
+            try { return await _http.GetFromJsonAsync<List<ArchivedPayslipDto>>("api/payroll/payslips/archived", JsonOpts) ?? new(); }
+            catch (Exception ex) { _logger.LogError(ex, "GetArchivedPayslips failed"); return new(); }
         }
     }
 }

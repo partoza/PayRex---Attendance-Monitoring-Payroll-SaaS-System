@@ -1,4 +1,4 @@
-﻿@using PayRex.Web.Configuration
+@using PayRex.Web.Configuration
 @using PayRexApplication.Models
 @inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @using System.Security.Claims
@@ -184,12 +184,17 @@
                             </button>
                             <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden" style="box-shadow: 0 20px 60px -15px rgba(0,0,0,0.15)">
                                 <div class="relative px-5 py-4 border-b border-gray-100" style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)">
-                                    <div class="flex items-center gap-3">
-                                        <div id="notifHeaderIcon" class="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1)"></div>
-                                        <div>
-                                            <h3 id="notifHeaderTitle" class="text-sm font-bold text-gray-900">Notifications</h3>
-                                            <p id="notifHeaderSubtitle" class="text-[11px] text-gray-500 mt-0.5"></p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div id="notifHeaderIcon" class="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-sm" style="background: linear-gradient(135deg, #3b82f6, #6366f1)"></div>
+                                            <div>
+                                                <h3 id="notifHeaderTitle" class="text-sm font-bold text-gray-900">Notifications</h3>
+                                                <p id="notifHeaderSubtitle" class="text-[11px] text-gray-500 mt-0.5"></p>
+                                            </div>
                                         </div>
+                                        <button type="button" id="markAllReadBtn" onclick="markAllNotificationsRead()" class="hidden text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap">
+                                            Mark all read
+                                        </button>
                                     </div>
                                 </div>
                                 <div id="notifList" class="max-h-80 overflow-y-auto" style="scrollbar-width: thin">
@@ -438,6 +443,45 @@
 
                 <div id="page-content" class="opacity-0">
                     @RenderBody()
+                </div>
+            </div>
+        </div>
+
+        <!-- Idle Timeout Modal -->
+        <div id="idleModal" tabindex="-1" aria-hidden="true" class="fixed inset-0 z-[100] hidden overflow-y-auto overflow-x-hidden flex items-center justify-center">
+            <!-- Backdrop with blur effect -->
+            <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
+            
+            <!-- Modal content -->
+            <div class="relative p-4 w-full max-w-md">
+                <div class="relative bg-white rounded-3xl shadow-2xl border border-gray-100 transform transition-all duration-300">
+                    <div class="p-8 text-center">
+                        <div class="flex justify-center mb-6">
+                            <div class="relative">
+                                <div class="absolute inset-0 rounded-full bg-blue-100 animate-ping opacity-25"></div>
+                                <img src="@Url.Content("~/images/auth-illustration.png")" 
+                                     alt="Security Illustration" 
+                                     class="w-32 h-32 object-contain relative z-10" />
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-2xl font-black text-gray-900 mb-3">Are you still there?</h3>
+                        <p class="text-sm text-gray-500 mb-8 leading-relaxed">
+                            You've been inactive for a while. For your security, you will be logged out in 
+                            <span id="idleCountdown" class="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg font-black text-lg mx-1 ring-4 ring-blue-50">60</span> 
+                            seconds.
+                        </p>
+                        
+                        <div class="flex flex-col gap-3">
+                            <button type="button" onclick="resetIdleTimerFromModal()" class="w-full py-4 px-6 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all active:scale-95 shadow-xl shadow-blue-200 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                I'm still here
+                            </button>
+                            <button type="button" onclick="forceLogout()" class="w-full py-3 px-6 rounded-2xl bg-gray-50 text-gray-400 font-bold hover:bg-gray-100 hover:text-gray-600 transition-all">
+                                Log out now
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -724,12 +768,22 @@
             if (hSub) hSub.textContent = cfg.subtitle;
         }
 
+        function getNotifAuthToken() {
+            var match = document.cookie.split(';').map(function(c) { return c.trim(); }).find(function(c) { return c.startsWith('PayRex.AuthToken='); });
+            return match ? match.split('=').slice(1).join('=') : null;
+        }
+
         function loadNotifications() {
-            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/role/' + encodeURIComponent(notifRole))
+            var headers = {};
+            var token = getNotifAuthToken();
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/role/' + encodeURIComponent(notifRole), { headers: headers })
                 .then(function(r) { return r.ok ? r.json() : []; })
                 .then(function(data) {
                     var list = document.getElementById('notifList');
                     var badge = document.getElementById('notifBadge');
+                    var markAllBtn = document.getElementById('markAllReadBtn');
                     var cfg = notifConfig[notifRole] || notifConfig.Employee;
 
                     if (!data || data.length === 0) {
@@ -739,22 +793,37 @@
                             '<p class="text-xs text-gray-300 mt-1">You\'re all caught up!</p>' +
                             '</div>';
                         badge.classList.add('hidden');
+                        if (markAllBtn) markAllBtn.classList.add('hidden');
                         return;
                     }
-                    badge.textContent = data.length > 9 ? '9+' : data.length;
-                    badge.classList.remove('hidden');
-                    badge.classList.remove('animate-pulse');
+
+                    var unreadCount = data.filter(function(n) { return !n.isRead; }).length;
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                        badge.classList.remove('hidden');
+                        badge.classList.remove('animate-pulse');
+                        if (markAllBtn) markAllBtn.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                        if (markAllBtn) markAllBtn.classList.add('hidden');
+                    }
 
                     var html = '';
-                    data.forEach(function(n, idx) {
+                    data.forEach(function(n) {
                         var ti = getNotifTypeInfo(n.type);
                         var ago = n.createdAt ? timeAgo(n.createdAt) : '';
-                        html += '<div class="px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50/80 transition-colors duration-150 cursor-default">' +
+                        var isRead = n.isRead;
+                        var readClass = isRead ? 'opacity-60' : '';
+                        var bgClass = isRead ? 'bg-white' : 'bg-blue-50/40';
+                        var dotHtml = isRead ? '' : '<div class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-3"></div>';
+
+                        html += '<div class="px-4 py-3.5 border-b border-gray-50 hover:bg-gray-50/80 transition-colors duration-150 cursor-pointer ' + bgClass + '" data-notif-id="' + n.notificationId + '" onclick="markNotificationRead(' + n.notificationId + ', this)">' +
                             '<div class="flex gap-3 items-start">' +
-                            '<div class="w-8 h-8 rounded-lg ' + ti.bg + ' ' + ti.border + ' border flex items-center justify-center flex-shrink-0 mt-0.5">' + ti.icon + '</div>' +
-                            '<div class="flex-1 min-w-0">' +
+                            dotHtml +
+                            '<div class="w-8 h-8 rounded-lg ' + ti.bg + ' ' + ti.border + ' border flex items-center justify-center flex-shrink-0 mt-0.5 ' + readClass + '">' + ti.icon + '</div>' +
+                            '<div class="flex-1 min-w-0 ' + readClass + '">' +
                             '<div class="flex items-center justify-between gap-2">' +
-                            '<p class="text-[13px] font-semibold text-gray-900 truncate">' + escapeHtml(n.title) + '</p>' +
+                            '<p class="text-[13px] ' + (isRead ? 'font-medium text-gray-600' : 'font-semibold text-gray-900') + ' truncate">' + escapeHtml(n.title) + '</p>' +
                             '<span class="text-[10px] text-gray-400 flex-shrink-0 whitespace-nowrap">' + ago + '</span>' +
                             '</div>' +
                             '<p class="text-xs text-gray-500 mt-0.5 line-clamp-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + escapeHtml(n.message) + '</p>' +
@@ -772,6 +841,64 @@
                         '</div>';
                 });
         }
+
+        function markNotificationRead(notifId, el) {
+            var token = getNotifAuthToken();
+            if (!token) return;
+
+            // Immediately update UI
+            el.classList.remove('bg-blue-50/40');
+            el.classList.add('opacity-60');
+            var dot = el.querySelector('.bg-blue-500');
+            if (dot) dot.remove();
+            var titleEl = el.querySelector('.font-semibold');
+            if (titleEl) { titleEl.classList.remove('font-semibold', 'text-gray-900'); titleEl.classList.add('font-medium', 'text-gray-600'); }
+
+            // Update badge count
+            var badge = document.getElementById('notifBadge');
+            if (badge && !badge.classList.contains('hidden')) {
+                var current = parseInt(badge.textContent) || 0;
+                if (current > 1) {
+                    badge.textContent = current - 1;
+                } else {
+                    badge.classList.add('hidden');
+                    var markAllBtn = document.getElementById('markAllReadBtn');
+                    if (markAllBtn) markAllBtn.classList.add('hidden');
+                }
+            }
+
+            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/' + notifId + '/read', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+            }).catch(function() {});
+        }
+
+        function markAllNotificationsRead() {
+            var token = getNotifAuthToken();
+            if (!token) return;
+
+            // Immediately update UI
+            var badge = document.getElementById('notifBadge');
+            if (badge) badge.classList.add('hidden');
+            var markAllBtn = document.getElementById('markAllReadBtn');
+            if (markAllBtn) markAllBtn.classList.add('hidden');
+
+            document.querySelectorAll('#notifList [data-notif-id]').forEach(function(el) {
+                el.classList.remove('bg-blue-50/40');
+                el.classList.add('opacity-60');
+                var dot = el.querySelector('.bg-blue-500');
+                if (dot) dot.remove();
+                var titleEl = el.querySelector('.font-semibold');
+                if (titleEl) { titleEl.classList.remove('font-semibold', 'text-gray-900'); titleEl.classList.add('font-medium', 'text-gray-600'); }
+            });
+
+            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/read-all', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: notifRole })
+            }).catch(function() {});
+        }
+
         function escapeHtml(str) {
             var div = document.createElement('div');
             div.appendChild(document.createTextNode(str));
@@ -780,16 +907,103 @@
         // Auto-check notification count on page load
         document.addEventListener('DOMContentLoaded', function() {
             initNotifHeader();
-            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/role/' + encodeURIComponent(notifRole))
+            var headers = {};
+            var token = getNotifAuthToken();
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch(window.ApiBaseUrl + '/api/superadmin/system-notifications/role/' + encodeURIComponent(notifRole), { headers: headers })
                 .then(function(r) { return r.ok ? r.json() : []; })
                 .then(function(data) {
                     var badge = document.getElementById('notifBadge');
                     if (badge && data && data.length > 0) {
-                        badge.textContent = data.length > 9 ? '9+' : data.length;
-                        badge.classList.remove('hidden');
+                        var unreadCount = data.filter(function(n) { return !n.isRead; }).length;
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                            badge.classList.remove('hidden');
+                        }
                     }
                 }).catch(function() {});
         });
+
+        // ── Idle Timeout Security Feature ──
+        (function() {
+            const idleLimit = 5 * 60; // 5 minutes (300 seconds)
+            const warningTime = 60;   // 60 seconds warning
+            let idleSeconds = 0;
+            let warningSeconds = warningTime;
+            let idleTimer = null;
+            let countdownTimer = null;
+            const isAuthenticated = @isAuthenticated.ToString().ToLower();
+
+            if (!isAuthenticated) return;
+
+            function startIdleTimer() {
+                stopIdleTimer();
+                idleTimer = setInterval(function() {
+                    idleSeconds++;
+                    if (idleSeconds >= idleLimit) {
+                        showIdleWarning();
+                    }
+                }, 1000);
+            }
+
+            function stopIdleTimer() {
+                if (idleTimer) clearInterval(idleTimer);
+            }
+
+            function resetIdleActivity() {
+                // If the modal is open, we don't reset activity automatically via mouse move
+                // The user must explicitly click "I'm still here"
+                if (document.getElementById('idleModal').classList.contains('hidden')) {
+                    idleSeconds = 0;
+                }
+            }
+
+            function showIdleWarning() {
+                stopIdleTimer();
+                warningSeconds = warningTime;
+                
+                const modal = document.getElementById('idleModal');
+                const countdownEl = document.getElementById('idleCountdown');
+                
+                if (modal) modal.classList.remove('hidden');
+                if (countdownEl) countdownEl.textContent = warningSeconds;
+                
+                countdownTimer = setInterval(function() {
+                    warningSeconds--;
+                    if (countdownEl) countdownEl.textContent = warningSeconds;
+                    
+                    if (warningSeconds <= 0) {
+                        clearInterval(countdownTimer);
+                        forceLogout();
+                    }
+                }, 1000);
+            }
+
+            window.resetIdleTimerFromModal = function() {
+                if (countdownTimer) clearInterval(countdownTimer);
+                document.getElementById('idleModal').classList.add('hidden');
+                idleSeconds = 0;
+                startIdleTimer();
+            };
+
+            window.forceLogout = function() {
+                const logoutForm = document.querySelector('.logout-form');
+                if (logoutForm) {
+                    logoutForm.submit();
+                } else {
+                    window.location.href = '/Auth/Logout';
+                }
+            };
+
+            // Activity listeners
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(evt => {
+                document.addEventListener(evt, resetIdleActivity, { passive: true });
+            });
+
+            // Start monitoring
+            startIdleTimer();
+        })();
     </script>
 
 </body>

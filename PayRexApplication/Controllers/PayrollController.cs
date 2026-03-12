@@ -144,7 +144,7 @@ namespace PayRexApplication.Controllers
         // ──────────── SALARY COMPUTATION (Run Payroll: Draft → Computed, no calculation) ────────────
 
         [HttpPost("compute/{periodId}")]
-        [Authorize(Roles = "Admin,Accountant,HR")]
+        [Authorize(Roles = "Admin,HR")]
         public async Task<IActionResult> ComputeSalaries(int periodId)
         {
             var (userId, companyId, role) = GetUserInfo();
@@ -162,13 +162,13 @@ namespace PayRexApplication.Controllers
             period.Status = PayrollPeriodStatus.Computed;
             period.UpdatedAt = DateTime.UtcNow;
 
-            // Notify Admin and Accountant that payroll is pending review
+            // Notify Admin, Accountant, and HR that payroll is pending review
             _db.SystemNotifications.Add(new SystemNotification
             {
                 Title = "Payroll Pending Review",
                 Message = $"Payroll period '{period.PeriodName}' has been submitted for review by {role}. Please verify and approve.",
                 Type = "info",
-                TargetRoles = "Admin,Accountant",
+                TargetRoles = "Admin,Accountant,HR",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = userId
@@ -188,7 +188,7 @@ namespace PayRexApplication.Controllers
         // ──────────── SALARY SUMMARIES ────────────
 
         [HttpGet("summaries/{periodId}")]
-        [Authorize(Roles = "Admin,Accountant,Employee")]
+        [Authorize(Roles = "Admin,Accountant,HR,Employee")]
         public async Task<IActionResult> GetSummaries(int periodId)
         {
             var (userId, companyId, role) = GetUserInfo();
@@ -379,7 +379,7 @@ namespace PayRexApplication.Controllers
                     .ThenInclude(s => s.Employee)
                 .Include(p => p.PayrollSummary)
                     .ThenInclude(s => s.PayrollPeriod)
-                .Where(p => p.PayrollSummary.Employee.CompanyId == companyId);
+                .Where(p => p.PayrollSummary.Employee.CompanyId == companyId && !p.IsArchived);
 
             if (role == "Employee" || selfOnly)
             {
@@ -488,10 +488,99 @@ namespace PayRexApplication.Controllers
             return Ok(new { message = $"{generated} payslips generated", count = generated });
         }
 
+        /// <summary>
+        /// Archive all payslips belonging to a payroll period.
+        /// </summary>
+        [HttpPost("payslips/archive-period")]
+        [Authorize(Roles = "Admin,Accountant,HR")]
+        public async Task<IActionResult> ArchivePayslipsByPeriod([FromBody] ArchivePeriodRequest req)
+        {
+            var companyId = GetCompanyId();
+            if (companyId == 0) return Unauthorized();
+            if (string.IsNullOrWhiteSpace(req.PeriodName)) return BadRequest(new { message = "Period name is required." });
+
+            var payslips = await _db.Payslips
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.PayrollPeriod)
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.Employee)
+                .Where(p => p.PayrollSummary.Employee.CompanyId == companyId
+                         && p.PayrollSummary.PayrollPeriod.PeriodName == req.PeriodName
+                         && !p.IsArchived)
+                .ToListAsync();
+
+            if (!payslips.Any()) return NotFound(new { message = "No active payslips found for the specified period." });
+
+            foreach (var slip in payslips)
+            {
+                slip.IsArchived = true;
+                slip.ArchivedAt = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { message = $"{payslips.Count} payslips archived for period \"{req.PeriodName}\".", count = payslips.Count });
+        }
+
+        /// <summary>
+        /// Restore all archived payslips for a period.
+        /// </summary>
+        [HttpPost("payslips/restore-period")]
+        [Authorize(Roles = "Admin,Accountant,HR")]
+        public async Task<IActionResult> RestorePayslipsByPeriod([FromBody] ArchivePeriodRequest req)
+        {
+            var companyId = GetCompanyId();
+            if (companyId == 0) return Unauthorized();
+
+            var payslips = await _db.Payslips
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.PayrollPeriod)
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.Employee)
+                .Where(p => p.PayrollSummary.Employee.CompanyId == companyId
+                         && p.PayrollSummary.PayrollPeriod.PeriodName == req.PeriodName
+                         && p.IsArchived)
+                .ToListAsync();
+
+            foreach (var slip in payslips)
+            {
+                slip.IsArchived = false;
+                slip.ArchivedAt = null;
+            }
+
+            await _db.SaveChangesAsync();
+            return Ok(new { message = $"{payslips.Count} payslips restored.", count = payslips.Count });
+        }
+
+        /// <summary>
+        /// Get all archived payslips for the company, grouped by period.
+        /// </summary>
+        [HttpGet("payslips/archived")]
+        [Authorize(Roles = "Admin,Accountant,HR")]
+        public async Task<IActionResult> GetArchivedPayslips()
+        {
+            var companyId = GetCompanyId();
+            if (companyId == 0) return Unauthorized();
+
+            var list = await _db.Payslips
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.Employee)
+                .Include(p => p.PayrollSummary).ThenInclude(s => s.PayrollPeriod)
+                .Where(p => p.PayrollSummary.Employee.CompanyId == companyId && p.IsArchived)
+                .OrderByDescending(p => p.ArchivedAt)
+                .Select(p => new
+                {
+                    p.PayslipId,
+                    EmployeeName = p.PayrollSummary.Employee.FirstName + " " + p.PayrollSummary.Employee.LastName,
+                    PeriodName = p.PayrollSummary.PayrollPeriod.PeriodName,
+                    p.PayrollSummary.GrossPay,
+                    p.PayrollSummary.TotalDeductions,
+                    p.PayrollSummary.NetPay,
+                    p.ArchivedAt
+                })
+                .ToListAsync();
+
+            return Ok(list);
+        }
+
         // ──────────── PAYROLL PERIOD STATUS TRANSITIONS ────────────
 
         [HttpPost("periods/{periodId}/approve")]
-        [Authorize(Roles = "Admin,Accountant,HR")]
+        [Authorize(Roles = "Admin,Accountant")]
         public async Task<IActionResult> ApprovePeriod(int periodId)
         {
             var (userId, companyId, role) = GetUserInfo();
@@ -617,7 +706,7 @@ namespace PayRexApplication.Controllers
         }
 
         [HttpPost("periods/{periodId}/reject")]
-        [Authorize(Roles = "Admin,Accountant,HR")]
+        [Authorize(Roles = "Admin,Accountant")]
         public async Task<IActionResult> RejectPeriod(int periodId, [FromBody] PeriodActionDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto?.Remarks))
@@ -765,5 +854,10 @@ namespace PayRexApplication.Controllers
     public class PeriodActionDto
     {
         public string? Remarks { get; set; }
+    }
+
+    public class ArchivePeriodRequest
+    {
+        public string PeriodName { get; set; } = string.Empty;
     }
 }

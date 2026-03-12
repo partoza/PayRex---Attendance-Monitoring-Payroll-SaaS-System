@@ -12,7 +12,6 @@ namespace PayRex.Web.Pages
         private readonly IPayrollApiService _payroll;
 
         public List<LeaveRequestDto> LeaveRequests { get; set; } = new();
-        public List<PayslipDto> Payslips { get; set; } = new();
         public LeaveBalanceDto Balance { get; set; } = new();
         [TempData] public string? StatusMessage { get; set; }
 
@@ -25,11 +24,9 @@ namespace PayRex.Web.Pages
             var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
             var selfOnly = isEmployeeView || role == "Employee";
             var leaveTask = _payroll.GetLeaveRequestsAsync(token, selfOnly: selfOnly);
-            var payslipsTask = _payroll.GetPayslipsAsync(token, selfOnly);
             var balanceTask = _payroll.GetLeaveBalanceAsync(token);
-            await Task.WhenAll(leaveTask, payslipsTask, balanceTask);
+            await Task.WhenAll(leaveTask, balanceTask);
             LeaveRequests = leaveTask.Result;
-            Payslips = payslipsTask.Result;
             Balance = balanceTask.Result;
         }
 

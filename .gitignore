@@ -43,6 +43,16 @@ appsettings.*.json
 # Ignore Program.cs files
 **/Program.cs
 
-# Ignore Markdown files
+# Ignore Markdown files (except SonarQube documentation)
 *.md
 **/*.md
+!SONARQUBE_*.md
+!SONARLINT_*.md
+!README.md
+
+# SonarQube/SonarLint
+.sonarqube/
+.sonarlint/**/*
+!.sonarlint/PayRexApplication/
+!.sonarlint/PayRexApplication/settings.json
+TestResults/

@@ -45,5 +45,12 @@ namespace PayRexApplication.Models
 
         [Column("createdBy")]
         public int? CreatedBy { get; set; }
+
+        /// <summary>
+        /// When set, this entry belongs to a specific company (e.g. subscription cost).
+        /// When null, it is a SuperAdmin-level global entry (e.g. subscription income).
+        /// </summary>
+        [Column("companyId")]
+        public int? CompanyId { get; set; }
     }
 }

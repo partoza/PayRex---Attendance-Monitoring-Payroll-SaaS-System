@@ -174,6 +174,8 @@
 
         public DbSet<SystemNotification> SystemNotifications { get; set; }
 
+        public DbSet<NotificationRead> NotificationReads { get; set; }
+
         /// <summary>
         /// The OnModelCreating
         /// </summary>
@@ -181,6 +183,14 @@
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // ===== NotificationRead Configuration =====
+            modelBuilder.Entity<NotificationRead>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).UseIdentityColumn();
+                entity.HasIndex(e => new { e.UserId, e.NotificationId }).IsUnique();
+            });
 
             // ===== UserLoginAttempt Configuration =====
             modelBuilder.Entity<UserLoginAttempt>(entity =>
@@ -1209,12 +1219,14 @@ PlanUserLimit = 3,
             modelBuilder.Entity<SystemSetting>().HasData(systemSetting);
 
             // Seed default Role Permissions
-            var modules = new[] { "User Management", "Employee Management", "Attendance", "Salary Computation", "Tax & Contributions", "Finance", "Compensation", "Payslips", "Company Settings", "Archives", "Audit Logs" };
+            // Module names MUST match MenuConfiguration titles exactly
+            var managementModules = new[] { "Employee Management", "Attendance Monitoring", "Leave Management", "Salary Computation", "Tax & Contributions", "Finance", "Compensation", "Payslip", "Billing", "Company Settings", "Archives", "Audit Logs" };
+            var employeeModules = new[] { "My Attendance", "Leave Request", "My Payslips", "My Contributions", "My QR Code" };
             var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             int permId = 1;
 
-            // Admin: full access to everything
-            foreach (var m in modules)
+            // Admin: full access to all management modules
+            foreach (var m in managementModules)
             {
                 modelBuilder.Entity<RolePermission>().HasData(new RolePermission
                 {
@@ -1223,13 +1235,14 @@ PlanUserLimit = 3,
                 });
             }
 
-            // HR: Employee Management, Attendance
+            // HR: Employee Management, Attendance, Leave Management
             var hrModules = new Dictionary<string, (bool add, bool upd, bool inact)>
             {
                 ["Employee Management"] = (true, true, true),
-                ["Attendance"] = (true, true, false)
+                ["Attendance Monitoring"] = (true, true, false),
+                ["Leave Management"] = (true, true, false)
             };
-            foreach (var m in modules)
+            foreach (var m in managementModules)
             {
                 hrModules.TryGetValue(m, out var perms);
                 modelBuilder.Entity<RolePermission>().HasData(new RolePermission
@@ -1239,16 +1252,16 @@ PlanUserLimit = 3,
                 });
             }
 
-            // Accountant: Salary, Tax, Finance, Compensation, Payslips
+            // Accountant: Salary, Tax, Finance, Compensation, Payslip
             var acctModules = new Dictionary<string, (bool add, bool upd, bool inact)>
             {
                 ["Salary Computation"] = (true, true, true),
                 ["Tax & Contributions"] = (true, true, true),
                 ["Finance"] = (true, true, true),
                 ["Compensation"] = (true, true, true),
-                ["Payslips"] = (true, true, false)
+                ["Payslip"] = (true, true, false)
             };
-            foreach (var m in modules)
+            foreach (var m in managementModules)
             {
                 acctModules.TryGetValue(m, out var perms);
                 modelBuilder.Entity<RolePermission>().HasData(new RolePermission
@@ -1258,14 +1271,28 @@ PlanUserLimit = 3,
                 });
             }
 
-            // Employee: minimal (view only, no Add/Update/Inactivate)
-            foreach (var m in modules)
+            // Employee: no access to management modules
+            foreach (var m in managementModules)
             {
                 modelBuilder.Entity<RolePermission>().HasData(new RolePermission
                 {
                     PermissionId = permId++, RoleName = "Employee", ModuleName = m,
                     CanAdd = false, CanUpdate = false, CanInactivate = false, CreatedAt = seedDate
                 });
+            }
+
+            // Employee-view modules: all roles with employee view get access
+            var employeeViewRoles = new[] { "Employee", "HR", "Accountant" };
+            foreach (var role in employeeViewRoles)
+            {
+                foreach (var m in employeeModules)
+                {
+                    modelBuilder.Entity<RolePermission>().HasData(new RolePermission
+                    {
+                        PermissionId = permId++, RoleName = role, ModuleName = m,
+                        CanAdd = true, CanUpdate = true, CanInactivate = false, CreatedAt = seedDate
+                    });
+                }
             }
         }
     }

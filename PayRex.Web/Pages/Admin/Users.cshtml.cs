@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Hosting;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using PayRex.Web.QuestPdf;
 
 namespace PayRex.Web.Pages.Admin
 {
@@ -12,14 +15,16 @@ namespace PayRex.Web.Pages.Admin
     {
         private readonly IHttpClientFactory _httpClientFactory;
    private readonly ILogger<UsersModel> _logger;
+    private readonly IWebHostEnvironment _env;
 
     public List<UserItem> Users { get; set; } = new();
         [TempData] public string? StatusMessage { get; set; }
 
-        public UsersModel(IHttpClientFactory httpClientFactory, ILogger<UsersModel> logger)
+        public UsersModel(IHttpClientFactory httpClientFactory, ILogger<UsersModel> logger, IWebHostEnvironment env)
         {
      _httpClientFactory = httpClientFactory;
      _logger = logger;
+            _env = env;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -41,6 +46,100 @@ namespace PayRex.Web.Pages.Admin
             catch (Exception ex) { _logger.LogError(ex, "Error loading admin users"); }
   return Page();
  }
+
+        public async Task<IActionResult> OnPostExportPdfAsync()
+        {
+            if (!Request.Cookies.TryGetValue("PayRex.AuthToken", out var token))
+                return RedirectToPage("/Auth/Login");
+
+            var search = Request.Form["search"].ToString() ?? string.Empty;
+            var roleFilter = Request.Form["role"].ToString() ?? string.Empty;
+            var statusFilter = Request.Form["status"].ToString() ?? string.Empty;
+            var companyFilter = Request.Form["company"].ToString() ?? string.Empty;
+
+            var client = _httpClientFactory.CreateClient("PayRexApi");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.GetAsync("api/superadmin/users");
+            var users = new List<UserItem>();
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                users = JsonSerializer.Deserialize<List<UserItem>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+                users = users.Where(u => ($"{u.FirstName} {u.LastName}").Contains(search, StringComparison.OrdinalIgnoreCase) || (u.Email ?? string.Empty).Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrWhiteSpace(roleFilter))
+                users = users.Where(u => string.Equals(u.Role, roleFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrWhiteSpace(statusFilter))
+                users = users.Where(u => u.Status == statusFilter).ToList();
+            if (!string.IsNullOrWhiteSpace(companyFilter))
+                users = users.Where(u => u.CompanyName == companyFilter).ToList();
+
+            string issuerName = "Administrator";
+            string issuerPosition = "Super Admin";
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(token);
+                var given = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+                var family = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+                if (!string.IsNullOrEmpty(given))
+                    issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+            }
+            catch { }
+
+            var roleMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Admin"] = "Administration",
+                ["HR"] = "Human Resource Manager",
+                ["Hr"] = "Human Resource Manager",
+                ["Accountant"] = "Accountant",
+                ["Employee"] = "Employee",
+                ["SuperAdmin"] = "Super Admin"
+            };
+
+            var rows = users.Select(u => new UserExportRow
+            {
+                FullName = $"{u.FirstName} {u.LastName}".Trim(),
+                Email = u.Email,
+                Role = roleMap.TryGetValue(u.Role ?? "", out var rd) ? rd : (u.Role ?? "—"),
+                Company = u.CompanyName ?? "—",
+                Status = u.Status,
+                CreatedAt = u.CreatedAt.ToString("MMM dd, yyyy")
+            }).ToList();
+
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(search)) parts.Add($"search: \"{search}\"");
+            if (!string.IsNullOrWhiteSpace(roleFilter)) parts.Add($"role: {roleFilter}");
+            if (!string.IsNullOrWhiteSpace(statusFilter)) parts.Add($"status: {statusFilter}");
+            if (!string.IsNullOrWhiteSpace(companyFilter)) parts.Add($"company: {companyFilter}");
+            var filterDesc = parts.Any() ? $"Filtered by {string.Join(", ", parts)}" : "All platform users";
+
+            var generator = new UsersPdfGenerator();
+
+            byte[]? logoBytes = null;
+            try
+            {
+                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                if (System.IO.File.Exists(logoPath))
+                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+            }
+            catch { }
+
+            var pdfBytes = generator.Generate(new UsersPdfGeneratorOptions
+            {
+                IssuerName = issuerName,
+                IssuerPosition = issuerPosition,
+                FilterDescription = filterDesc,
+                Users = rows,
+                LogoBytes = logoBytes
+            });
+
+            var filename = $"PayRex_Users_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            return new FileContentResult(pdfBytes, "application/pdf") { FileDownloadName = filename };
+        }
 
         public async Task<IActionResult> OnPostToggleStatusAsync(int userId, string currentStatus)
         {

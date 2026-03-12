@@ -4,11 +4,12 @@
     ViewData["Title"] = "Tax & Contributions";
 }
 
-<div class="max-w-8xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+<div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-50 via-white to-blue-50 rounded-xl sm:rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
-        <div class="px-8 py-8 relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-20"></div>
+        <div class="px-4 py-5 sm:px-8 sm:py-8 relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Tax & Contributions</h1>
                 <p class="mt-2 text-gray-600">Period: <span class="font-semibold text-gray-900">@Model.CurrentPeriod</span></p>
@@ -30,141 +31,226 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+         <div class="bg-white rounded-xl sm:rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-500">Total SSS</p>
                 <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalSSS.ToString("N2")</p>
             </div>
-             <div class="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold">
-                SSS
+             <div class="h-12 w-12 rounded-xl bg-blue-50/50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm p-1.5">
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAoPJxb0I15kEEIf1ZMGEUHImH9E_5rckS40BUxEwyB5SlzI-d9zJXm4w0Fey4rggOlhQiijSXwjLWkIGfoXkuMvWbUNTuo0REBoMA2IzcOGZcxJgYBvqZtG3Cd7o-mtbFbLAYFQhq80Ugp72rIBEQFFDwd28HsmO5a_kILIYmbl4l8LFFBdK4U8PE/s1280/Social_Security_System_(SSS).svg.png" 
+                     alt="SSS" class="w-full h-full object-contain" />
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-500">Total PhilHealth</p>
                 <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalPhilHealth.ToString("N2")</p>
             </div>
-             <div class="h-12 w-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 font-bold">
-                PH
+             <div class="h-12 w-12 rounded-xl bg-green-50/50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm p-1.5">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbJiXsPX6y6fLA9TFLh6aREMYVZK1yDmazDQ&s" 
+                     alt="PhilHealth" class="w-full h-full object-contain" />
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-gray-500">Total Pag-IBIG</p>
                 <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalPagIBIG.ToString("N2")</p>
             </div>
-             <div class="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 font-bold">
-                P-I
+             <div class="h-12 w-12 rounded-xl bg-red-50/50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm p-1.5">
+                <img src="https://www.bworldonline.com/wp-content/uploads/2022/04/Pag-IBIG-logo-hi-res.png" 
+                     alt="Pag-IBIG" class="w-full h-full object-contain" />
             </div>
         </div>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="flex flex-col sm:flex-row justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-        <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-             <div class="relative">
-                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                 <input type="text" id="searchInput" 
-                       class="pl-10 block w-full sm:w-64 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
-                       placeholder="Search employee..." onkeyup="filterTable()">
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 border border-gray-200 shadow-sm flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500">Withholding Tax</p>
+                <p class="text-2xl font-bold text-gray-900">₱@Model.Stats.TotalTax.ToString("N2")</p>
             </div>
-            
-             <select id="typeFilter" onchange="filterTable()" 
-                    class="block w-full sm:w-48 rounded-xl border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <option value="">All Types</option>
-                <option value="SSS">SSS</option>
-                <option value="PhilHealth">PhilHealth</option>
-                <option value="Pag-IBIG">Pag-IBIG</option>
-                <option value="Tax">Tax</option>
-            </select>
+             <div class="h-12 w-12 rounded-xl bg-yellow-50/50 flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm p-1.5">
+                <img src="https://formsphilippines.com/agencylogo/2.png" 
+                     alt="BIR/Tax" class="w-full h-full object-contain" />
+            </div>
         </div>
-        
-         <button type="button" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">
-            Export Report
-        </button>
     </div>
 
     <!-- Contribution List -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 class="text-sm sm:text-base font-semibold text-gray-900">Contributions</h2>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="text" id="searchInput"
+                               class="pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-56"
+                               placeholder="Search employee..." onkeyup="filterTable()">
+                    </div>
+                    <select id="typeFilter" onchange="filterTable()"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500 w-full sm:w-36">
+                        <option value="">All Types</option>
+                        <option value="SSS">SSS</option>
+                        <option value="PhilHealth">PhilHealth</option>
+                        <option value="Pag-IBIG">Pag-IBIG</option>
+                        <option value="Tax">Tax</option>
+                    </select>
+                    <select id="pageSizeSelect" onchange="currentPage=1;updateView()"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500">
+                        <option value="10" selected>10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                    </select>
+                </div>
+            </div>
+        </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200" id="contributionTable">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50/80">
                     <tr>
-                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contribution Type</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Share</th>
-                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Employer Share</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contribution Type</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Employee Share</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Employer Share</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach (var item in Model.Contributions)
                     {
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                        <tr class="hover:bg-gray-50/50 transition-colors contribution-row">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold mr-3 @(item.Type == "SSS" ? "bg-blue-100 text-blue-700" : item.Type == "PhilHealth" ? "bg-green-100 text-green-700" : (item.Type == "Pag-IBIG" || item.Type == "PagIBIG" || item.Type == "PagIig" || item.Type == "PagIbig") ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700")">
-                                        @item.Type.Substring(0, Math.Min(3, item.Type.Length))
+                                    @{
+                                        string logoUrl = item.Type switch
+                                        {
+                                            "SSS" => "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAoPJxb0I15kEEIf1ZMGEUHImH9E_5rckS40BUxEwyB5SlzI-d9zJXm4w0Fey4rggOlhQiijSXwjLWkIGfoXkuMvWbUNTuo0REBoMA2IzcOGZcxJgYBvqZtG3Cd7o-mtbFbLAYFQhq80Ugp72rIBEQFFDwd28HsmO5a_kILIYmbl4l8LFFBdK4U8PE/s1280/Social_Security_System_(SSS).svg.png",
+                                            "PhilHealth" => "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbJiXsPX6y6fLA9TFLh6aREMYVZK1yDmazDQ&s",
+                                            "Pag-IBIG" or "PagIBIG" or "PagIig" or "PagIbig" => "https://www.bworldonline.com/wp-content/uploads/2022/04/Pag-IBIG-logo-hi-res.png",
+                                            "Tax" or "BIR" => "https://formsphilippines.com/agencylogo/2.png",
+                                            _ => ""
+                                        };
+                                        string bgClass = item.Type switch
+                                        {
+                                            "SSS" => "bg-blue-50/50",
+                                            "PhilHealth" => "bg-green-50/50",
+                                            "Pag-IBIG" or "PagIBIG" or "PagIig" or "PagIbig" => "bg-red-50/50",
+                                            "Tax" or "BIR" => "bg-yellow-50/50",
+                                            _ => "bg-gray-50"
+                                        };
+                                    }
+                                    <div class="h-9 w-9 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100 shadow-sm p-1 mr-3 @bgClass">
+                                        @if (!string.IsNullOrEmpty(logoUrl))
+                                        {
+                                            <img src="@logoUrl" alt="@item.Type" class="w-full h-full object-contain" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-[10px] font-bold text-gray-500">@item.Type.Substring(0, Math.Min(3, item.Type.Length))</span>
+                                        }
                                     </div>
-                                    <span class="text-sm font-medium text-gray-900 search-type">@item.Type</span>
+                                    <span class="text-xs sm:text-sm font-medium text-gray-900 search-type">@item.Type</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 search-name">@item.EmployeeName</div>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                <div class="text-xs sm:text-sm text-gray-900 search-name">@item.EmployeeName</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm text-gray-500">
                                 ₱@item.EmployeeShare.ToString("N2")
                             </td>
-                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm text-gray-500">
                                 ₱@item.EmployerShare.ToString("N2")
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-semibold text-gray-900">
                                 ₱@((item.EmployeeShare + item.EmployerShare).ToString("N2"))
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Remitted
-                                </span>
+                            <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Remitted</span>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+        <!-- Pagination -->
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/50">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs sm:text-sm text-gray-600" id="contribPaginationInfo"></div>
+                <nav class="flex items-center gap-1 flex-wrap justify-center" id="contribPaginationNav"></nav>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+    let currentPage = 1;
+    let filteredRows = [];
+
     function filterTable() {
-        var input = document.getElementById("searchInput");
-        var filter = input.value.toUpperCase();
-        var typeFilter = document.getElementById("typeFilter").value.toUpperCase();
-        var table = document.getElementById("contributionTable");
-        var tr = table.getElementsByTagName("tr");
+        const filter = document.getElementById("searchInput").value.toUpperCase();
+        const typeFilter = document.getElementById("typeFilter").value.toUpperCase();
+        const rows = document.querySelectorAll(".contribution-row");
+        filteredRows = [];
+        rows.forEach(row => {
+            const nameText = (row.querySelector(".search-name")?.textContent || "").toUpperCase();
+            const typeText = (row.querySelector(".search-type")?.textContent || "").toUpperCase();
+            const matchesSearch = !filter || nameText.includes(filter);
+            const matchesType = !typeFilter || typeText.includes(typeFilter);
+            row.style.display = (matchesSearch && matchesType) ? "" : "none";
+            if (matchesSearch && matchesType) filteredRows.push(row);
+        });
+        currentPage = 1;
+        updateView();
+    }
 
-        for (var i = 1; i < tr.length; i++) {
-            var nameTd = tr[i].querySelector(".search-name");
-            var typeTd = tr[i].querySelector(".search-type");
+    function updateView() {
+        const pageSize = parseInt(document.getElementById("pageSizeSelect").value) || 10;
+        const totalRows = filteredRows.length;
+        const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        filteredRows.forEach((row, i) => { row.style.display = (i >= start && i < end) ? "" : "none"; });
+        document.getElementById("contribPaginationInfo").textContent =
+            totalRows === 0 ? "No records found" :
+            `Showing ${start + 1}–${Math.min(end, totalRows)} of ${totalRows} records`;
+        const nav = document.getElementById("contribPaginationNav");
+        nav.innerHTML = "";
+        const btnClass = (active, disabled) => `px-3 py-1.5 text-sm font-medium border rounded-lg transition-all ${
+            active    ? 'bg-blue-600 text-white border-blue-600' :
+            disabled  ? 'opacity-40 cursor-not-allowed bg-gray-100 border-gray-200 text-gray-500' :
+                        'bg-white text-gray-700 border-gray-200 hover:bg-gray-100'
+        }`;
+        
+        if (totalPages <= 1) return;
 
-            if (nameTd && typeTd) {
-                var nameText = nameTd.textContent || nameTd.innerText;
-                var typeText = typeTd.textContent || typeTd.innerText;
+        if (currentPage > 1) {
+            const b = document.createElement("button"); b.className = btnClass(false, false); b.textContent = "‹";
+            b.onclick = () => { currentPage--; updateView(); }; nav.appendChild(b);
+        } else {
+            const b = document.createElement("button"); b.className = btnClass(false, true); b.textContent = "‹";
+            nav.appendChild(b);
+        }
 
-                var matchesSearch = nameText.toUpperCase().indexOf(filter) > -1;
-                var matchesType = typeFilter === "" || typeText.toUpperCase().indexOf(typeFilter) > -1;
+        for (let p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++) {
+            const b = document.createElement("button"); b.className = btnClass(p === currentPage, false); b.textContent = p;
+            b.onclick = ((page) => () => { currentPage = page; updateView(); })(p); nav.appendChild(b);
+        }
 
-                if (matchesSearch && matchesType) {
-                    tr[i].style.display = "";
-                } else {
-                    tr[i].style.display = "none";
-                }
-            }
+        if (currentPage < totalPages) {
+            const b = document.createElement("button"); b.className = btnClass(false, false); b.textContent = "›";
+            b.onclick = () => { currentPage++; updateView(); }; nav.appendChild(b);
+        } else {
+            const b = document.createElement("button"); b.className = btnClass(false, true); b.textContent = "›";
+            nav.appendChild(b);
         }
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        filteredRows = Array.from(document.querySelectorAll(".contribution-row"));
+        updateView();
+    });
+
 </script>

@@ -38,10 +38,23 @@
     <!-- Inactive Users Tab -->
     <div id="panel-users" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 class="text-base font-semibold text-gray-900">Inactive Users</h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Inactive Users</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Users who have been deactivated from the system</p>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="searchUsers" placeholder="Search users..."
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           onkeyup="filterAdminTable('adminUsersTable','searchUsers','adminUsersEmpty')">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full" id="adminUsersTable">
                 <thead class="bg-gray-50/80">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">User</th>
@@ -71,7 +84,7 @@
                     {
                         @foreach (var user in Model.InactiveUsers)
                         {
-                            <tr class="hover:bg-gray-50/50 transition-colors">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-search-row>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         @if (!string.IsNullOrEmpty(user.ProfileImageUrl))
@@ -95,14 +108,15 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">@user.CreatedAt.ToString("MMM dd, yyyy")</td>
                                 <td class="px-6 py-4">
-                                    <form method="post" asp-page-handler="RestoreUser" onsubmit="return confirm('Restore this user to Active status?')">
+                                    <form method="post" asp-page-handler="RestoreUser" id="restore-user-form-@user.UserId" onsubmit="return false;">
                                         <input type="hidden" name="userId" value="@user.UserId" />
-                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+                                        <button type="button" onclick="openRestoreModal('user', '@user.UserId', '@user.FirstName @user.LastName')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
                                             Restore
                                         </button>
                                     </form>
                                 </td>
                             </tr>
+                            <tr id="adminUsersEmpty" class="hidden"><td colspan="6" class="px-6 py-8 text-center text-gray-500 text-sm">No matching users</td></tr>
                         }
                     }
                 </tbody>
@@ -113,10 +127,23 @@
     <!-- Inactive Companies Tab -->
     <div id="panel-companies" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 class="text-base font-semibold text-gray-900">Inactive Companies</h2>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Inactive Companies</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Companies that have been suspended or deactivated</p>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="searchCompanies" placeholder="Search companies..."
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           onkeyup="filterAdminTable('adminCompaniesTable','searchCompanies','adminCompaniesEmpty')">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full" id="adminCompaniesTable">
                 <thead class="bg-gray-50/80">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
@@ -147,7 +174,7 @@
                     {
                         @foreach (var company in Model.InactiveCompanies)
                         {
-                            <tr class="hover:bg-gray-50/50 transition-colors">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-search-row>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         @if (!string.IsNullOrEmpty(company.LogoUrl))
@@ -169,14 +196,15 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500">@company.CreatedAt.ToString("MMM dd, yyyy")</td>
                                 <td class="px-6 py-4">
-                                    <form method="post" asp-page-handler="RestoreCompany" onsubmit="return confirm('Restore this company to Active status?')">
+                                    <form method="post" asp-page-handler="RestoreCompany" id="restore-company-form-@company.CompanyId" onsubmit="return false;">
                                         <input type="hidden" name="companyId" value="@company.CompanyId" />
-                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+                                        <button type="button" onclick="openRestoreModal('company', '@company.CompanyId', '@company.CompanyName')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
                                             Restore
                                         </button>
                                     </form>
                                 </td>
                             </tr>
+                            <tr id="adminCompaniesEmpty" class="hidden"><td colspan="7" class="px-6 py-8 text-center text-gray-500 text-sm">No matching companies</td></tr>
                         }
                     }
                 </tbody>
@@ -187,11 +215,23 @@
     <!-- Archived Billing Tab -->
     <div id="panel-billing" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hidden">
         <div class="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-            <h2 class="text-base font-semibold text-gray-900">Archived Invoices</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Invoices archived from Admin Billing</p>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Archived Invoices</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Invoices archived from Admin Billing</p>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="searchBilling" placeholder="Search invoices..."
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           onkeyup="filterAdminTable('adminBillingTable','searchBilling','adminBillingEmpty')">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full" id="adminBillingTable">
                 <thead class="bg-gray-50/80">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Invoice #</th>
@@ -222,7 +262,7 @@
                     {
                         @foreach (var inv in Model.ArchivedInvoices)
                         {
-                            <tr class="hover:bg-gray-50/50 transition-colors">
+                            <tr class="hover:bg-gray-50/50 transition-colors" data-search-row>
                                 <td class="px-6 py-4 text-sm font-mono font-semibold text-blue-600">@inv.InvoiceNumber</td>
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">@inv.CompanyName</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-gray-900">₱@inv.Amount.ToString("N2")</td>
@@ -236,6 +276,7 @@
                                 <td class="px-6 py-4 text-sm text-gray-500">@inv.DueDate.ToString("MMM dd, yyyy")</td>
                                 <td class="px-6 py-4 text-sm text-gray-500">@inv.CreatedAt.ToString("MMM dd, yyyy")</td>
                             </tr>
+                            <tr id="adminBillingEmpty" class="hidden"><td colspan="7" class="px-6 py-8 text-center text-gray-500 text-sm">No matching invoices</td></tr>
                         }
                     }
                 </tbody>
@@ -246,6 +287,23 @@
 
 @section Scripts {
 <script>
+    function filterAdminTable(tableId, inputId, emptyRowId) {
+        const input = document.getElementById(inputId);
+        const filter = input ? input.value.toUpperCase() : '';
+        const table = document.getElementById(tableId);
+        const emptyRow = document.getElementById(emptyRowId);
+        if (!table) return;
+        const rows = table.querySelectorAll('tbody tr[data-search-row]');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const txt = (row.textContent || row.innerText || '').toUpperCase();
+            const show = txt.indexOf(filter) > -1;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        if (emptyRow) emptyRow.style.display = (visibleCount === 0 && filter !== '') ? '' : 'none';
+    }
+
     function switchTab(tab) {
         const tabs = ['users', 'companies', 'billing'];
         tabs.forEach(t => {
@@ -256,5 +314,68 @@
             document.getElementById(`tab-${t}`).classList.toggle('text-gray-500', tab !== t);
         });
     }
+
+    let _restoreType = null;
+    let _restoreId = null;
+
+    function openRestoreModal(type, id, name) {
+        _restoreType = type;
+        _restoreId = id;
+        document.getElementById('restoreModalName').textContent = name;
+        document.getElementById('restoreModalTypeLabel').textContent = type === 'user' ? 'user' : 'company';
+        document.getElementById('restoreConfirmModal').classList.remove('hidden');
+    }
+
+    function hideRestoreModal() {
+        document.getElementById('restoreConfirmModal').classList.add('hidden');
+        _restoreType = null;
+        _restoreId = null;
+    }
+
+    function confirmRestore() {
+        if (!_restoreType || !_restoreId) return;
+        const formId = `restore-${_restoreType}-form-${_restoreId}`;
+        const form = document.getElementById(formId);
+        if (form) {
+            form.onsubmit = null;
+            form.submit();
+        }
+        hideRestoreModal();
+    }
 </script>
+
+<!-- Restore Confirmation Modal -->
+<div id="restoreConfirmModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-hidden="true">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity" onclick="hideRestoreModal()"></div>
+    <div class="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full sm:w-[90%] md:w-[60%] lg:w-[50%] max-w-md mx-auto">
+            <div class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+                <div>
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900">Confirm Restore</h3>
+                    <p class="text-sm text-gray-500 mt-0.5">This will reactivate the <span id="restoreModalTypeLabel">item</span></p>
+                </div>
+                <button type="button" onclick="hideRestoreModal()" class="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-500">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+            <div class="px-4 py-4 sm:px-6 sm:py-5 md:px-6 md:py-6">
+                <div class="text-center">
+                    <p class="mb-4 text-sm text-gray-700">
+                        Are you sure you want to restore
+                        <span class="font-semibold" id="restoreModalName">—</span>
+                        to Active status?
+                    </p>
+                    <div class="flex justify-center gap-3">
+                        <button type="button" onclick="hideRestoreModal()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300">
+                            No, Cancel
+                        </button>
+                        <button type="button" onclick="confirmRestore()" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-300">
+                            Yes, Restore
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 }

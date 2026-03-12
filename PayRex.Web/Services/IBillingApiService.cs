@@ -6,6 +6,7 @@ namespace PayRex.Web.Services
         Task<List<InvoiceItemDto>> GetInvoicesAsync(string token);
         Task<CheckoutResultItemDto?> CreateCheckoutAsync(string token, int? invoiceId = null, int? planId = null);
         Task<CheckoutResultItemDto?> RenewSubscriptionAsync(string token);
+        Task<(bool Success, string Message)> ScheduleDowngradeAsync(string token, int planId);
     }
 
     public class SubscriptionInfoDto
@@ -26,6 +27,8 @@ namespace PayRex.Web.Services
         public bool IsExpired { get; set; }
         public bool IsInGracePeriod { get; set; }
         public bool IsTrialing { get; set; }
+        public int? PendingDowngradePlanId { get; set; }
+        public string? PendingDowngradePlanName { get; set; }
     }
 
     public class InvoiceItemDto

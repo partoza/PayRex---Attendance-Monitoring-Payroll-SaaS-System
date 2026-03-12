@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using PayRexApplication.Data;
 using PayRexApplication.Models;
+using PayRexApplication.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 using System.Text;
@@ -16,48 +17,155 @@ namespace PayRex.Web.Pages
     {
         private readonly AppDbContext _db;
         private readonly IHttpClientFactory _httpClientFactory;
-        public FinanceModel(AppDbContext db, IHttpClientFactory httpClientFactory) { _db = db; _httpClientFactory = httpClientFactory; }
+
+        public FinanceModel(AppDbContext db, IHttpClientFactory httpClientFactory)
+        {
+            _db = db;
+            _httpClientFactory = httpClientFactory;
+        }
+
+        [BindProperty(SupportsGet = true)] public DateTime? FromDate { get; set; }
+        [BindProperty(SupportsGet = true)] public DateTime? ToDate { get; set; }
 
         public List<IncomeItem> Income { get; set; } = new();
-        public List<ExpenseItem> Expenses { get; set; } = new();
-        public int TotalItems => Income.Count + Expenses.Count;
+        public List<CombinedExpenseItem> Expenses { get; set; } = new();
+        public List<ContributionItem> Contributions { get; set; } = new();
+
+        public decimal TotalIncome { get; set; }
+        public decimal TotalExpenses { get; set; }
+        public decimal TotalContributions { get; set; }
+        public decimal NetBalance => TotalIncome - TotalExpenses;
 
         public async Task OnGetAsync()
         {
-            // Get companyId from JWT claims
             var companyIdClaim = User.FindFirst("companyId")?.Value;
             if (!int.TryParse(companyIdClaim, out var companyId)) return;
 
+            var from = FromDate ?? new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var to = (ToDate ?? DateTime.Now).Date.AddDays(1).AddSeconds(-1);
+            FromDate = from;
+            ToDate = to.Date;
+
+            // ── Income records ──
             try
             {
                 Income = await _db.IncomeRecords.AsNoTracking()
-                    .Where(i => i.CompanyId == companyId)
-                    .OrderByDescending(i => i.Date).Select(i => new IncomeItem {
-                    Date = i.Date,
-                    Source = i.Source,
-                    Category = i.Category,
-                    Amount = i.Amount,
-                    Note = i.Note
-                }).ToListAsync();
+                    .Where(i => i.CompanyId == companyId && i.Date >= from && i.Date <= to)
+                    .OrderByDescending(i => i.Date)
+                    .Select(i => new IncomeItem
+                    {
+                        Id = i.Id,
+                        Date = i.Date,
+                        Source = i.Source,
+                        Category = i.Category,
+                        Amount = i.Amount,
+                        Note = i.Note ?? ""
+                    }).ToListAsync();
+                TotalIncome = Income.Sum(i => i.Amount);
             }
             catch { Income = new(); }
 
+            // ── Expenses = manual expense records + released/approved payroll periods ──
             try
             {
-                Expenses = await _db.ExpenseRecords.AsNoTracking()
-                    .Where(e => e.CompanyId == companyId)
-                    .OrderByDescending(e => e.Date).Select(e => new ExpenseItem {
-                    Date = e.Date,
-                    Payee = e.Payee,
-                    Category = e.Category,
-                    Amount = e.Amount,
-                    Note = e.Note
-                }).ToListAsync();
+                var manualExpenses = await _db.ExpenseRecords.AsNoTracking()
+                    .Where(e => e.CompanyId == companyId && e.Date >= from && e.Date <= to)
+                    .OrderByDescending(e => e.Date)
+                    .Select(e => new CombinedExpenseItem
+                    {
+                        Id = e.Id,
+                        Date = e.Date,
+                        Description = e.Payee,
+                        Category = e.Category,
+                        Amount = e.Amount,
+                        Note = e.Note ?? "",
+                        Type = "Manual"
+                    }).ToListAsync();
+
+                var fromDateOnly = DateOnly.FromDateTime(from);
+                var toDateOnly = DateOnly.FromDateTime(to);
+
+                var payrollRows = await _db.PayrollPeriods
+                    .AsNoTracking()
+                    .Where(p => p.CompanyId == companyId
+                        && (p.Status == PayrollPeriodStatus.Released || p.Status == PayrollPeriodStatus.Approved)
+                        && p.EndDate >= fromDateOnly
+                        && p.StartDate <= toDateOnly)
+                    .Select(p => new
+                    {
+                        p.PayrollPeriodId,
+                        p.PeriodName,
+                        p.UpdatedAt,
+                        p.CreatedAt,
+                        p.Status,
+                        TotalNet = p.PayrollSummaries.Sum(s => s.NetPay),
+                        EmpCount = p.PayrollSummaries.Count()
+                    })
+                    .ToListAsync();
+
+                var payrollExpenses = payrollRows.Select(p => new CombinedExpenseItem
+                {
+                    Id = p.PayrollPeriodId,
+                    Date = p.UpdatedAt ?? p.CreatedAt,
+                    Description = p.PeriodName ?? "Payroll Period",
+                    Category = "Payroll",
+                    Amount = p.TotalNet,
+                    Note = $"{p.EmpCount} employees · {p.Status}",
+                    Type = "Payroll"
+                });
+
+                Expenses = manualExpenses.Concat(payrollExpenses).OrderByDescending(e => e.Date).ToList();
+                TotalExpenses = Expenses.Sum(e => e.Amount);
             }
             catch { Expenses = new(); }
+
+            // ── Government Contributions ──
+            try
+            {
+                var fromDateOnly = DateOnly.FromDateTime(from);
+                var toDateOnly = DateOnly.FromDateTime(to);
+
+                var contribRows = await _db.GovernmentContributions
+                    .AsNoTracking()
+                    .Where(c => c.Employee.CompanyId == companyId
+                        && c.PayrollPeriod.EndDate >= fromDateOnly
+                        && c.PayrollPeriod.StartDate <= toDateOnly)
+                    .Select(c => new
+                    {
+                        c.PayrollPeriodId,
+                        PeriodName = c.PayrollPeriod.PeriodName ?? "Period",
+                        PeriodEndYear = c.PayrollPeriod.EndDate.Year,
+                        PeriodEndMonth = c.PayrollPeriod.EndDate.Month,
+                        PeriodEndDay = c.PayrollPeriod.EndDate.Day,
+                        TypeName = c.Type.ToString(),
+                        c.EmployeeShare,
+                        c.EmployerShare
+                    })
+                    .ToListAsync();
+
+                Contributions = contribRows
+                    .GroupBy(c => new { c.PayrollPeriodId, c.PeriodName, c.PeriodEndYear, c.PeriodEndMonth, c.PeriodEndDay, c.TypeName })
+                    .Select(g => new ContributionItem
+                    {
+                        PeriodName = g.Key.PeriodName,
+                        PeriodEnd = new DateTime(g.Key.PeriodEndYear, g.Key.PeriodEndMonth, g.Key.PeriodEndDay),
+                        Type = g.Key.TypeName,
+                        EmployeeShare = g.Sum(x => x.EmployeeShare),
+                        EmployerShare = g.Sum(x => x.EmployerShare),
+                        Count = g.Count()
+                    })
+                    .OrderByDescending(c => c.PeriodEnd).ThenBy(c => c.Type)
+                    .ToList();
+
+                TotalContributions = Contributions.Sum(c => c.EmployeeShare + c.EmployerShare);
+            }
+            catch { Contributions = new(); }
         }
 
-        public class IncomeItem {
+        // ── DTOs ──
+        public class IncomeItem
+        {
+            public int Id { get; set; }
             public DateTime Date { get; set; }
             public string Source { get; set; } = "";
             public string Category { get; set; } = "";
@@ -65,12 +173,25 @@ namespace PayRex.Web.Pages
             public string Note { get; set; } = "";
         }
 
-        public class ExpenseItem {
+        public class CombinedExpenseItem
+        {
+            public int Id { get; set; }
             public DateTime Date { get; set; }
-            public string Payee { get; set; } = "";
+            public string Description { get; set; } = "";
             public string Category { get; set; } = "";
             public decimal Amount { get; set; }
             public string Note { get; set; } = "";
+            public string Type { get; set; } = "Manual";
+        }
+
+        public class ContributionItem
+        {
+            public string PeriodName { get; set; } = "";
+            public DateTime PeriodEnd { get; set; }
+            public string Type { get; set; } = "";
+            public decimal EmployeeShare { get; set; }
+            public decimal EmployerShare { get; set; }
+            public int Count { get; set; }
         }
 
         public async Task<IActionResult> OnPostAddIncomeAsync([FromBody] IncomeRequest req)
