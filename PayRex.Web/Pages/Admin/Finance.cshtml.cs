@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using PayRexApplication.Data;
+using PayRexApplication.Models;
 using PayRex.Web.QuestPdf;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -16,6 +19,7 @@ namespace PayRex.Web.Pages.Admin
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<FinanceModel> _logger;
         private readonly IWebHostEnvironment _env;
+        private readonly AppDbContext _db;
 
         public List<FinanceEntryItem> Entries { get; set; } = new();
         public FinanceSummaryItem Summary { get; set; } = new();
@@ -23,11 +27,12 @@ namespace PayRex.Web.Pages.Admin
         [BindProperty(SupportsGet = true)] public string? FromDate { get; set; }
         [BindProperty(SupportsGet = true)] public string? ToDate { get; set; }
 
-        public FinanceModel(IHttpClientFactory httpClientFactory, ILogger<FinanceModel> logger, IWebHostEnvironment env)
+        public FinanceModel(IHttpClientFactory httpClientFactory, ILogger<FinanceModel> logger, IWebHostEnvironment env, AppDbContext db)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _env = env;
+            _db = db;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -108,6 +113,9 @@ namespace PayRex.Web.Pages.Admin
             // Identification
             string issuerName = "Administrator";
             string issuerPosition = "Super Admin";
+            string? issuerSignatureUrl = null;
+            int issuingUserId = 0;
+            int issuerCompanyId = 0;
             try
             {
                 var handler = new JwtSecurityTokenHandler();
@@ -116,27 +124,56 @@ namespace PayRex.Web.Pages.Admin
                 var family = jwt.Claims.FirstOrDefault(c => c.Type == "family_name" || c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
                 if (!string.IsNullOrEmpty(given))
                     issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "uid")?.Value, out issuingUserId);
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value, out issuerCompanyId);
             }
             catch { }
 
-            // Logo
+            if (issuingUserId > 0)
+                issuerSignatureUrl = await _db.Users.AsNoTracking()
+                    .Where(u => u.UserId == issuingUserId)
+                    .Select(u => u.SignatureUrl)
+                    .FirstOrDefaultAsync();
+
+            var issuerCompany = issuerCompanyId > 0
+                ? await _db.Companies.AsNoTracking().Where(c => c.CompanyId == issuerCompanyId).FirstOrDefaultAsync()
+                : null;
+
+            var companyName    = issuerCompany?.CompanyName ?? "PayRex";
+            var companyAddress = issuerCompany?.Address;
+            var companyEmail   = issuerCompany?.ContactEmail;
+            var companyPhone   = issuerCompany?.ContactPhone;
+
+            // Logo: Cloudinary first, local fallback
             byte[]? logoBytes = null;
-            try
+            if (!string.IsNullOrWhiteSpace(issuerCompany?.LogoUrl))
             {
-                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
-                if (System.IO.File.Exists(logoPath))
-                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                try
+                {
+                    using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    logoBytes = await http.GetByteArrayAsync(issuerCompany.LogoUrl);
+                }
+                catch { }
             }
-            catch { }
+            if (logoBytes == null)
+            {
+                try
+                {
+                    var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                    if (System.IO.File.Exists(logoPath))
+                        logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                }
+                catch { }
+            }
 
             var generator = new FinancePdfGenerator();
             var pdfOptions = new FinancePdfGeneratorOptions
             {
-                CompanyName = "PayRex",
+                CompanyName = companyName,
                 CompanyTagline = "Financial Management & Payroll Platform",
-                CompanyAddress = "Quezon City, Metro Manila, Philippines",
-                CompanyPhone = "+63 912 345 6789",
-                CompanyEmail = "admin@payrex.com",
+                CompanyAddress = companyAddress,
+                CompanyPhone = companyPhone,
+                CompanyEmail = companyEmail,
                 Period = (string.IsNullOrEmpty(FromDate) && string.IsNullOrEmpty(ToDate)) ? "All Time" : $"{FromDate ?? "..."} to {ToDate ?? "..."}",
                 TotalIncome = summary.TotalIncome,
                 TotalCost = summary.TotalDeductions,
@@ -146,6 +183,7 @@ namespace PayRex.Web.Pages.Admin
                 SummaryConclusion = summaryConclusion,
                 IssuerName = issuerName,
                 IssuerPosition = issuerPosition,
+                IssuerSignatureUrl = issuerSignatureUrl,
                 LogoBytes = logoBytes,
                 Entries = entries.Select(e => new FinanceExportRow
                 {

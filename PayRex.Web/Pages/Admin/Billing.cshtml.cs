@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using PayRexApplication.Data;
+using PayRexApplication.Models;
 using PayRex.Web.QuestPdf;
 
 namespace PayRex.Web.Pages.Admin
@@ -15,15 +18,17 @@ namespace PayRex.Web.Pages.Admin
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<BillingModel> _logger;
         private readonly IWebHostEnvironment _env;
+        private readonly AppDbContext _db;
 
   public List<BillingItem> Invoices { get; set; } = new();
  public List<PlanItem> Plans { get; set; } = new();
 
-    public BillingModel(IHttpClientFactory httpClientFactory, ILogger<BillingModel> logger, IWebHostEnvironment env)
+    public BillingModel(IHttpClientFactory httpClientFactory, ILogger<BillingModel> logger, IWebHostEnvironment env, AppDbContext db)
  {
      _httpClientFactory = httpClientFactory;
      _logger = logger;
             _env = env;
+            _db = db;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -92,6 +97,9 @@ await Task.WhenAll(billingTask, plansTask);
 
             string issuerName = "Administrator";
             string issuerPosition = "Super Admin";
+            string? issuerSignatureUrl = null;
+            int issuingUserId = 0;
+            int issuerCompanyId = 0;
             try
             {
                 var handler = new JwtSecurityTokenHandler();
@@ -100,8 +108,25 @@ await Task.WhenAll(billingTask, plansTask);
                 var family = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
                 if (!string.IsNullOrEmpty(given))
                     issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "uid")?.Value, out issuingUserId);
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value, out issuerCompanyId);
             }
             catch { }
+
+            if (issuingUserId > 0)
+                issuerSignatureUrl = await _db.Users.AsNoTracking()
+                    .Where(u => u.UserId == issuingUserId)
+                    .Select(u => u.SignatureUrl)
+                    .FirstOrDefaultAsync();
+
+            var issuerCompany = issuerCompanyId > 0
+                ? await _db.Companies.AsNoTracking().Where(c => c.CompanyId == issuerCompanyId).FirstOrDefaultAsync()
+                : null;
+
+            var companyName    = issuerCompany?.CompanyName ?? "PayRex";
+            var companyAddress = issuerCompany?.Address;
+            var companyEmail   = issuerCompany?.ContactEmail;
+            var companyPhone   = issuerCompany?.ContactPhone;
 
             var rows = invoices.Select(i => new BillingInvoiceExportRow
             {
@@ -124,19 +149,36 @@ await Task.WhenAll(billingTask, plansTask);
             var filterDesc = parts.Any() ? $"Filtered by {string.Join(", ", parts)}" : "All invoices";
 
             byte[]? logoBytes = null;
-            try
+            if (!string.IsNullOrWhiteSpace(issuerCompany?.LogoUrl))
             {
-                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
-                if (System.IO.File.Exists(logoPath))
-                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                try
+                {
+                    using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    logoBytes = await http.GetByteArrayAsync(issuerCompany.LogoUrl);
+                }
+                catch { }
             }
-            catch { }
+            if (logoBytes == null)
+            {
+                try
+                {
+                    var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                    if (System.IO.File.Exists(logoPath))
+                        logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                }
+                catch { }
+            }
 
             var generator = new BillingInvoicePdfGenerator();
             var pdfBytes = generator.Generate(new BillingInvoicePdfGeneratorOptions
             {
                 IssuerName = issuerName,
                 IssuerPosition = issuerPosition,
+                IssuerSignatureUrl = issuerSignatureUrl,
+                CompanyName = companyName,
+                CompanyAddress = companyAddress,
+                CompanyEmail = companyEmail,
+                CompanyPhone = companyPhone,
                 FilterDescription = filterDesc,
                 Invoices = rows,
                 LogoBytes = logoBytes

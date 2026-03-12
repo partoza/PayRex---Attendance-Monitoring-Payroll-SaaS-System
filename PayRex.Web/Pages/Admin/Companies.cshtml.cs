@@ -6,6 +6,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using PayRexApplication.Data;
+using PayRexApplication.Models;
 using PayRex.Web.QuestPdf;
 
 namespace PayRex.Web.Pages.Admin
@@ -16,15 +19,17 @@ namespace PayRex.Web.Pages.Admin
         private readonly IHttpClientFactory _httpClientFactory;
       private readonly ILogger<CompaniesModel> _logger;
       private readonly IWebHostEnvironment _env;
+      private readonly AppDbContext _db;
 
       public List<CompanyItem> Companies { get; set; } = new();
  [TempData] public string? StatusMessage { get; set; }
 
-     public CompaniesModel(IHttpClientFactory httpClientFactory, ILogger<CompaniesModel> logger, IWebHostEnvironment env)
+     public CompaniesModel(IHttpClientFactory httpClientFactory, ILogger<CompaniesModel> logger, IWebHostEnvironment env, AppDbContext db)
         {
     _httpClientFactory = httpClientFactory;
   _logger = logger;
             _env = env;
+            _db = db;
         }
 
     public async Task<IActionResult> OnGetAsync()
@@ -77,6 +82,9 @@ namespace PayRex.Web.Pages.Admin
 
             string issuerName = "Administrator";
             string issuerPosition = "Super Admin";
+            string? issuerSignatureUrl = null;
+            int issuingUserId = 0;
+            int issuerCompanyId = 0;
             try
             {
                 var handler = new JwtSecurityTokenHandler();
@@ -85,8 +93,25 @@ namespace PayRex.Web.Pages.Admin
                 var family = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
                 if (!string.IsNullOrEmpty(given))
                     issuerName = !string.IsNullOrEmpty(family) ? $"{given} {family}" : given;
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "uid")?.Value, out issuingUserId);
+                int.TryParse(jwt.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value, out issuerCompanyId);
             }
             catch { }
+
+            if (issuingUserId > 0)
+                issuerSignatureUrl = await _db.Users.AsNoTracking()
+                    .Where(u => u.UserId == issuingUserId)
+                    .Select(u => u.SignatureUrl)
+                    .FirstOrDefaultAsync();
+
+            var issuerCompany = issuerCompanyId > 0
+                ? await _db.Companies.AsNoTracking().Where(c => c.CompanyId == issuerCompanyId).FirstOrDefaultAsync()
+                : null;
+
+            var companyName    = issuerCompany?.CompanyName ?? "PayRex";
+            var companyAddress = issuerCompany?.Address;
+            var companyEmail   = issuerCompany?.ContactEmail;
+            var companyPhone   = issuerCompany?.ContactPhone;
 
             var rows = companies.Select(c => new CompanyExportRow
             {
@@ -108,18 +133,35 @@ namespace PayRex.Web.Pages.Admin
             var generator = new CompaniesPdfGenerator();
 
             byte[]? logoBytes = null;
-            try
+            if (!string.IsNullOrWhiteSpace(issuerCompany?.LogoUrl))
             {
-                var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
-                if (System.IO.File.Exists(logoPath))
-                    logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                try
+                {
+                    using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                    logoBytes = await http.GetByteArrayAsync(issuerCompany.LogoUrl);
+                }
+                catch { }
             }
-            catch { }
+            if (logoBytes == null)
+            {
+                try
+                {
+                    var logoPath = Path.Combine(_env.WebRootPath, "images", "logo.png");
+                    if (System.IO.File.Exists(logoPath))
+                        logoBytes = await System.IO.File.ReadAllBytesAsync(logoPath);
+                }
+                catch { }
+            }
 
             var pdfBytes = generator.Generate(new CompaniesPdfGeneratorOptions
             {
                 IssuerName = issuerName,
                 IssuerPosition = issuerPosition,
+                IssuerSignatureUrl = issuerSignatureUrl,
+                CompanyName = companyName,
+                CompanyAddress = companyAddress,
+                CompanyEmail = companyEmail,
+                CompanyPhone = companyPhone,
                 FilterDescription = filterDesc,
                 Companies = rows,
                 LogoBytes = logoBytes

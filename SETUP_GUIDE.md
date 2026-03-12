@@ -175,7 +175,7 @@ cd ..
 #### Option B: Command Line
 
 **Terminal 1 - API:**
-```powershell
+```powershell`
 dotnet run --project PayRexApplication/PayRex.API.csproj
 ```
 

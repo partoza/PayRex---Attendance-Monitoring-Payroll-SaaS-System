@@ -28,6 +28,11 @@ namespace PayRex.Web.QuestPdf
         public string FilterDescription { get; set; } = string.Empty;
         public IEnumerable<CompanyExportRow> Companies { get; set; } = Array.Empty<CompanyExportRow>();
         public byte[]? LogoBytes { get; set; }
+        public string CompanyName { get; set; } = "PayRex";
+        public string? CompanyTagline { get; set; }
+        public string? CompanyAddress { get; set; }
+        public string? CompanyEmail { get; set; }
+        public string? CompanyPhone { get; set; }
     }
 
     public class CompaniesPdfGenerator
@@ -53,9 +58,9 @@ namespace PayRex.Web.QuestPdf
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(9).FontColor(TextDark).FontFamily("Helvetica"));
 
-                    page.Header().Element(c => ComposeHeader(c, now, list.Count, logoBytes));
+                    page.Header().Element(c => ComposeHeader(c, opts, now, list.Count, logoBytes));
                     page.Content().PaddingHorizontal(0).PaddingTop(8).Element(c => ComposeContent(c, opts, list, sigBytes));
-                    page.Footer().Element(c => ComposeFooter(c, now));
+                    page.Footer().Element(c => ComposeFooter(c, opts, now));
                 });
             });
 
@@ -64,7 +69,7 @@ namespace PayRex.Web.QuestPdf
             return ms.ToArray();
         }
 
-        private void ComposeHeader(IContainer container, DateTime now, int totalRecords, byte[]? logoBytes = null)
+        private void ComposeHeader(IContainer container, CompaniesPdfGeneratorOptions opts, DateTime now, int totalRecords, byte[]? logoBytes = null)
         {
             container.Column(col =>
             {
@@ -85,9 +90,13 @@ namespace PayRex.Web.QuestPdf
 
                     row.RelativeItem().PaddingLeft(10).Column(c =>
                     {
-                        c.Item().Text("PayRex").FontSize(18).Bold().FontColor(PrimaryColor);
-                        c.Item().PaddingTop(4).Text("Administration Platform").FontSize(9).FontColor(TextGray);
-                        c.Item().Text("Company Management System").FontSize(9).FontColor(TextGray);
+                        c.Item().Text(opts.CompanyName).FontSize(18).Bold().FontColor(PrimaryColor);
+                        if (!string.IsNullOrWhiteSpace(opts.CompanyAddress))
+                            c.Item().PaddingTop(2).Text($"Address: {opts.CompanyAddress}").FontSize(8).FontColor(TextGray);
+                        if (!string.IsNullOrWhiteSpace(opts.CompanyPhone) || !string.IsNullOrWhiteSpace(opts.CompanyEmail))
+                            c.Item().Text($"Contact: {opts.CompanyPhone ?? "N/A"} | Email: {opts.CompanyEmail ?? "N/A"}").FontSize(8).FontColor(TextGray);
+                        if (!string.IsNullOrWhiteSpace(opts.CompanyTagline))
+                            c.Item().PaddingTop(2).Text(opts.CompanyTagline).FontSize(8).Italic().FontColor(TextGray);
                     });
 
                     row.ConstantItem(260).Column(c =>
@@ -231,7 +240,7 @@ namespace PayRex.Web.QuestPdf
             });
         }
 
-        private void ComposeFooter(IContainer container, DateTime now)
+        private void ComposeFooter(IContainer container, CompaniesPdfGeneratorOptions opts, DateTime now)
         {
             container.Column(c =>
             {
@@ -241,7 +250,7 @@ namespace PayRex.Web.QuestPdf
                 {
                     r.RelativeItem().Column(col =>
                     {
-                        col.Item().Text("PayRex").FontSize(9).Bold().FontColor(PrimaryColor);
+                        col.Item().Text(opts.CompanyName).FontSize(9).Bold().FontColor(PrimaryColor);
                         col.Item().Text($"Generated: {now:MM/dd/yyyy hh:mm tt}").FontSize(8).FontColor(TextGray);
                         col.Item().Text("Document is confidential and intended for internal use only.")
                             .FontSize(8).FontColor(TextGray);
