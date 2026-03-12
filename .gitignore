@@ -37,6 +37,10 @@ secrets.json
 # Others
 .vscode/
 
+# PuppeteerSharp downloaded Chromium browser
+.local-chromium/
+**/.local-chromium/
+
 # Ignore appsettings files (global and in subfolders)
 appsettings.json
 appsettings.*.json
